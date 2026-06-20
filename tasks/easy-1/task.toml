@@ -1,0 +1,20 @@
+schema_version = "1.3"
+
+[task]
+name = "disteval/easy-word-count"
+description = "Write a word count script"
+keywords = ["python", "scripting", "easy"]
+
+[metadata]
+difficulty = "easy"
+difficulty_explanation = "Single script, well-defined output format, no edge cases"
+category = "scripting"
+
+[verifier]
+timeout_sec = 30.0
+
+[agent]
+timeout_sec = 120.0
+
+[environment]
+build_timeout_sec = 120.0

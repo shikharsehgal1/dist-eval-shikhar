@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "disteval"
+version = "0.1.0"
+description = "Distribution-first evaluation and self-improvement for long-horizon AI agents"
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["ai", "agents", "evaluation", "reinforcement-learning", "dpo", "training"]
+authors = [
+    {name = "Cognition Inc.", email = "dev@cognition.ai"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+inspect = ["inspect-ai"]
+rliable = ["rliable"]
+dev = ["pytest", "pytest-cov", "black", "ruff"]
+
+[project.urls]
+Homepage = "https://github.com/cognition-inc/disteval"
+Documentation = "https://github.com/cognition-inc/disteval"
+
+[project.scripts]
+disteval = "disteval.__main__:main"
+disteval-report = "disteval.report:main"
+disteval-compare = "disteval.compare_report:main"
+disteval-sim = "disteval.training_sim:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["disteval*"]

@@ -1,0 +1,21 @@
+order_id,region,revenue,product
+1001,North,1250.50,Widget A
+1002,South,875.00,Widget B
+1003,North,2100.75,Widget C
+1004,East,650.25,Widget A
+1005,West,3200.00,Widget D
+1006,South,1100.50,Widget A
+1007,East,,Widget B
+1008,North,945.00,Widget B
+1009,West,2750.25,Widget C
+1010,South,1800.00,Widget D
+1011,East,525.75,Widget A
+1012,North,3100.00,Widget C
+1013,West,890.50,Widget B
+1014,South,,Widget C
+1015,East,1450.00,Widget D
+1016,North,675.25,Widget A
+1017,West,4200.00,Widget D
+1018,South,2300.75,Widget C
+1019,East,780.00,Widget B
+1020,North,1560.50,Widget D

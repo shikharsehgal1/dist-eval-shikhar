@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# disteval outputs (generated, not source)
+disteval_output*/
+wow_output/
+
+# large job data — keep structure, skip raw trajectory blobs
+jobs/
+
+# Harbor environments dataset (separate repo, not disteval source)
+Harbor-Environments-main/
+
+# comparison outputs
+disteval_comparison/

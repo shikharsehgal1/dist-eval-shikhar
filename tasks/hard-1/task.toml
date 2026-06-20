@@ -1,0 +1,20 @@
+schema_version = "1.3"
+
+[task]
+name = "disteval/hard-bugfix"
+description = "Find and fix multiple bugs in a broken Python data pipeline"
+keywords = ["python", "debugging", "hard"]
+
+[metadata]
+difficulty = "hard"
+difficulty_explanation = "Multiple interacting bugs, requires reading existing code, tracing data flow, and fixing without breaking working parts"
+category = "debugging"
+
+[verifier]
+timeout_sec = 60.0
+
+[agent]
+timeout_sec = 300.0
+
+[environment]
+build_timeout_sec = 120.0

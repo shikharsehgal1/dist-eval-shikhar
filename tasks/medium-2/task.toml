@@ -1,0 +1,20 @@
+schema_version = "1.3"
+
+[task]
+name = "disteval/medium-rest-client"
+description = "Implement a CLI tool that fetches and processes JSON from a local mock API"
+keywords = ["python", "http", "json", "medium"]
+
+[metadata]
+difficulty = "medium"
+difficulty_explanation = "Requires HTTP client usage, JSON parsing, filtering, and formatted output"
+category = "networking"
+
+[verifier]
+timeout_sec = 60.0
+
+[agent]
+timeout_sec = 180.0
+
+[environment]
+build_timeout_sec = 120.0

@@ -1,0 +1,34 @@
+# Dataset manifest for disteval/disteval-bench
+# Add tasks using: harbor add <org>/<name>
+# Publish using: harbor publish
+
+[dataset]
+name = "disteval/disteval-bench"
+description = ""
+authors = []
+keywords = []
+
+[[tasks]]
+name = "disteval/easy-word-count"
+digest = "sha256:2376be193b315cb717e15c92f121de3c9ace39449259f38bb2edd81dd9346668"
+
+[[tasks]]
+name = "disteval/easy-fizzbuzz"
+digest = "sha256:a7f2968dd02fd48fa700695646d90465c00f8e0546729cd4db77474ac5e93e82"
+
+[[tasks]]
+name = "disteval/medium-log-parser"
+digest = "sha256:28d40f1b1d7fe2e5285732c61cc762060fa034f02370208aa2b83549c265e06c"
+
+[[tasks]]
+name = "disteval/medium-rest-client"
+digest = "sha256:199406457d2df2f2139b9c0fe01c93d1c769780bfac5d3fe63823e7b44371c39"
+
+[[tasks]]
+name = "disteval/hard-bugfix"
+digest = "sha256:cc223d96864890ee47ce3911ce0e7006e9de054e8924a9bdd628aa39e0d7801e"
+
+[[tasks]]
+name = "disteval/hard-algorithm"
+digest = "sha256:cf7d69bc4ce07822e3f568d44865372211ebb855afb09d79490b188fb6c0ce77"
+
