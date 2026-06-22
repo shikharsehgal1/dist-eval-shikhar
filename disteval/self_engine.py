@@ -71,6 +71,12 @@ except Exception:  # pragma: no cover - recursion engine may be unavailable duri
     SubTaskDefinition = None
     SubTaskGraph = None
 
+try:
+    from .distributed_eval import DistributedEvalPool, CrossAgentPair
+except Exception:  # pragma: no cover - distributed eval may be unavailable during early import
+    DistributedEvalPool = None
+    CrossAgentPair = None
+
 
 # ── Output data structures ────────────────────────────────────────────────────
 
@@ -155,6 +161,9 @@ class SelfImprovementPlan:
     recursion_context: Optional[dict] = None
     sub_task_graph: Optional[dict] = None
     n_decomposed: int = 0
+
+    # Distributed evaluation extensions (optional, default-disabled)
+    cross_agent_pairs: list[dict] = field(default_factory=list)
 
     def summary(self) -> str:
         """Human-readable summary string."""
@@ -244,6 +253,8 @@ class SelfImprovementPlan:
             "recursion_enabled": self.recursion_enabled,
             "recursion_context": self.recursion_context,
             "sub_task_graph": self.sub_task_graph,
+            "n_decomposed": self.n_decomposed,
+            "cross_agent_pairs": self.cross_agent_pairs,
             "curriculum": [_task_item_to_dict(t) for t in self.curriculum],
         }
 
@@ -746,6 +757,37 @@ class SelfEngine:
                 ),
             )
             parent_item.sub_tasks.append(sub_item)
+
+    def contribute_to_pool(self, pool: "DistributedEvalPool") -> None:
+        """Add this engine's eval records to a distributed pool."""
+        if DistributedEvalPool is None:
+            return
+        from .distributed_eval import DistributedEvalRecord
+        df = self.store.df()
+        for _, row in df.iterrows():
+            pool.add(
+                DistributedEvalRecord(
+                    agent_name=self.agent_name,
+                    model_name=self.model_name,
+                    task=row["task"],
+                    score=float(row["score"]),
+                    trajectory_ref=row.get("trajectory_ref"),
+                    success=bool(row.get("success", False)),
+                    failure_mode=row.get("failure_mode"),
+                )
+            )
+
+    def attach_cross_agent_pairs(
+        self,
+        plan: SelfImprovementPlan,
+        pool: "DistributedEvalPool",
+        min_gap: float = 0.1,
+    ) -> None:
+        """Attach cross-agent training pairs to a plan from a distributed pool."""
+        if DistributedEvalPool is None:
+            return
+        pairs = pool.generate_cross_agent_pairs(min_gap=min_gap)
+        plan.cross_agent_pairs = [p.to_dict() for p in pairs]
 
     def _try_load_sim_results(self) -> Optional[dict]:
         """Load training_sim JSON results if available."""
