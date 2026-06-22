@@ -16,7 +16,6 @@ from typing import Optional
 import matplotlib
 matplotlib.use("Agg")  # headless
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 
 from .records import RecordStore

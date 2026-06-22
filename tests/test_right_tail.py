@@ -1,6 +1,5 @@
 """Tests for disteval.right_tail — right-tail training signal."""
 import pytest
-import numpy as np
 import pandas as pd
 
 from disteval.records import EpisodeRecord, RecordStore
@@ -8,8 +7,6 @@ from disteval.right_tail import (
     task_outcome_profile,
     right_tail_analysis,
     compare_right_tail,
-    TaskOutcomeProfile,
-    RightTailReport,
 )
 
 

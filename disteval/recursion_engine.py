@@ -32,14 +32,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-import numpy as np
 
 from .right_tail import (
     TaskOutcomeProfile,
     RightTailReport,
     task_outcome_profile,
 )
-from .test_suite_parser import CheckpointSpec, parse_test_suite, parse_all_tasks
+from .test_suite_parser import CheckpointSpec, parse_all_tasks
 from .trajectory_monitor import TrajectoryMonitor
 from .trajectory_memory import TrajectoryMemory
 

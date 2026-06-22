@@ -25,9 +25,20 @@ Thumbs.db
 *.swp
 *.swo
 
+# tool caches
+.pytest_cache/
+.ruff_cache/
+
 # disteval outputs (generated, not source)
 disteval_output*/
 wow_output/
+
+# demo artifacts removed from source tree
+demo.py
+wow_demo.py
+disteval_gui.py
+DEMO_SCRIPT.md
+PROJECT_STORY.md
 
 # large job data — keep structure, skip raw trajectory blobs
 jobs/

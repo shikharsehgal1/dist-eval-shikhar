@@ -24,10 +24,8 @@ from __future__ import annotations
 import json
 import os
 import sys
-import tempfile
 
 import numpy as np
-import pytest
 
 # Add project root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -37,8 +35,6 @@ from disteval.right_tail import right_tail_analysis
 from disteval.training_sim import (
     ALPHA,
     DPO_BONUS,
-    STUCK_FACTOR,
-    N_BOOTSTRAP,
     apply_training_effect,
     bootstrap_resample_within_tasks,
     build_json_output,

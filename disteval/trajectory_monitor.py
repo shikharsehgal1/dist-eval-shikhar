@@ -344,8 +344,6 @@ class OutcomePredictor:
 
         X = np.vstack([self._feature_vector(r.features) for r in records])
         y = np.array([1.0 if r.score >= 0.5 else 0.0 for r in records], dtype=float)
-        mean_full = X.mean(axis=0)
-        std_full = X.std(axis=0) + 1e-6
 
         correct = 0
         for i in range(len(records)):

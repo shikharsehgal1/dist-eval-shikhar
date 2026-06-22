@@ -8,7 +8,6 @@ pass^k) -- the three things mean-collapse hides.
 from __future__ import annotations
 
 from math import comb
-from typing import Optional
 
 import numpy as np
 import pandas as pd

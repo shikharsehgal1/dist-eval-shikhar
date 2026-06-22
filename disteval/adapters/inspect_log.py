@@ -23,7 +23,7 @@ and iterate `log.samples`; the field mapping is identical.
 from __future__ import annotations
 
 import json
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 from ..records import EpisodeRecord, RecordStore
 

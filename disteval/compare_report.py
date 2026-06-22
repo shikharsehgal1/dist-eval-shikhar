@@ -19,17 +19,15 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from typing import Optional
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 
 from .adapters.harbor_jobs import load_harbor_job
 from .records import RecordStore
-from . import metrics, bootstrap
+from . import metrics
 
 
 PALETTE = ["#e74c3c", "#3498db", "#2ecc71"]   # red, blue, green
@@ -92,11 +90,11 @@ def print_leaderboard(summaries: list[dict]) -> None:
 
     # Harbor ranking
     harbor_rank = sorted(summaries, key=lambda s: -s["mean"])
-    print(f"\n  ┌──── Harbor sees only this ─────────────────────────────────┐")
+    print("\n  ┌──── Harbor sees only this ─────────────────────────────────┐")
     for i, s in enumerate(harbor_rank, 1):
         bar = "█" * int(s["mean"] * 20)
         print(f"  │  #{i}  {s['agent']:<30}  mean={s['mean']:.3f}  {bar}")
-    print(f"  └────────────────────────────────────────────────────────────┘")
+    print("  └────────────────────────────────────────────────────────────┘")
 
     # Full metric table
     METRICS = [
@@ -136,13 +134,13 @@ def print_leaderboard(summaries: list[dict]) -> None:
     # Disteval ranking
     disteval_rank = sorted(summaries, key=lambda s: -(s["cvar@0.1"] * 2 + s["pass^3"] + s["iqm"]))
     print()
-    print(f"  ┌──── disteval reliability ranking ─────────────────────────┐")
+    print("  ┌──── disteval reliability ranking ─────────────────────────┐")
     for i, s in enumerate(disteval_rank, 1):
         wins = ranking_wins[s["agent"]]
         harbor_pos = next(j+1 for j, h in enumerate(harbor_rank) if h["agent"] == s["agent"])
         flip = f"  ↕ (was #{harbor_pos} on Harbor)" if i != harbor_pos else ""
         print(f"  │  #{i}  {s['agent']:<28}  wins {wins}/5 metrics{flip}")
-    print(f"  └────────────────────────────────────────────────────────────┘")
+    print("  └────────────────────────────────────────────────────────────┘")
 
     # Inversion check
     if harbor_rank[0]["agent"] != disteval_rank[0]["agent"]:
@@ -157,7 +155,7 @@ def print_leaderboard(summaries: list[dict]) -> None:
         print(f"  → The mean rewarded {winner_harbor} for peak shots; disteval found {winner_dist} is more consistent in deployment")
     else:
         print(f"\n  Harbor and disteval agree on #1: {_color(harbor_rank[0]['agent'], '32')}")
-        print(f"  But distributional metrics reveal important per-agent tail risk differences ↑")
+        print("  But distributional metrics reveal important per-agent tail risk differences ↑")
 
     # Per-difficulty breakdown
     _hr("PER-DIFFICULTY BREAKDOWN", width=72)
@@ -175,11 +173,7 @@ def print_leaderboard(summaries: list[dict]) -> None:
                 vals.append(v)
                 row += f"  {v:>14.3f}"
             # color the winner
-            if not all(np.isnan(v) for v in vals):
-                best = max((v for v in vals if not np.isnan(v)), default=None)
-                print(row)
-            else:
-                print(row)
+            print(row)
         print()
 
 

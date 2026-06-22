@@ -31,7 +31,7 @@ import json
 import os
 import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -39,7 +39,7 @@ import numpy as np
 
 from .adapters.harbor_jobs import load_harbor_job
 from .records import EpisodeRecord, RecordStore
-from .right_tail import right_tail_analysis, RightTailReport, TaskOutcomeProfile
+from .right_tail import right_tail_analysis, RightTailReport
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
@@ -425,16 +425,6 @@ def simulate_rounds_to_threshold(
             task_scores[rec.task] = []
         task_scores[rec.task].append(rec.score)
     task_scores = {t: np.array(s, dtype=float) for t, s in task_scores.items()}
-
-    tasks = list(task_scores.keys())
-    n_total = sum(len(s) for s in task_scores.values())
-
-    # Priority order for disteval: sort by initial gap descending (keep stable)
-    initial_gaps = {
-        t: float(s.max()) - float(s.mean()) if s.max() > 0 else 0.0
-        for t, s in task_scores.items()
-    }
-    priority_order = sorted(tasks, key=lambda t: -initial_gaps[t])
 
     for round_num in range(1, max_rounds + 1):
         # Check if already at threshold
@@ -941,7 +931,7 @@ def print_results_table(results: list[AgentResult], n_bootstrap: int) -> None:
             print(f"  random requires {-res.efficiency_gain_vs_random_pct:.1f}% fewer training rounds "
                   f"than disteval.")
         print()
-        print(f"  Bootstrap p-values:")
+        print("  Bootstrap p-values:")
         print(f"    disteval vs mean_reward: p = {res.p_value_vs_mean_reward:.4f}")
         print(f"    disteval vs random:      p = {res.p_value_vs_random:.4f}")
 
@@ -1066,14 +1056,12 @@ def save_score_gain_chart(results: list[AgentResult], out_path: str) -> None:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
-        import matplotlib.patches as mpatches
     except ImportError:
         print("  [warning] matplotlib not available; skipping chart export.")
         return
 
     agent_names = [r.agent_name for r in results]
     n_agents = len(results)
-    n_strats = 3
     x = np.arange(n_agents)
     width = 0.25
 
@@ -1095,7 +1083,7 @@ def save_score_gain_chart(results: list[AgentResult], out_path: str) -> None:
             means.append(sr.mean_gain)
             errs_low.append(sr.mean_gain - sr.ci_low)
             errs_high.append(sr.ci_high - sr.mean_gain)
-        bars = ax.bar(
+        ax.bar(
             x + (i - 1) * width,
             means,
             width,
@@ -1260,7 +1248,7 @@ def main() -> None:
     print_results_table(results, N_BOOTSTRAP)
 
     # Save JSON
-    out_dir = project_root / "wow_output"
+    out_dir = project_root / "disteval_output"
     out_dir.mkdir(exist_ok=True)
     json_path = out_dir / "training_sim_results.json"
     chart_path = out_dir / "training_sim_score_gain.png"

@@ -11,7 +11,6 @@ for the prototype, but for production you'd defer to rliable here.
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 
 from ..records import RecordStore
 

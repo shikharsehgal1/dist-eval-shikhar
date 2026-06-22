@@ -1,7 +1,7 @@
 # Phase 4B — End-to-End Validation Plan for the Recursive Self-Improvement Prototype
 
 **Date:** 2026-06-24  
-**Input:** `.devin/skills/research-recursive-self-improvement/SKILL.md`, `research/phase3_master_report.md`, `research/phase3{a,b,c}_*.md`, `disteval/self_engine.py`, `disteval/training_sim.py`, `disteval/__main__.py`, `disteval/right_tail.py`, `disteval/trajectory_monitor.py`, `disteval/trajectory_memory.py`, `demo.py`, `wow_demo.py`, and existing tests.  
+**Input:** `.devin/skills/research-recursive-self-improvement/SKILL.md`, `research/phase3_master_report.md`, `research/phase3{a,b,c}_*.md`, `disteval/self_engine.py`, `disteval/training_sim.py`, `disteval/__main__.py`, `disteval/right_tail.py`, `disteval/trajectory_monitor.py`, `disteval/trajectory_memory.py`, and existing tests.  
 **Output:** This design document.  
 **Constraint:** No existing disteval code is modified. Only the design document is produced.
 
@@ -304,7 +304,7 @@ A new test file `tests/test_recursive_loop.py` (proposed for Phase 4 implementat
 | Tasks per agent | 6 (full suite) | 6 + generated sub-tasks | The existing suite has 6 tasks (`disteval/self_engine.py:471-478`). Sub-tasks expand this to ~15–30 active environments. |
 | Agents | 1 | 3 | One agent can run the recursive loop, but the distributed/cross-agent benefits in `research/phase3c_distributed_evals.md` require at least 2 agents. Three agents match the existing `AGENT_CONFIGS` in `disteval/training_sim.py:59-75`. |
 | Cycles | 3 | 5–8 | Need enough cycles to observe transitions (RECOVERABLE → SOLID) and to detect plateaus. |
-| Runs per cycle (for statistical power) | 1 full eval per agent | 2 full evals per agent, aggregated | Reduces run-level shock, which `demo.py` (lines 36–68) shows can dominate the headline mean. |
+| Runs per cycle (for statistical power) | 1 full eval per agent | 2 full evals per agent, aggregated | Reduces run-level shock, which the existing `disteval.repeat` module demonstrates can dominate the headline mean. |
 
 ### 4.2 Total data footprint estimate
 
@@ -314,7 +314,7 @@ For 3 agents, 6 tasks, 5 attempts per task, 5 cycles, and 2 evals per cycle:
 - Sub-tasks multiply this by ~3–5, giving ~3,000–5,000 sub-task episodes after decomposition.
 - Trajectory JSON files: ~1,000 files across cycles.
 
-This is large but not unmanageable; the existing `wow_output/` directory already contains real trajectory data from 37 episodes (`wow_demo.py`, line 712).
+This is large but not unmanageable; the existing `jobs/` directory contains real trajectory data for validation.
 
 ### 4.3 Synthetic fallback
 
@@ -442,7 +442,7 @@ These questions are inherited from `research/phase3_master_report.md`, section 7
 | Right-tail taxonomy | `disteval/right_tail.py` |
 | Trajectory monitor / divergence | `disteval/trajectory_monitor.py` |
 | Trajectory memory | `disteval/trajectory_memory.py` |
-| Existing demo | `wow_demo.py` |
+| CLI engine | `disteval engine` via `disteval/__main__.py` |
 | Existing tests | `tests/test_training_sim.py`, `tests/test_right_tail.py`, `tests/test_trajectory_monitor.py`, `tests/test_trajectory_memory.py` |
 | Prototype pool | `research/phase4b/distributed_pool_cycleN.json` |
 | Prototype sub-task graph | `research/phase4b/subtask_graph_cycleN.json` |

@@ -483,7 +483,7 @@ plan = engine.run_cycle(cycle=1)
 
 # 3. Inspect the plan.
 print(plan.summary())
-plan.save("wow_output/recursion_plan.json")
+plan.save("disteval_output/recursion_plan.json")
 
 # 4. Inspect sub-task decomposition for a specific task.
 for item in plan.curriculum:

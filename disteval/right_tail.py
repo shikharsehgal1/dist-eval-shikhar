@@ -107,7 +107,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from .records import EpisodeRecord, RecordStore
+from .records import RecordStore
 
 
 # ── Data structures ──────────────────────────────────────────────────────────
@@ -383,7 +383,7 @@ def print_right_tail_report(report: RightTailReport, width: int = 80) -> None:
     if not verdict_parts:
         verdict_parts.append("\033[1;32mAll tasks SOLID — no right-tail gap\033[0m")
 
-    print(f"\n  VERDICT")
+    print("\n  VERDICT")
     for v in verdict_parts:
         print(f"    {v}")
     print(f"\n{EQ}\n")

@@ -16,7 +16,7 @@ Available subcommands:
 import argparse
 import json
 import sys
-from typing import List, Optional
+from typing import List
 
 
 def main() -> None:

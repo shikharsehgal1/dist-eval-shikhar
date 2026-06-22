@@ -17,14 +17,13 @@ import argparse
 import json
 import os
 import sys
-from pathlib import Path
 
 import numpy as np
 
 from .adapters.harbor_jobs import load_harbor_job
 from .records import RecordStore
-from . import metrics, bootstrap, compare, failure, repeat
-from .right_tail import right_tail_analysis, print_right_tail_report
+from . import metrics, bootstrap, failure
+from .right_tail import right_tail_analysis
 from .viz import generate_all_plots
 
 
@@ -110,7 +109,6 @@ def build_report(store: RecordStore, agent_name: str = "Agent") -> dict:
     )
 
     # --- right-tail training signal ---
-    from .right_tail import right_tail_analysis
     rt_report = right_tail_analysis(store, model_name=agent_name)
     rt_summary = {
         "n_solid":        rt_report.n_solid,
@@ -218,8 +216,8 @@ def print_report(rep: dict) -> None:
     print(f"  Bootstrap CI range:           [{b['lo']:.3f}, {b['hi']:.3f}]")
     print()
     print(f"  {_color('NOTE', '33')}: This bootstrap CI only resamples episodes already collected.")
-    print(f"  It CANNOT capture variance from fresh task draws, env seeds, or")
-    print(f"  LLM nondeterminism. Run disteval repeat-eval to see true spread.")
+    print("  It CANNOT capture variance from fresh task draws, env seeds, or")
+    print("  LLM nondeterminism. Run disteval repeat-eval to see true spread.")
 
     if "right_tail" in rep:
         rt = rep["right_tail"]
@@ -241,7 +239,7 @@ def print_report(rep: dict) -> None:
                     "n_stuck": "never solved → needs new skill or exploration"}[key]
             print(f"  {_color(kind_label, color)}  {n:>2} task(s)  {_color(desc, color)}")
         if rt["priority_tasks"]:
-            print(f"\n  Top training targets (RECOVERABLE, ranked by gap):")
+            print("\n  Top training targets (RECOVERABLE, ranked by gap):")
             for p in rt["priority_tasks"]:
                 tag = f" [{p['difficulty']}]" if p.get('difficulty') else ""
                 print(f"    {p['task'] + tag:<38}  "
@@ -256,7 +254,7 @@ def print_report(rep: dict) -> None:
         print()
 
     _hr("VERDICT", width=72)
-    m, c = g["mean"], g["cvar@0.1"]
+    c = g["cvar@0.1"]
     p3 = g["pass^3"]
     if c < 0.1:
         verdict = _color("HIGH RISK", "31") + f": CVaR@0.1={c:.3f} — agent catastrophically fails on tail tasks"

@@ -55,7 +55,6 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional, Any
 
-import numpy as np
 
 from .records import RecordStore
 from .right_tail import right_tail_analysis, RightTailReport, TaskOutcomeProfile
@@ -253,7 +252,6 @@ class SelfImprovementPlan:
             "recursion_enabled": self.recursion_enabled,
             "recursion_context": self.recursion_context,
             "sub_task_graph": self.sub_task_graph,
-            "n_decomposed": self.n_decomposed,
             "cross_agent_pairs": self.cross_agent_pairs,
             "curriculum": [_task_item_to_dict(t) for t in self.curriculum],
         }
@@ -285,7 +283,7 @@ class SelfEngine:
         )
         plan = engine.run_cycle()
         print(plan.summary())
-        plan.save("wow_output/self_improvement_plan.json")
+        plan.save("disteval_output/self_improvement_plan.json")
 
     Multiple cycles:
         for cycle in range(5):
@@ -694,7 +692,6 @@ class SelfEngine:
                 agent_key = _SIM_KEY_MAP.get(self.agent_name, self.agent_name)
                 agent_data = sim_results.get("agents", {}).get(agent_key, {})
                 disteval_data = agent_data.get("disteval", {})
-                mean_reward_data = agent_data.get("mean_reward", {})
 
                 if disteval_data:
                     item.predicted_gain = disteval_data.get("mean_gain")
@@ -792,7 +789,7 @@ class SelfEngine:
     def _try_load_sim_results(self) -> Optional[dict]:
         """Load training_sim JSON results if available."""
         candidates = [
-            "wow_output/training_sim_results.json",
+            "disteval_output/training_sim_results.json",
             "training_sim_results.json",
         ]
         for path in candidates:
@@ -883,59 +880,11 @@ def run_self_improvement_cycle(
 
 if __name__ == "__main__":
     import sys
-
-    JOB_DIRS = [
-        "jobs/run_A/disteval-run-A",
-        "jobs/run_B/disteval-run-B",
-        "jobs/run_C/disteval-run-C",
-    ]
-
-    AGENTS = [
-        ("Claude Code", "claude-sonnet-4-5",  ["jobs/run_A/disteval-run-A"]),
-        ("Gemini CLI",  "gemini-2.5-flash",   ["jobs/run_B/disteval-run-B"]),
-        ("Codex CLI",   "openai/o4-mini",     ["jobs/run_C/disteval-run-C"]),
-    ]
-
-    print("=" * 72)
-    print("  SELF-ENGINE: disteval self-improvement cycle")
-    print("=" * 72)
-    print()
-
-    for agent_name, model_name, dirs in AGENTS:
-        print(f"Running cycle for {agent_name}...")
-        try:
-            plan = run_self_improvement_cycle(
-                job_dirs=dirs,
-                agent_name=agent_name,
-                model_name=model_name,
-                output_path=f"wow_output/self_plan_{agent_name.replace(' ', '_').lower()}.json",
-            )
-            print(plan.summary())
-            print()
-        except Exception as e:
-            print(f"  [Error for {agent_name}: {e}]")
-            import traceback; traceback.print_exc()
-            print()
-
-    print("=" * 72)
-    print("  Detailed Codex cycle with all training pairs:")
-    print("=" * 72)
-    print()
-    try:
-        engine = SelfEngine.from_job_dirs(
-            job_dirs=["jobs/run_C/disteval-run-C"],
-            agent_name="Codex CLI",
-            model_name="openai/o4-mini",
+    if len(sys.argv) > 1:
+        run_self_improvement_cycle(
+            job_dirs=sys.argv[1:],
+            agent_name="agent",
+            model_name="unknown",
         )
-        plan = engine.run_cycle()
-        for item in plan.curriculum:
-            print(f"  Task: {item.task}  κ={item.consistency:.2f}  gap={item.gap:.3f}")
-            for p in item.training_pairs:
-                print(f"    Pair:  reinforce={p.reinforce_score:.2f} ({p.reinforce_traj_path[-30:]})")
-                print(f"           contrast= {p.contrast_score:.2f} ({p.contrast_traj_path[-30:]})")
-                print(f"           diverges at step {p.structural_divergence_step}")
-            print(f"    → {item.recommendation[:100]}")
-            print()
-    except Exception as e:
-        print(f"  [Error: {e}]")
-        import traceback; traceback.print_exc()
+    else:
+        print("Usage: python -m disteval.self_engine <job_dir> [<job_dir> ...]")

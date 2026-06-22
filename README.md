@@ -312,16 +312,3 @@ THEORY.md                 — mathematical argument for right-tail training
 pip install disteval[dev]
 pytest tests/ -v
 ```
-
----
-
-## Interactive demo
-
-```bash
-python disteval_gui.py     # web UI at http://localhost:9173
-```
-
-Seven-step guided story: from mean-only leaderboard → full distribution →
-inconsistency taxonomy → DPO pair extraction → training curriculum → live
-self-engine run → Monte Carlo proof (+249% vs random selection).
-Real data, three real agents, six real tasks.

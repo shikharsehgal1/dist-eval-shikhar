@@ -4,15 +4,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from disteval.environment_generator import EnvironmentGenerator, EnvironmentBundle
+from disteval.environment_generator import EnvironmentGenerator
 from disteval.environment_registry import EnvironmentRegistry
 from disteval.recursion_engine import (
     RecursionEngine,
     RecursionEngineConfig,
-    SubTaskDefinition,
     SubTaskGraph,
 )
-from disteval.right_tail import TaskOutcomeProfile, task_outcome_profile
+from disteval.right_tail import task_outcome_profile
 from disteval.training_sim import simulate_recursive_gains
 
 

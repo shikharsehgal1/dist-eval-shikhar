@@ -9,7 +9,6 @@ These tests cover:
   5. Integration with real job dirs
 """
 import os
-import json
 import tempfile
 import pytest
 import numpy as np
@@ -61,9 +60,12 @@ class TestMemoryEntry:
         tools = tools or ["write_file", "run_shell_command"]
         rec = make_trajectory_record(tools, score)
         # outcome_class
-        if score >= 0.75: cls = "high"
-        elif score >= 0.25: cls = "medium"
-        else: cls = "low"
+        if score >= 0.75:
+            cls = "high"
+        elif score >= 0.25:
+            cls = "medium"
+        else:
+            cls = "low"
         emb = np.array([1.0, 0.0, 0.5])
         norm = np.linalg.norm(emb)
         emb /= norm

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field, asdict
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Iterable, Optional
 
 import pandas as pd
 
@@ -126,7 +126,6 @@ class RecordStore:
 
     @classmethod
     def from_parquet(cls, path: str) -> "RecordStore":
-        import pyarrow.parquet as pq
         df = pd.read_parquet(path)
         store = cls()
         for _, row in df.iterrows():
