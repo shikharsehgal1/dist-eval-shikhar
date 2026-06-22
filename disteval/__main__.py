@@ -95,7 +95,8 @@ Use 'disteval <subcommand> --help' for more information on a specific command.
 def print_engine_help_and_exit() -> None:
     """Print engine subcommand help and exit."""
     help_text = """usage: disteval engine [-h] [--agent AGENT] [--model MODEL] [--tasks-dir TASKS_DIR]
-                        [--output OUTPUT] [--cycle CYCLE]
+                        [--output OUTPUT] [--cycle CYCLE] [--enable-recursion]
+                        [--max-depth MAX_DEPTH]
                         job_dirs [job_dirs ...]
 
 Run SelfEngine on Harbor job directories to generate improvement plans
@@ -111,6 +112,8 @@ optional arguments:
   --output OUTPUT, -o OUTPUT
                         Output path for the improvement plan JSON (default: improvement_plan.json)
   --cycle CYCLE         SelfEngine cycle number (default: 1)
+  --enable-recursion    Enable recursive sub-task decomposition (default: disabled)
+  --max-depth MAX_DEPTH Maximum recursion depth for sub-task decomposition (default: 3)
 """
     print(help_text)
     sys.exit(0)
@@ -210,21 +213,37 @@ def handle_engine(remaining_args: List[str]) -> None:
         default=1,
         help="SelfEngine cycle number (default: 1)"
     )
-    
+
+    parser.add_argument(
+        "--enable-recursion",
+        action="store_true",
+        default=False,
+        help="Enable recursive sub-task decomposition (default: disabled)"
+    )
+
+    parser.add_argument(
+        "--max-depth",
+        type=int,
+        default=3,
+        help="Maximum recursion depth for sub-task decomposition (default: 3)"
+    )
+
     args = parser.parse_args(remaining_args)
-    
+
     try:
         # Import SelfEngine (lazy import to avoid circular dependencies)
         from disteval.self_engine import SelfEngine
-        
+
         print(f"Running SelfEngine cycle {args.cycle} for agent {args.agent}...")
-        
+
         # Create SelfEngine from job directories
         engine = SelfEngine.from_job_dirs(
             args.job_dirs,
             agent_name=args.agent,
             model_name=args.model,
-            tasks_dir=args.tasks_dir
+            tasks_dir=args.tasks_dir,
+            enable_recursion=args.enable_recursion,
+            recursion_config={"max_depth": args.max_depth},
         )
         
         # Run the specified cycle

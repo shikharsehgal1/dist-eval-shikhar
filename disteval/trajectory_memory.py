@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import Any
 
 import numpy as np
@@ -47,6 +47,9 @@ class TrajectoryRecord:
     first_write_pos: int          # index of first write/exec; len(seq) if never
     n_exec: int
     n_search: int
+
+    # Recursive self-improvement extensions (optional, default-disabled)
+    sub_task_slices: list[tuple[int, int, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -299,6 +302,27 @@ class TrajectoryMemory:
         return self.retrieve(
             query_tool_sequence=None,
             query_task_description=task_description,
+            k=k,
+            outcome_filter="high",
+            prefer_recoverable=True,
+        )
+
+    def retrieve_for_sub_task(
+        self,
+        sub_task_description: str,
+        entry_tool_sequence: list[str],
+        k: int = 3,
+    ) -> list[RetrievalResult]:
+        """
+        Retrieve memories for a specific sub-task window.
+
+        Uses the tool sequence inside the sub-task window plus the sub-task
+        description (e.g., "medium-2::phase-2 Engineering groupby") to find
+        structurally similar successful demonstrations.
+        """
+        return self.retrieve(
+            query_tool_sequence=entry_tool_sequence,
+            query_task_description=sub_task_description,
             k=k,
             outcome_filter="high",
             prefer_recoverable=True,

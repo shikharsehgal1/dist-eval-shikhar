@@ -71,6 +71,10 @@ class TrajectoryRecord:
     tool_sequence: list[str]
     traj_path: str
 
+    # Recursive self-improvement extensions (optional, default-disabled)
+    entry_step: int = 0           # first tool-call index of the sub-task window
+    exit_step: int = -1          # last tool-call index of the sub-task window (-1 = full)
+
 
 @dataclass
 class PatternMatch:
@@ -85,6 +89,11 @@ class PatternMatch:
     similar_low: list[TrajectoryRecord]   # top-3 similar LOW past trajectories
     prefix_len: int
     features: TrajectoryFeatures
+
+    # Recursive self-improvement extensions (optional, default-disabled)
+    entry_step: int = 0           # sub-task window start
+    exit_step: int = -1          # sub-task window end
+    phase_tag: Optional[str] = None
 
 
 # ── Featurizer ───────────────────────────────────────────────────────────────
@@ -533,6 +542,100 @@ class TrajectoryMonitor:
         """Load a trajectory file and check at a specific step index."""
         steps = self.load_trajectory_steps(traj_path)
         return self.check(steps, prefix_n=at_step)
+
+    def find_phase_boundaries(
+        self,
+        traj_path: str,
+        min_confidence: float = 0.70,
+        max_boundaries: int = 5,
+    ) -> list[dict]:
+        """
+        Propose structural phase boundaries for a completed trajectory.
+
+        A boundary is a step index where the monitor's p_high crosses the
+        confidence threshold (>= min_confidence for high, <= 1-min_confidence for
+        low) or where the dominant tool category changes. This is a heuristic
+        approximation of RMDP entry/exit points.
+
+        Returns a list of dicts with keys:
+            step_index, tool_name, p_high, phase_tag, confidence
+        """
+        steps = self.load_trajectory_steps(traj_path)
+        sequence = self.featurizer.extract_tool_sequence(steps)
+        n = len(sequence)
+        if n == 0:
+            return []
+
+        boundaries = []
+        prev_tag = None
+        for i in range(1, n + 1):
+            match = self.check(steps, prefix_n=i)
+            tool = sequence[i - 1] if i <= len(sequence) else "unknown"
+            tag = self._phase_tag(tool)
+
+            # Boundary triggers
+            high_conf = match.p_high >= min_confidence
+            low_conf = match.p_high <= (1.0 - min_confidence)
+            tag_changed = tag != prev_tag and prev_tag is not None
+
+            if high_conf or low_conf or tag_changed:
+                boundaries.append({
+                    "step_index": i,
+                    "tool_name": tool,
+                    "p_high": match.p_high,
+                    "phase_tag": tag,
+                    "confidence": match.confidence,
+                })
+                prev_tag = tag
+            else:
+                prev_tag = tag
+
+            if len(boundaries) >= max_boundaries:
+                break
+
+        return boundaries
+
+    def _phase_tag(self, tool: str) -> str:
+        """Map a canonical tool to a coarse phase tag."""
+        if tool in ("write_file", "write_todos"):
+            return "write"
+        if tool in ("run_shell_command", "exec_command"):
+            return "exec"
+        if tool in ("read_file", "list_directory"):
+            return "read"
+        if tool == "search_tool":
+            return "search"
+        return "other"
+
+    def divergence_steps(
+        self,
+        high_traj_path: str,
+        low_traj_path: str,
+        min_confidence: float = 0.70,
+        max_boundaries: int = 5,
+    ) -> list[int]:
+        """
+        Return step indices where a high-scoring and low-scoring trajectory
+        first structurally diverge according to the monitor. Multiple divergence
+        points are returned for multi-phase tasks.
+        """
+        high_steps = self.load_trajectory_steps(high_traj_path)
+        low_steps = self.load_trajectory_steps(low_traj_path)
+        high_seq = self.featurizer.extract_tool_sequence(high_steps)
+        low_seq = self.featurizer.extract_tool_sequence(low_steps)
+        max_len = min(len(high_seq), len(low_seq), max_boundaries * 3)
+
+        divergences = []
+        for i in range(1, max_len + 1):
+            high_match = self.check(high_steps, prefix_n=i)
+            low_match = self.check(low_steps, prefix_n=i)
+            high_confident = high_match.p_high >= min_confidence
+            low_confident = low_match.p_high <= (1.0 - min_confidence)
+            if high_confident and low_confident:
+                divergences.append(i)
+                if len(divergences) >= max_boundaries:
+                    break
+        return divergences
 
 
 # ── Self-test ─────────────────────────────────────────────────────────────────

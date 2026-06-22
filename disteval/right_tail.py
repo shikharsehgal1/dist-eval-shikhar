@@ -131,6 +131,12 @@ class TaskOutcomeProfile:
     reinforce_idx: list[int] = field(default_factory=list)
     contrast_idx:  list[int] = field(default_factory=list)
 
+    # Recursive self-improvement extensions (optional, default-disabled)
+    parent_task: Optional[str] = None        # parent task if this is a sub-task
+    sub_task_depth: int = 0                  # recursion depth (0 = root task)
+    sub_task_profiles: list["TaskOutcomeProfile"] = field(default_factory=list)
+    recursive_gap: float = 0.0               # gap propagated from sub-task gaps
+
 
 @dataclass
 class RightTailReport:
@@ -157,6 +163,10 @@ class RightTailReport:
     # Ranked training targets
     priority_tasks: list[TaskOutcomeProfile]  # RECOVERABLE, sorted by gap desc
 
+    # Recursive self-improvement extensions (optional, default-disabled)
+    sub_task_profiles: dict[str, list[TaskOutcomeProfile]] = field(default_factory=dict)
+    recursive_gap: float = 0.0               # total gap propagated from sub-tasks
+
 
 # ── Core analysis ─────────────────────────────────────────────────────────────
 
@@ -166,6 +176,8 @@ def task_outcome_profile(
     model: str,
     difficulty: Optional[str] = None,
     reinforce_threshold: float = 0.9,   # fraction of q_star to count as "high"
+    parent_task: Optional[str] = None,
+    sub_task_depth: int = 0,
 ) -> TaskOutcomeProfile:
     """
     Compute the right-tail profile for one (agent, task) cell.
@@ -201,6 +213,8 @@ def task_outcome_profile(
         residuals=residuals,
         reinforce_idx=reinforce_idx,
         contrast_idx=contrast_idx,
+        parent_task=parent_task,
+        sub_task_depth=sub_task_depth,
     )
 
 

@@ -63,6 +63,14 @@ from .trajectory_loader import load_trajectory_records
 from .trajectory_monitor import TrajectoryMonitor
 from .trajectory_memory import TrajectoryMemory, RetrievalResult
 
+# Optional recursion engine. Import lazily to avoid a hard dependency cycle.
+try:
+    from .recursion_engine import RecursionEngine, SubTaskDefinition, SubTaskGraph
+except Exception:  # pragma: no cover - recursion engine may be unavailable during early import
+    RecursionEngine = None
+    SubTaskDefinition = None
+    SubTaskGraph = None
+
 
 # ── Output data structures ────────────────────────────────────────────────────
 
@@ -77,13 +85,20 @@ class TrainingPair:
     gap: float                     # reinforce_score - contrast_score
     structural_divergence_step: int  # step at which monitor prediction diverges
 
+    # Recursive self-improvement extensions (optional, default-disabled)
+    parent_task: Optional[str] = None
+    sub_task_depth: int = 0
+    entry_step: int = 0
+    exit_step: int = -1
+    call_stack: list[str] = field(default_factory=list)
+
 
 @dataclass
 class TaskImprovement:
     """Self-improvement plan for one RECOVERABLE task."""
     task: str
     difficulty: Optional[str]
-    kind: str                           # always "recoverable"
+    kind: str                           # always "recoverable" or "decomposed"
     current_q_star: float               # best score achieved so far
     current_q_bar: float                # mean score currently
     consistency: float                  # q_bar / q_star
@@ -98,6 +113,9 @@ class TaskImprovement:
     predicted_rounds_to_threshold: Optional[float] = None
 
     recommendation: str = ""           # human-readable action string
+
+    # Recursive self-improvement extensions (optional, default-disabled)
+    sub_tasks: list["TaskImprovement"] = field(default_factory=list)
 
 
 @dataclass
@@ -131,6 +149,12 @@ class SelfImprovementPlan:
     # Engine metadata
     job_dirs: list[str] = field(default_factory=list)
     n_trajectories_loaded: int = 0
+
+    # Recursive self-improvement extensions (optional, default-disabled)
+    recursion_enabled: bool = False
+    recursion_context: Optional[dict] = None
+    sub_task_graph: Optional[dict] = None
+    n_decomposed: int = 0
 
     def summary(self) -> str:
         """Human-readable summary string."""
@@ -168,6 +192,41 @@ class SelfImprovementPlan:
 
     def to_dict(self) -> dict:
         """Serialisable dict for JSON export."""
+        def _task_item_to_dict(t: TaskImprovement) -> dict:
+            return {
+                "task": t.task,
+                "difficulty": t.difficulty,
+                "kind": t.kind,
+                "current_q_star": t.current_q_star,
+                "current_q_bar": t.current_q_bar,
+                "consistency": t.consistency,
+                "gap": t.gap,
+                "priority_score": t.priority_score,
+                "predicted_gain": t.predicted_gain,
+                "predicted_gain_ci": list(t.predicted_gain_ci) if t.predicted_gain_ci else None,
+                "predicted_rounds_to_threshold": t.predicted_rounds_to_threshold,
+                "recommendation": t.recommendation,
+                "n_training_pairs": len(t.training_pairs),
+                "training_pairs": [
+                    {
+                        "reinforce_traj_path": p.reinforce_traj_path,
+                        "contrast_traj_path": p.contrast_traj_path,
+                        "reinforce_score": p.reinforce_score,
+                        "contrast_score": p.contrast_score,
+                        "gap": p.gap,
+                        "structural_divergence_step": p.structural_divergence_step,
+                        "parent_task": p.parent_task,
+                        "sub_task_depth": p.sub_task_depth,
+                        "entry_step": p.entry_step,
+                        "exit_step": p.exit_step,
+                        "call_stack": p.call_stack,
+                    }
+                    for p in t.training_pairs
+                ],
+                "n_sub_tasks": len(t.sub_tasks),
+                "sub_tasks": [_task_item_to_dict(st) for st in t.sub_tasks],
+            }
+
         return {
             "agent_name": self.agent_name,
             "model_name": self.model_name,
@@ -176,40 +235,16 @@ class SelfImprovementPlan:
             "n_solid": self.n_solid,
             "n_recoverable": self.n_recoverable,
             "n_stuck": self.n_stuck,
+            "n_decomposed": self.n_decomposed,
             "consistency_index": self.consistency_index,
             "recoverable_score_left": self.recoverable_score_left,
             "predicted_total_gain": self.predicted_total_gain,
             "cycle_complete": self.cycle_complete,
             "n_trajectories_loaded": self.n_trajectories_loaded,
-            "curriculum": [
-                {
-                    "task": t.task,
-                    "difficulty": t.difficulty,
-                    "kind": t.kind,
-                    "current_q_star": t.current_q_star,
-                    "current_q_bar": t.current_q_bar,
-                    "consistency": t.consistency,
-                    "gap": t.gap,
-                    "priority_score": t.priority_score,
-                    "predicted_gain": t.predicted_gain,
-                    "predicted_gain_ci": list(t.predicted_gain_ci) if t.predicted_gain_ci else None,
-                    "predicted_rounds_to_threshold": t.predicted_rounds_to_threshold,
-                    "recommendation": t.recommendation,
-                    "n_training_pairs": len(t.training_pairs),
-                    "training_pairs": [
-                        {
-                            "reinforce_traj_path": p.reinforce_traj_path,
-                            "contrast_traj_path": p.contrast_traj_path,
-                            "reinforce_score": p.reinforce_score,
-                            "contrast_score": p.contrast_score,
-                            "gap": p.gap,
-                            "structural_divergence_step": p.structural_divergence_step,
-                        }
-                        for p in t.training_pairs
-                    ],
-                }
-                for t in self.curriculum
-            ],
+            "recursion_enabled": self.recursion_enabled,
+            "recursion_context": self.recursion_context,
+            "sub_task_graph": self.sub_task_graph,
+            "curriculum": [_task_item_to_dict(t) for t in self.curriculum],
         }
 
     def save(self, path: str) -> None:
@@ -257,11 +292,15 @@ class SelfEngine:
         model_name: str,
         monitor: Optional[TrajectoryMonitor] = None,
         memory: Optional[TrajectoryMemory] = None,
+        recursion_engine: Optional[Any] = None,
+        enable_recursion: bool = False,
     ):
         self.store = store
         self.job_dirs = job_dirs
         self.agent_name = agent_name
         self.model_name = model_name
+        self.recursion_engine = recursion_engine
+        self.enable_recursion = enable_recursion and (recursion_engine is not None)
 
         # Load trajectory records (trajectory_monitor.TrajectoryRecord schema)
         self._traj_records = []
@@ -315,12 +354,17 @@ class SelfEngine:
         agent_name: str = "agent",
         model_name: str = "unknown",
         tasks_dir: str = "tasks",
+        enable_recursion: bool = False,
+        recursion_config: Optional[dict] = None,
     ) -> "SelfEngine":
         """
         Convenience constructor: load everything from Harbor job dirs.
 
         Finds the run directory within each job_dir automatically
         (handles both 'jobs/run_A' and 'jobs/run_A/disteval-run-A').
+
+        When enable_recursion=True, a RecursionEngine is instantiated and
+        attached to the SelfEngine. The recursion engine is default-disabled.
         """
         from .adapters.harbor_jobs import load_harbor_job
 
@@ -353,22 +397,43 @@ class SelfEngine:
             for rec in s._records:
                 merged.add(rec)
 
-        return cls(
+        # Build the base engine without recursion first.
+        engine = cls(
             store=merged,
             job_dirs=resolved_dirs,
             agent_name=agent_name,
             model_name=model_name,
         )
 
+        if enable_recursion and RecursionEngine is not None:
+            from .recursion_engine import RecursionEngineConfig
+            cfg = recursion_config or {}
+            recursion_engine = RecursionEngine(
+                monitor=engine.monitor,
+                memory=engine.memory,
+                agent_name=agent_name,
+                model_name=model_name,
+                tasks_dir=tasks_dir,
+                config=RecursionEngineConfig(**cfg),
+            )
+            engine.recursion_engine = recursion_engine
+            engine.enable_recursion = True
+
+        return engine
+
     def reload(self) -> None:
         """Reload all data from job dirs — call after external training step."""
         new = self.__class__.from_job_dirs(
-            self.job_dirs, self.agent_name, self.model_name
+            self.job_dirs,
+            self.agent_name,
+            self.model_name,
+            enable_recursion=self.enable_recursion,
         )
         self.store = new.store
         self._traj_records = new._traj_records
         self.monitor = new.monitor
         self.memory = new.memory
+        self.recursion_engine = new.recursion_engine
 
     # ── Core cycle ──────────────────────────────────────────────────────────
 
@@ -408,6 +473,22 @@ class SelfEngine:
         # Sort by priority_score descending (gap × (1-consistency))
         curriculum.sort(key=lambda x: x.priority_score, reverse=True)
 
+        # ── RECURSION (optional, default-disabled) ─────────────────────────
+        sub_task_graph = None
+        recursion_context = None
+        n_decomposed = 0
+        if self.enable_recursion and self.recursion_engine is not None:
+            sub_task_graph = self.recursion_engine.decompose(report, self._traj_records)
+            recursion_context = {
+                "enabled": True,
+                "max_depth": self.recursion_engine.config.max_depth,
+                "depth_reached": 0,
+                "terminated_early": [],
+            }
+            n_decomposed = len(sub_task_graph.sub_tasks)
+            # Attach sub-tasks to their parent TaskImprovement items.
+            self._attach_sub_tasks(curriculum, sub_task_graph)
+
         # ── STEP 5: SIMULATE (optional) ────────────────────────────────────
         self._attach_predicted_gains(curriculum, report)
 
@@ -431,6 +512,10 @@ class SelfEngine:
             cycle_complete=(report.n_recoverable == 0),
             job_dirs=self.job_dirs,
             n_trajectories_loaded=len(self._traj_records),
+            recursion_enabled=self.enable_recursion,
+            recursion_context=recursion_context,
+            sub_task_graph=sub_task_graph.to_dict() if sub_task_graph else None,
+            n_decomposed=n_decomposed,
         )
         return plan
 
@@ -620,6 +705,47 @@ class SelfEngine:
                     round(gain * 0.7, 4),
                     round(gain * 1.3, 4),
                 )
+
+    def _attach_sub_tasks(
+        self,
+        curriculum: list[TaskImprovement],
+        sub_task_graph: SubTaskGraph,
+    ) -> None:
+        """Attach decomposed sub-tasks to their parent TaskImprovement items."""
+        if not sub_task_graph:
+            return
+
+        parent_to_item: dict[str, TaskImprovement] = {}
+        for item in curriculum:
+            parent_to_item[item.task] = item
+
+        for sub_task in sub_task_graph.sub_tasks:
+            parent = sub_task.parent_task
+            if parent not in parent_to_item:
+                continue
+            parent_item = parent_to_item[parent]
+            profile = sub_task_graph.profiles.get(sub_task.sub_task_id)
+            if profile is None:
+                continue
+
+            sub_item = TaskImprovement(
+                task=sub_task.sub_task_id,
+                difficulty=parent_item.difficulty,
+                kind="decomposed",
+                current_q_star=sub_task.estimated_q_star,
+                current_q_bar=sub_task.estimated_q_bar,
+                consistency=profile.consistency,
+                gap=profile.gap,
+                priority_score=profile.gap * (1.0 - profile.consistency),
+                training_pairs=[],
+                memory_results=[],
+                recommendation=(
+                    f"Decomposed sub-task: {sub_task.instruction} "
+                    f"(entry={sub_task.entry_step}, exit={sub_task.exit_step}, "
+                    f"reward_delta={sub_task.reward_delta:.3f})"
+                ),
+            )
+            parent_item.sub_tasks.append(sub_item)
 
     def _try_load_sim_results(self) -> Optional[dict]:
         """Load training_sim JSON results if available."""
