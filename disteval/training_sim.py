@@ -1127,6 +1127,104 @@ def save_score_gain_chart(results: list[AgentResult], out_path: str) -> None:
     print(f"  Chart saved → {out_path}")
 
 
+# ── Recursive self-improvement simulation (optional) ──────────────────────────
+
+def simulate_recursive_gains(
+    sub_task_scores: dict[str, np.ndarray],
+    sub_task_kinds: dict[str, str],
+    strategy: str = "disteval_right_tail",
+    alpha: float = ALPHA,
+    max_rounds: int = MAX_ROUNDS,
+) -> dict[str, np.ndarray]:
+    """
+    Simulate multi-round training on decomposed sub-task environments.
+
+    Parameters
+    ----------
+    sub_task_scores : dict[str, np.ndarray]
+        Map of sub_task_id -> score array across attempts.
+    sub_task_kinds : dict[str, str]
+        Map of sub_task_id -> "solid" | "recoverable" | "stuck".
+    strategy : str
+        "disteval_right_tail" | "mean_reward" | "random".
+    alpha : float
+        Learning rate.
+    max_rounds : int
+        Maximum training rounds.
+
+    Returns
+    -------
+    dict[str, np.ndarray]
+        Updated sub-task score arrays after simulated training.
+    """
+    rng = np.random.default_rng(SEED)
+    task_scores = {t: s.copy() for t, s in sub_task_scores.items()}
+    k = max(1, len(task_scores) // 2)
+
+    for _ in range(max_rounds):
+        selected_by_task: dict[str, np.ndarray] = {}
+
+        if strategy == "disteval_right_tail":
+            recov = sorted(
+                [t for t, kind in sub_task_kinds.items() if kind == "recoverable"],
+                key=lambda t: float(task_scores[t].max()) - float(task_scores[t].mean()),
+                reverse=True,
+            )
+            n_selected = 0
+            for task in recov:
+                if n_selected >= k:
+                    break
+                scores = task_scores[task]
+                q_star_local = float(scores.max())
+                if q_star_local == 0:
+                    continue
+                thr = 0.9 * q_star_local
+                reinforce = scores[scores >= thr]
+                contrast = scores[scores < thr]
+                picks = np.concatenate([reinforce, contrast])
+                picks = picks[: k - n_selected]
+                if len(picks) > 0:
+                    selected_by_task[task] = picks
+                    n_selected += len(picks)
+
+        elif strategy == "mean_reward":
+            flat_tasks = []
+            flat_scores = []
+            for t, s in task_scores.items():
+                for sc in s:
+                    flat_tasks.append(t)
+                    flat_scores.append(sc)
+            flat_scores_arr = np.array(flat_scores)
+            top_idx = np.argsort(flat_scores_arr)[::-1][:k]
+            for i in top_idx:
+                t = flat_tasks[i]
+                selected_by_task.setdefault(t, []).append(flat_scores_arr[i])
+            selected_by_task = {t: np.array(v) for t, v in selected_by_task.items()}
+
+        elif strategy == "random":
+            flat_tasks = []
+            flat_scores = []
+            for t, s in task_scores.items():
+                for sc in s:
+                    flat_tasks.append(t)
+                    flat_scores.append(sc)
+            n_all = len(flat_scores)
+            sample_k = min(k, n_all)
+            pick_idx = rng.choice(n_all, size=sample_k, replace=False)
+            flat_scores_arr = np.array(flat_scores)
+            for i in pick_idx:
+                t = flat_tasks[i]
+                selected_by_task.setdefault(t, []).append(flat_scores_arr[i])
+            selected_by_task = {t: np.array(v) for t, v in selected_by_task.items()}
+
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
+
+        task_scores = _fast_apply_improvement(task_scores, sub_task_kinds, selected_by_task)
+
+    return task_scores
+
+
 # ── Main entry point ──────────────────────────────────────────────────────────
 
 def main() -> None:
