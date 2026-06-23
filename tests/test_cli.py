@@ -1,4 +1,5 @@
 """Tests for disteval.__main__ CLI dispatcher."""
+import json
 import os
 import sys
 import tempfile
@@ -101,3 +102,40 @@ class TestEngineSubcommand:
         finally:
             if os.path.exists(out_path):
                 os.unlink(out_path)
+
+
+class TestTrainSubcommand:
+    def test_train_noop_runs(self, capsys):
+        plan = {
+            "agent_name": "a",
+            "model_name": "m",
+            "cycle": 1,
+            "curriculum": [
+                {
+                    "task": "t1",
+                    "current_q_star": 0.8,
+                    "predicted_gain": 0.1,
+                    "training_pairs": [
+                        {
+                            "reinforce_traj_path": "/tmp/r.json",
+                            "contrast_traj_path": "/tmp/c.json",
+                            "reinforce_score": 0.8,
+                            "contrast_score": 0.4,
+                        }
+                    ],
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as d:
+            plan_path = os.path.join(d, "plan.json")
+            with open(plan_path, "w") as f:
+                json.dump(plan, f)
+            sys.argv = [
+                "disteval", "train",
+                "--curriculum", plan_path,
+                "--trainer", "noop",
+                "--output", os.path.join(d, "out"),
+            ]
+            main()
+            captured = capsys.readouterr()
+            assert "t1" in captured.out

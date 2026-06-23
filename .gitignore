@@ -32,6 +32,8 @@ Thumbs.db
 # disteval outputs (generated, not source)
 disteval_output*/
 wow_output/
+out/
+disteval_train_output/
 
 # demo artifacts removed from source tree
 demo.py

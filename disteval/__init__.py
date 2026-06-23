@@ -19,6 +19,8 @@ from . import bootstrap, compare, failure, metrics, repeat, right_tail
 from . import trajectory_monitor, trajectory_memory
 from . import self_engine
 from . import recursion_engine, environment_generator, environment_registry, distributed_eval
+from . import logging, training_harness
+from . import adapters
 from .records import EpisodeRecord, RecordStore
 
 __all__ = [
@@ -26,4 +28,5 @@ __all__ = [
     "metrics", "bootstrap", "compare", "failure", "repeat", "right_tail",
     "trajectory_monitor", "trajectory_memory", "self_engine",
     "recursion_engine", "environment_generator", "environment_registry", "distributed_eval",
+    "logging", "training_harness", "adapters",
 ]

@@ -9,6 +9,59 @@ from disteval.distributed_eval import (
 )
 
 
+# ---------------------------------------------------------------------------
+# Consensus graph aggregation
+# ---------------------------------------------------------------------------
+
+class TestConsensusGraph:
+    def test_ingest_and_build_consensus(self):
+        pool = DistributedEvalPool()
+        graph = {
+            "sub_tasks": [
+                {
+                    "sub_task_id": "t1::p0",
+                    "parent_task": "t1",
+                    "phase_tag": "explore",
+                    "entry_step": 3,
+                    "exit_step": 8,
+                    "source": "structural_divergence",
+                    "confidence": 0.8,
+                }
+            ]
+        }
+        pool.ingest("agent-A", {"n_tasks": 1}, graph)
+        pool.ingest("agent-B", {"n_tasks": 1}, graph)
+        consensus = pool.build_consensus_graph(min_votes=2)
+        assert len(consensus) == 1
+        assert consensus[0].parent_task == "t1"
+        assert consensus[0].phase_tag == "explore"
+        assert consensus[0].n_votes == 2
+        assert consensus[0].mean_confidence == pytest.approx(0.8)
+
+    def test_consensus_requires_min_votes(self):
+        pool = DistributedEvalPool()
+        graph = {
+            "sub_tasks": [
+                {"parent_task": "t1", "phase_tag": "explore", "entry_step": 3, "exit_step": 8}
+            ]
+        }
+        pool.ingest("agent-A", {}, graph)
+        consensus = pool.build_consensus_graph(min_votes=2)
+        assert consensus == []
+
+    def test_boundary_tolerance_clusters(self):
+        pool = DistributedEvalPool()
+        pool.ingest("agent-A", {}, {
+            "sub_tasks": [{"parent_task": "t1", "phase_tag": "explore", "entry_step": 3, "exit_step": 8}]
+        })
+        pool.ingest("agent-B", {}, {
+            "sub_tasks": [{"parent_task": "t1", "phase_tag": "explore", "entry_step": 4, "exit_step": 9}]
+        })
+        consensus = pool.build_consensus_graph(min_votes=2, entry_tolerance=2)
+        assert len(consensus) == 1
+        assert consensus[0].entry_step == pytest.approx(3.5, abs=1.0)
+
+
 @pytest.fixture
 def pool() -> DistributedEvalPool:
     p = DistributedEvalPool()

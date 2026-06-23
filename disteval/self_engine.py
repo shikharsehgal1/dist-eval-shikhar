@@ -304,6 +304,7 @@ class SelfEngine:
         recursion_engine: Optional[Any] = None,
         enable_recursion: bool = False,
         tasks_dir: str = "tasks",
+        logger: Optional[Any] = None,
     ):
         self.store = store
         self.job_dirs = job_dirs
@@ -312,6 +313,7 @@ class SelfEngine:
         self.tasks_dir = tasks_dir
         self.recursion_engine = recursion_engine
         self.enable_recursion = enable_recursion and (recursion_engine is not None)
+        self.logger = logger
 
         # Load trajectory records (trajectory_monitor.TrajectoryRecord schema)
         self._traj_records = []
@@ -369,6 +371,7 @@ class SelfEngine:
         tasks_dir: str = "tasks",
         enable_recursion: bool = False,
         recursion_config: Optional[dict] = None,
+        logger: Optional[Any] = None,
     ) -> "SelfEngine":
         """
         Convenience constructor: load everything from Harbor job dirs.
@@ -418,6 +421,7 @@ class SelfEngine:
             agent_name=agent_name,
             model_name=model_name,
             tasks_dir=tasks_dir,
+            logger=logger,
         )
 
         if enable_recursion and RecursionEngine is not None:
@@ -480,11 +484,32 @@ class SelfEngine:
             if report.sum_q_star > 0 else 1.0
         )
 
+        # Observability: start cycle log
+        if self.logger is not None:
+            self.logger.log_cycle_start(cycle, report.n_tasks, kappa)
+            self.logger.log_taxonomy(
+                n_solid=report.n_solid,
+                n_recoverable=report.n_recoverable,
+                n_stuck=report.n_stuck,
+                recoverable_score_left=report.recoverable_score_left,
+            )
+
         # ── STEP 2 + 3 + 4: Build curriculum ──────────────────────────────
         curriculum = []
         for profile in report.priority_tasks:   # already RECOVERABLE, sorted by gap
             task_item = self._build_task_improvement(profile)
             curriculum.append(task_item)
+            if self.logger is not None:
+                self.logger.log_task_improvement(
+                    task=profile.task,
+                    kind=profile.kind,
+                    gap=profile.gap,
+                    priority_score=task_item.priority_score,
+                    difficulty=profile.difficulty,
+                    n_training_pairs=len(task_item.training_pairs),
+                    divergence_step=task_item.divergence_step,
+                    predicted_gain=task_item.predicted_gain,
+                )
 
         # Sort by priority_score descending (gap × (1-consistency))
         curriculum.sort(key=lambda x: x.priority_score, reverse=True)
@@ -512,6 +537,26 @@ class SelfEngine:
             sum(t.predicted_gain for t in curriculum if t.predicted_gain is not None)
             or None
         )
+
+        # Detect plateau: κ improved by < 1% since last cycle
+        prev_kappa = getattr(self, "_last_kappa", None)
+        delta_kappa = (kappa - prev_kappa) if prev_kappa is not None else 0.0
+        plateau_detected = bool(
+            prev_kappa is not None and abs(delta_kappa) < 0.01
+        )
+        self._last_kappa = kappa
+
+        if self.logger is not None:
+            self.logger.log_cycle_end(
+                cycle=cycle,
+                kappa_new=kappa,
+                delta_kappa=delta_kappa,
+                plateau_detected=plateau_detected,
+                predicted_total_gain=predicted_total,
+                cycle_complete=(report.n_recoverable == 0),
+                recursion_enabled=self.enable_recursion,
+                n_decomposed=n_decomposed,
+            )
 
         plan = SelfImprovementPlan(
             agent_name=self.agent_name,

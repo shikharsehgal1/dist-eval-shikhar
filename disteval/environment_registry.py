@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Optional
 
 from .environment_generator import EnvironmentBundle, GenEnv
@@ -162,6 +163,64 @@ class EnvironmentRegistry:
             source=item.get("source", "checkpoint"),
             metadata=item.get("metadata", {}),
         )
+
+    # -- lifecycle management ------------------------------------------------
+    def retire(self, task_id: str, reason: str = "completed") -> bool:
+        """Mark a GenEnv as retired (e.g., SOLID sub-task no longer needs training).
+
+        Returns True if the task existed and was retired.
+        """
+        env = self.environments.get(task_id)
+        if env is None:
+            return False
+        env.metadata["status"] = "retired"
+        env.metadata["retired_reason"] = reason
+        env.metadata["retired_at"] = datetime.now(timezone.utc).isoformat()
+        return True
+
+    def recompute_status(self, task_id: str, profile: dict) -> bool:
+        """Update an environment's classification from a right-tail profile.
+
+        ``profile`` should be a dict with at least a ``kind`` key whose value is
+        one of ``solid``, ``recoverable``, or ``stuck``.
+        """
+        env = self.environments.get(task_id)
+        if env is None:
+            return False
+        kind = profile.get("kind", "unknown")
+        env.metadata["status"] = kind
+        env.metadata["last_profile"] = profile
+        env.metadata["profiled_at"] = datetime.now(timezone.utc).isoformat()
+        return True
+
+    def invalidate_by_boundary_hash(self, boundary_hash: str) -> list[str]:
+        """Remove environments whose boundary hash matches (boundary drift).
+
+        Returns the list of removed task_ids.
+        """
+        removed = []
+        for task_id, env in list(self.environments.items()):
+            if env.metadata.get("boundary_hash") == boundary_hash:
+                self.unregister(task_id)
+                removed.append(task_id)
+        return removed
+
+    def export_curriculum(self, output_path: str) -> dict:
+        """Export active (non-retired) environments as a training curriculum.
+
+        Returns the curriculum dict and writes it to ``output_path``.
+        """
+        active = [env for env in self.environments.values()
+                  if env.metadata.get("status") != "retired"]
+        curriculum = {
+            "n_active": len(active),
+            "n_retired": len(self.environments) - len(active),
+            "environments": [env.to_dict() for env in active],
+        }
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)) or ".", exist_ok=True)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(curriculum, f, indent=2)
+        return curriculum
 
     def __len__(self) -> int:
         return len(self.environments)

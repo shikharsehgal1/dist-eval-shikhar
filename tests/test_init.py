@@ -28,6 +28,12 @@ def test_public_api_exports_recursive_modules():
     assert hasattr(disteval, "distributed_eval")
 
 
+def test_public_api_exports_new_modules():
+    assert hasattr(disteval, "logging")
+    assert hasattr(disteval, "training_harness")
+    assert hasattr(disteval, "adapters")
+
+
 def test_all_is_complete():
     for name in disteval.__all__:
         assert hasattr(disteval, name)

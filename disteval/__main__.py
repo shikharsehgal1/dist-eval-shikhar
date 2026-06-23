@@ -58,6 +58,8 @@ def main() -> None:
         handle_sim(remaining_args)
     elif subcommand == "engine":
         handle_engine(remaining_args)
+    elif subcommand == "train":
+        handle_train(remaining_args)
     else:
         print(f"Unknown subcommand: {subcommand}", file=sys.stderr)
         print_help_and_exit(error=True)
@@ -65,12 +67,12 @@ def main() -> None:
 
 def print_help_and_exit(error: bool = False) -> None:
     """Print main help message and exit."""
-    help_text = """usage: disteval [-h] {report,compare,sim,engine} ...
+    help_text = """usage: disteval [-h] {report,compare,sim,engine,train} ...
 
 Distribution-first evaluation and self-improvement for long-horizon AI agents
 
 positional arguments:
-  {report,compare,sim,engine}
+  {report,compare,sim,engine,train}
                         Subcommand to run
 
 optional arguments:
@@ -79,8 +81,9 @@ optional arguments:
 Available subcommands:
   report    Generate evaluation reports
   compare   Generate comparison reports
-  sim       Run training simulations  
+  sim       Run training simulations
   engine    Run SelfEngine on Harbor job directories
+  train     Train a policy from a SelfImprovementPlan using a DPO trainer
 
 Use 'disteval <subcommand> --help' for more information on a specific command.
 """
@@ -137,6 +140,26 @@ def print_sim_help_and_exit() -> None:
     sys.exit(0)
 
 
+def print_train_help_and_exit() -> None:
+    """Print train subcommand help and exit."""
+    help_text = """usage: disteval train [-h] --curriculum CURRICULUM --trainer {noop,simulated,trl,axolotl}
+                      [--output OUTPUT]
+
+Train a policy from a SelfImprovementPlan using a DPO trainer
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --curriculum CURRICULUM
+                        Path to a SelfImprovementPlan JSON file
+  --trainer {noop,simulated,trl,axolotl}
+                        Trainer backend to use
+  --output OUTPUT, -o OUTPUT
+                        Output directory for the trained policy artifacts
+"""
+    print(help_text)
+    sys.exit(0)
+
+
 def handle_report(remaining_args: List[str]) -> None:
     """Delegate to disteval.report.main(), passing through all args."""
     sys.argv = ["disteval-report"] + remaining_args
@@ -167,6 +190,68 @@ def handle_sim(remaining_args: List[str]) -> None:
         sim_main()
     except ImportError as e:
         print(f"Error importing training_sim module: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def handle_train(remaining_args: List[str]) -> None:
+    """Handle the 'train' subcommand for running a DPO trainer on a curriculum."""
+    parser = argparse.ArgumentParser(
+        prog="disteval train",
+        description="Train a policy from a SelfImprovementPlan using a DPO trainer",
+    )
+    parser.add_argument(
+        "--curriculum",
+        required=True,
+        help="Path to a SelfImprovementPlan JSON file",
+    )
+    parser.add_argument(
+        "--trainer",
+        choices=["noop", "simulated", "trl", "axolotl"],
+        default="noop",
+        help="Trainer backend to use",
+    )
+    parser.add_argument(
+        "--output", "-o",
+        default="disteval_train_output",
+        help="Output directory for the trained policy artifacts",
+    )
+    parser.add_argument(
+        "--model",
+        default="model",
+        help="Base model name for trl/axolotl trainers",
+    )
+    args = parser.parse_args(remaining_args)
+
+    try:
+        with open(args.curriculum, "r", encoding="utf-8") as f:
+            import json
+            curriculum = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"Error loading curriculum: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        from disteval.training_harness import (
+            NoOpTrainer,
+            SimulatedTrainer,
+            TRLReferenceTrainer,
+            AxolotlReferenceTrainer,
+            run_training,
+        )
+        if args.trainer == "noop":
+            trainer = NoOpTrainer()
+        elif args.trainer == "simulated":
+            trainer = SimulatedTrainer()
+        elif args.trainer == "trl":
+            trainer = TRLReferenceTrainer(args.model)
+        else:
+            trainer = AxolotlReferenceTrainer(args.model)
+        scores = run_training(curriculum, trainer, args.output)
+        print("Training complete. Improved scores:")
+        for task, score in scores.items():
+            print(f"  {task}: {score:.3f}")
+    except Exception as e:
+        print(f"Error running trainer: {e}", file=sys.stderr)
         sys.exit(1)
 
 

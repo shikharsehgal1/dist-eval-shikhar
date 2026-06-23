@@ -32,6 +32,63 @@ import numpy as np
 
 
 @dataclass
+class BoundaryVariant:
+    """One agent's proposed boundary for a parent task, with a confidence score."""
+
+    parent_task: str
+    phase_tag: str
+    entry_step: int
+    exit_step: int
+    agent_name: str
+    confidence: float = 0.0
+    source: str = ""
+    metadata: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "parent_task": self.parent_task,
+            "phase_tag": self.phase_tag,
+            "entry_step": self.entry_step,
+            "exit_step": self.exit_step,
+            "agent_name": self.agent_name,
+            "confidence": self.confidence,
+            "source": self.source,
+            "metadata": self.metadata,
+        }
+
+
+@dataclass
+class ConsensusNode:
+    """Consensus boundary derived from multiple agent boundary variants."""
+
+    parent_task: str
+    phase_tag: str
+    entry_step: int
+    exit_step: int
+    n_votes: int
+    total_confidence: float
+    agent_votes: list[str]
+    sources: list[str]
+
+    @property
+    def mean_confidence(self) -> float:
+        return self.total_confidence / self.n_votes if self.n_votes > 0 else 0.0
+
+    def to_dict(self) -> dict:
+        return {
+            "parent_task": self.parent_task,
+            "phase_tag": self.phase_tag,
+            "entry_step": self.entry_step,
+            "exit_step": self.exit_step,
+            "n_votes": self.n_votes,
+            "mean_confidence": self.mean_confidence,
+            "total_confidence": self.total_confidence,
+            "agent_votes": self.agent_votes,
+            "sources": self.sources,
+        }
+
+
+@dataclass
 class DistributedEvalRecord:
     """One agent's outcome on one task."""
 
@@ -131,6 +188,8 @@ class DistributedEvalPool:
     def __init__(self) -> None:
         self.records: list[DistributedEvalRecord] = []
         self._task_records: dict[str, list[DistributedEvalRecord]] = {}
+        self._boundary_variants: list[BoundaryVariant] = []
+        self._sub_task_graphs: dict[str, dict] = {}
 
     def add(self, record: DistributedEvalRecord) -> None:
         """Add a record to the pool."""
@@ -165,6 +224,89 @@ class DistributedEvalPool:
                     failure_mode=row.get("failure_mode"),
                 )
             )
+
+    def ingest(
+        self,
+        agent_name: str,
+        report: dict,
+        graph: dict,
+        job_dir: Optional[str] = None,
+    ) -> None:
+        """Ingest one agent's recursive decomposition into the pool.
+
+        ``report`` is expected to be a dict with at least the right-tail keys
+        (e.g. produced by right_tail_analysis().to_dict()). ``graph`` is the
+        agent's SubTaskGraph serialisation (e.g. from RecursionEngine).
+        """
+        self._sub_task_graphs[agent_name] = {
+            "report": report,
+            "graph": graph,
+            "job_dir": job_dir,
+        }
+        for sub in graph.get("sub_tasks", []):
+            self._boundary_variants.append(
+                BoundaryVariant(
+                    parent_task=sub.get("parent_task", ""),
+                    phase_tag=sub.get("phase_tag", ""),
+                    entry_step=int(sub.get("entry_step", 0)),
+                    exit_step=int(sub.get("exit_step", 0) or sub.get("entry_step", 0)),
+                    agent_name=agent_name,
+                    confidence=float(sub.get("confidence", 0.5)),
+                    source=sub.get("source", ""),
+                    metadata={"sub_task_id": sub.get("sub_task_id", ""), "job_dir": job_dir},
+                )
+            )
+
+    def build_consensus_graph(
+        self,
+        min_votes: int = 2,
+        entry_tolerance: int = 2,
+    ) -> list[ConsensusNode]:
+        """Build consensus boundaries from ingested sub-task graphs.
+
+        Boundaries are grouped by (parent_task, phase_tag) and then clustered by
+        entry_step within ``entry_tolerance``. A consensus node requires at
+        least ``min_votes`` agents.
+        """
+        from collections import defaultdict
+
+        grouped: dict[tuple[str, str], list[BoundaryVariant]] = defaultdict(list)
+        for v in self._boundary_variants:
+            grouped[(v.parent_task, v.phase_tag)].append(v)
+
+        consensus: list[ConsensusNode] = []
+        for (parent, phase), variants in grouped.items():
+            # Cluster by entry_step using tolerance
+            clusters: list[list[BoundaryVariant]] = []
+            for v in sorted(variants, key=lambda x: x.entry_step):
+                placed = False
+                for cluster in clusters:
+                    if abs(cluster[0].entry_step - v.entry_step) <= entry_tolerance:
+                        cluster.append(v)
+                        placed = True
+                        break
+                if not placed:
+                    clusters.append([v])
+
+            for cluster in clusters:
+                if len(cluster) < min_votes:
+                    continue
+                entry = int(np.median([v.entry_step for v in cluster]))
+                exit_ = int(np.median([v.exit_step for v in cluster]))
+                consensus.append(
+                    ConsensusNode(
+                        parent_task=parent,
+                        phase_tag=phase,
+                        entry_step=entry,
+                        exit_step=exit_,
+                        n_votes=len(cluster),
+                        total_confidence=sum(v.confidence for v in cluster),
+                        agent_votes=[v.agent_name for v in cluster],
+                        sources=[v.source for v in cluster],
+                    )
+                )
+
+        return sorted(consensus, key=lambda n: (-n.n_votes, -n.mean_confidence))
 
     def tasks(self) -> list[str]:
         """Return all tasks with at least one record."""
