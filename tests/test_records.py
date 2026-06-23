@@ -225,6 +225,30 @@ class TestRecordStoreSlice:
         sub = store.slice(run_id="run1")
         assert len(sub) == 3
 
+    def test_filter_by_predicate(self, store):
+        sub = store.filter(lambda r: r.score >= 0.75)
+        assert len(sub) == 2
+
+    def test_query_by_score_range(self, store):
+        sub = store.query(score_min=0.5, score_max=1.0)
+        assert len(sub) == 3
+
+    def test_query_by_success_and_model(self, store):
+        sub = store.query(success=True, models=["A"])
+        assert len(sub) == 1
+        assert sub._records[0].task == "t1"
+
+    def test_query_by_strata_list(self, store):
+        sub = store.query(difficulty=["hard"])
+        assert len(sub) == 1
+        assert sub._records[0].task == "t2"
+
+    def test_group_by_task(self, store):
+        groups = store.group_by("task")
+        assert len(groups) == 2
+        assert len(groups[("t1",)]) == 2
+        assert len(groups[("t2",)]) == 1
+
 
 # ---------------------------------------------------------------------------
 # RecordStore – Parquet round-trip

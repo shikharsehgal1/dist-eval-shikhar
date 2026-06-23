@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field, asdict
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 import pandas as pd
 
@@ -102,6 +102,67 @@ class RecordStore:
             return True
 
         return RecordStore([r for r in self._records if keep(r)])
+
+    def filter(self, predicate: Callable[[EpisodeRecord], bool]) -> "RecordStore":
+        """Return a sub-store filtered by an arbitrary predicate.
+
+        e.g. store.filter(lambda r: r.score >= 0.5 and r.success)
+        """
+        return RecordStore([r for r in self._records if predicate(r)])
+
+    def query(
+        self,
+        *,
+        score_min: Optional[float] = None,
+        score_max: Optional[float] = None,
+        success: Optional[bool] = None,
+        models: Optional[list[str]] = None,
+        tasks: Optional[list[str]] = None,
+        **strata: Any,
+    ) -> "RecordStore":
+        """Flexible query by ranges, lists, and exact strata matches.
+
+        e.g. store.query(score_min=0.5, success=True, difficulty=["easy", "medium"])
+        """
+        def keep(r: EpisodeRecord) -> bool:
+            if score_min is not None and r.score < score_min:
+                return False
+            if score_max is not None and r.score > score_max:
+                return False
+            if success is not None and r.success != success:
+                return False
+            if models is not None and r.model not in models:
+                return False
+            if tasks is not None and r.task not in tasks:
+                return False
+            for k, want in strata.items():
+                val = r.strata.get(k)
+                if isinstance(want, (list, tuple, set)):
+                    if val not in want:
+                        return False
+                elif val != want:
+                    return False
+            return True
+
+        return RecordStore([r for r in self._records if keep(r)])
+
+    def group_by(self, *cols: str) -> dict[tuple, "RecordStore"]:
+        """Group records by one or more identity/strata columns.
+
+        Columns can be identity fields (model, task, run_id) or strata keys.
+        Returns {group_key: RecordStore}.
+        """
+        groups: dict[tuple, list[EpisodeRecord]] = {}
+        for r in self._records:
+            key = []
+            for c in cols:
+                if c in ("model", "task", "run_id"):
+                    key.append(getattr(r, c))
+                else:
+                    key.append(r.strata.get(c))
+            key_t = tuple(key)
+            groups.setdefault(key_t, []).append(r)
+        return {k: RecordStore(v) for k, v in groups.items()}
 
     def scores(self) -> "pd.Series":
         return self.df()["score"]

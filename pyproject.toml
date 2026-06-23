@@ -49,3 +49,24 @@ disteval-sim = "disteval.training_sim:main"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["disteval*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "integration: tests that touch external frameworks or filesystem fixtures",
+    "slow: tests that take more than a few seconds",
+    "requires_harbor: tests that require real Harbor job directories",
+]
+
+[tool.coverage.run]
+source = ["disteval"]
+omit = ["*/tests/*", "*/test_*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]

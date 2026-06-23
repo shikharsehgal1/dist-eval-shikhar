@@ -18,10 +18,12 @@ the landscape review found missing everywhere:
 from . import bootstrap, compare, failure, metrics, repeat, right_tail
 from . import trajectory_monitor, trajectory_memory
 from . import self_engine
+from . import recursion_engine, environment_generator, environment_registry, distributed_eval
 from .records import EpisodeRecord, RecordStore
 
 __all__ = [
     "EpisodeRecord", "RecordStore",
     "metrics", "bootstrap", "compare", "failure", "repeat", "right_tail",
     "trajectory_monitor", "trajectory_memory", "self_engine",
+    "recursion_engine", "environment_generator", "environment_registry", "distributed_eval",
 ]

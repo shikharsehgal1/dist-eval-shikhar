@@ -9,6 +9,17 @@ import numpy as np
 from scipy import stats
 
 
+__all__ = [
+    "wasserstein",
+    "ks",
+    "prob_improvement",
+    "stochastic_dominance",
+    "effect_size",
+    "mann_whitney_u",
+    "compare_distributions",
+]
+
+
 def wasserstein(a: np.ndarray, b: np.ndarray) -> float:
     """Earth-mover distance: aggregate displacement between two outcome distributions.
 
@@ -75,4 +86,48 @@ def stochastic_dominance(a: np.ndarray, b: np.ndarray, grid: int = 200, tol: flo
         "FSD_B_dominates_A": fsd_b_over_a,
         "SSD_A_dominates_B": ssd_a_over_b,
         "SSD_B_dominates_A": ssd_b_over_a,
+    }
+
+
+def effect_size(a: np.ndarray, b: np.ndarray) -> float:
+    """Cohen's d: standardized mean difference between two outcome distributions.
+
+    A rule-of-thumb scale: |d| < 0.2 negligible, 0.2-0.5 small, 0.5-0.8 medium,
+    > 0.8 large. Useful alongside prob_improvement to quantify magnitude.
+    """
+    a = np.asarray(a, float)
+    b = np.asarray(b, float)
+    pooled_std = np.sqrt((a.std(ddof=1) ** 2 + b.std(ddof=1) ** 2) / 2)
+    if pooled_std == 0:
+        return 0.0
+    return float((a.mean() - b.mean()) / pooled_std)
+
+
+def mann_whitney_u(a: np.ndarray, b: np.ndarray) -> dict:
+    """Mann-Whitney U test: non-parametric test for stochastic ordering.
+
+    Returns the U statistic and two-sided p-value. A small p-value means the
+    distributions are unlikely to be identical. Unlike `prob_improvement`, this
+    provides a significance level for P(A > B).
+    """
+    a = np.asarray(a, float)
+    b = np.asarray(b, float)
+    res = stats.mannwhitneyu(a, b, alternative="two-sided")
+    return {"U": float(res.statistic), "p": float(res.pvalue),
+            "prob_A_greater_B": prob_improvement(a, b)}
+
+
+def compare_distributions(a: np.ndarray, b: np.ndarray) -> dict:
+    """All-in-one comparison of two outcome distributions.
+
+    Returns a single dict with Wasserstein, KS, prob_improvement, stochastic
+    dominance, effect size, and Mann-Whitney U. Useful for agent leaderboards.
+    """
+    return {
+        "wasserstein": wasserstein(a, b),
+        "ks": ks(a, b),
+        "prob_improvement": prob_improvement(a, b),
+        "stochastic_dominance": stochastic_dominance(a, b),
+        "effect_size": effect_size(a, b),
+        "mann_whitney_u": mann_whitney_u(a, b),
     }

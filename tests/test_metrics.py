@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from disteval.metrics import iqm, cvar, var_at, pass_at_k, pass_hat_k, summarize
+from disteval.metrics import iqm, cvar, var_at, pass_at_k, pass_hat_k, summarize, optimality_gap
 
 
 # ---------------------------------------------------------------------------
@@ -282,3 +282,28 @@ class TestSummarize:
         out = summarize(df, ks=(1,))
         assert "pass@1" in out
         assert "pass^1" in out
+
+
+# ---------------------------------------------------------------------------
+# optimality_gap
+# ---------------------------------------------------------------------------
+
+class TestOptimalityGap:
+    def test_perfect_scores(self):
+        assert optimality_gap([1.0, 1.0, 1.0]) == pytest.approx(0.0)
+
+    def test_zero_scores(self):
+        assert optimality_gap([0.0, 0.0, 0.0]) == pytest.approx(1.0)
+
+    def test_partial_scores(self):
+        assert optimality_gap([0.5, 0.75, 1.0]) == pytest.approx((1.0 - 0.75) / 1.0)
+
+    def test_custom_optimal(self):
+        assert optimality_gap([50.0, 75.0], optimal=100.0) == pytest.approx(0.375)
+
+    def test_empty_returns_nan(self):
+        assert np.isnan(optimality_gap([]))
+
+    def test_zero_optimal_raises(self):
+        with pytest.raises(ValueError, match="non-zero"):
+            optimality_gap([0.5], optimal=0.0)

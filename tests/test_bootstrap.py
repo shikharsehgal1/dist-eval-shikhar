@@ -3,7 +3,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from disteval.bootstrap import performance_profile, stratified_bootstrap_ci
+from disteval.bootstrap import (
+    analytical_ci,
+    binomial_ci,
+    performance_profile,
+    stratified_bootstrap_ci,
+)
 from disteval.metrics import iqm
 
 
@@ -182,3 +187,51 @@ class TestStratifiedBootstrapCI:
         )
         assert result["lo"] < result["hi"]
         assert result["point"] == pytest.approx(iqm(scores), rel=1e-6)
+
+
+# ---------------------------------------------------------------------------
+# analytical_ci
+# ---------------------------------------------------------------------------
+
+class TestAnalyticalCI:
+    def test_ci_contains_mean(self):
+        x = np.array([1.0, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        result = analytical_ci(x)
+        assert result["lo"] < result["point"] < result["hi"]
+
+    def test_empty_returns_nan(self):
+        result = analytical_ci(np.array([]))
+        assert np.isnan(result["point"])
+
+    def test_single_value_zero_width(self):
+        result = analytical_ci(np.array([5.0]))
+        assert result["width"] == 0.0
+
+
+# ---------------------------------------------------------------------------
+# binomial_ci
+# ---------------------------------------------------------------------------
+
+class TestBinomialCI:
+    def test_perfect_interval_tight(self):
+        result = binomial_ci(50, 50)
+        assert result["lo"] > 0.9
+        assert result["hi"] == pytest.approx(1.0, abs=1e-9)
+
+    def test_half_interval_contains_point(self):
+        result = binomial_ci(5, 10)
+        assert result["point"] == pytest.approx(0.5)
+        assert result["lo"] < 0.5 < result["hi"]
+
+    def test_wilson_interval(self):
+        result = binomial_ci(5, 10, method="wilson")
+        assert result["point"] == pytest.approx(0.5)
+        assert result["lo"] < result["hi"]
+
+    def test_zero_n_returns_nan(self):
+        result = binomial_ci(0, 0)
+        assert np.isnan(result["point"])
+
+    def test_invalid_method_raises(self):
+        with pytest.raises(ValueError, match="Unknown binomial CI method"):
+            binomial_ci(5, 10, method="bad")

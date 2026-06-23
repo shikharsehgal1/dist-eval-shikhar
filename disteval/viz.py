@@ -82,7 +82,52 @@ def plot_performance_profile(
 
 
 # --------------------------------------------------------------------------- #
-# 2. CVaR vs Mean bar chart                                                    #
+# 2. Empirical CDF                                                             #
+# --------------------------------------------------------------------------- #
+def plot_empirical_cdf(
+    store: RecordStore,
+    out_path: str,
+    title: str = "Empirical CDF by Difficulty",
+) -> plt.Figure:
+    """Plot the empirical CDF of scores for each difficulty stratum.
+
+    Shows the full distribution shape, not just the fraction above a threshold.
+    """
+    fig, ax = plt.subplots(figsize=(8, 5))
+    df = store.df()
+
+    # Overall
+    scores_all = df["score"].to_numpy(float)
+    x_all = np.sort(scores_all)
+    y_all = np.arange(1, len(x_all) + 1) / len(x_all)
+    ax.plot(x_all, y_all, color=COLORS["all"], lw=2.5, label="All tasks", zorder=5)
+
+    # Per stratum
+    if "s_difficulty" in df.columns:
+        for diff in DIFF_ORDER:
+            sub = df[df["s_difficulty"] == diff]
+            if sub.empty:
+                continue
+            s = np.sort(sub["score"].to_numpy(float))
+            y = np.arange(1, len(s) + 1) / len(s)
+            ax.plot(s, y, color=COLORS.get(diff, "gray"), lw=2, ls="--",
+                    label=f"{diff.capitalize()} tasks")
+
+    ax.axhline(0.5, color="gray", lw=0.8, ls=":", alpha=0.7)
+    ax.set_xlabel("Score", fontsize=12)
+    ax.set_ylabel("Cumulative fraction", fontsize=12)
+    ax.set_title(title, fontsize=13, fontweight="bold")
+    ax.legend(fontsize=10)
+    ax.set_ylim(0, 1.02)
+    ax.grid(alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
+    return fig
+
+
+# --------------------------------------------------------------------------- #
+# 3. CVaR vs Mean bar chart                                                    #
 # --------------------------------------------------------------------------- #
 def plot_mean_vs_cvar(
     store: RecordStore,
@@ -274,17 +319,21 @@ def generate_all_plots(
     plot_performance_profile(store, p1)
     paths["performance_profile"] = p1
 
-    p2 = os.path.join(output_dir, "02_mean_vs_cvar.png")
-    plot_mean_vs_cvar(store, p2)
-    paths["mean_vs_cvar"] = p2
+    p2 = os.path.join(output_dir, "02_empirical_cdf.png")
+    plot_empirical_cdf(store, p2)
+    paths["empirical_cdf"] = p2
 
-    p3 = os.path.join(output_dir, "03_pass_reliability.png")
-    plot_pass_reliability(store, p3)
-    paths["pass_reliability"] = p3
+    p3 = os.path.join(output_dir, "03_mean_vs_cvar.png")
+    plot_mean_vs_cvar(store, p3)
+    paths["mean_vs_cvar"] = p3
+
+    p4 = os.path.join(output_dir, "04_pass_reliability.png")
+    plot_pass_reliability(store, p4)
+    paths["pass_reliability"] = p4
 
     if boot_width is not None and repeat_width is not None:
-        p4 = os.path.join(output_dir, "04_eval_reliability.png")
-        plot_eval_reliability(boot_width, repeat_width, p4, agent_name)
-        paths["eval_reliability"] = p4
+        p5 = os.path.join(output_dir, "05_eval_reliability.png")
+        plot_eval_reliability(boot_width, repeat_width, p5, agent_name)
+        paths["eval_reliability"] = p5
 
     return paths

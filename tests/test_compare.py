@@ -2,7 +2,15 @@
 import numpy as np
 import pytest
 
-from disteval.compare import wasserstein, ks, prob_improvement, stochastic_dominance
+from disteval.compare import (
+    wasserstein,
+    ks,
+    prob_improvement,
+    stochastic_dominance,
+    effect_size,
+    mann_whitney_u,
+    compare_distributions,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -227,3 +235,70 @@ class TestStochasticDominance:
         result = stochastic_dominance(A, B)
         assert result["FSD_A_dominates_B"] is True
         assert result["FSD_B_dominates_A"] is True
+
+
+# ---------------------------------------------------------------------------
+# effect_size
+# ---------------------------------------------------------------------------
+
+class TestEffectSize:
+    def test_identical_distributions_zero(self):
+        a = np.array([1.0, 2, 3, 4, 5])
+        assert effect_size(a, a) == pytest.approx(0.0)
+
+    def test_shifted_distribution_positive(self):
+        a = np.array([1.0, 2, 3, 4, 5])
+        b = np.array([3.0, 4, 5, 6, 7])
+        assert effect_size(b, a) > 0.5
+
+    def test_sign_depends_on_order(self):
+        a = np.array([1.0, 2, 3])
+        b = np.array([4.0, 5, 6])
+        assert effect_size(a, b) == pytest.approx(-effect_size(b, a))
+
+
+# ---------------------------------------------------------------------------
+# mann_whitney_u
+# ---------------------------------------------------------------------------
+
+class TestMannWhitneyU:
+    def test_identical_distributions_high_p(self):
+        a = np.array([1.0, 2, 3, 4, 5])
+        result = mann_whitney_u(a, a)
+        assert result["p"] > 0.05
+
+    def test_separated_distributions_low_p(self):
+        a = np.array([1.0, 2, 3, 4, 5])
+        b = np.array([10.0, 20, 30, 40, 50])
+        result = mann_whitney_u(a, b)
+        assert result["p"] < 0.05
+
+    def test_returns_prob_improvement(self):
+        a = np.array([1.0, 2, 3])
+        b = np.array([2.0, 3, 4])
+        result = mann_whitney_u(a, b)
+        assert 0.0 <= result["prob_A_greater_B"] <= 1.0
+
+
+# ---------------------------------------------------------------------------
+# compare_distributions
+# ---------------------------------------------------------------------------
+
+class TestCompareDistributions:
+    def test_returns_all_keys(self):
+        a = np.array([1.0, 2, 3, 4, 5])
+        b = np.array([3.0, 4, 5, 6, 7])
+        result = compare_distributions(a, b)
+        assert "wasserstein" in result
+        assert "ks" in result
+        assert "prob_improvement" in result
+        assert "stochastic_dominance" in result
+        assert "effect_size" in result
+        assert "mann_whitney_u" in result
+
+    def test_prob_improvement_reflects_order(self):
+        a = np.array([1.0, 2, 3])
+        b = np.array([4.0, 5, 6])
+        result = compare_distributions(a, b)
+        assert result["prob_improvement"] == pytest.approx(0.0)
+

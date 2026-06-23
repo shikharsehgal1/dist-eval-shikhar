@@ -13,6 +13,17 @@ import numpy as np
 import pandas as pd
 
 
+__all__ = [
+    "iqm",
+    "var_at",
+    "cvar",
+    "pass_at_k",
+    "pass_hat_k",
+    "summarize",
+    "optimality_gap",
+]
+
+
 # --------------------------------------------------------------------------- #
 # Robust center                                                               #
 # --------------------------------------------------------------------------- #
@@ -122,3 +133,17 @@ def summarize(df: pd.DataFrame, alpha: float = 0.1, ks: tuple[int, ...] = (1, 4,
         out[f"pass@{k}"] = pass_at_k(df, k)
         out[f"pass^{k}"] = pass_hat_k(df, k)
     return out
+
+
+def optimality_gap(scores: np.ndarray, optimal: float = 1.0) -> float:
+    """Normalized distance from the best possible score.
+
+    The optimality gap is a standard RL aggregate: (optimal - mean(scores)) / optimal.
+    A value of 0 means the agent matches the optimal score; 1 means it scores zero.
+    """
+    scores = np.asarray(scores, dtype=float)
+    if scores.size == 0:
+        return float("nan")
+    if optimal == 0:
+        raise ValueError("optimal score must be non-zero")
+    return float((optimal - scores.mean()) / optimal)
