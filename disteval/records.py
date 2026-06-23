@@ -135,8 +135,8 @@ class RecordStore:
                 episode=int(row["episode"]), score=float(row["score"]),
                 success=bool(row["success"]),
                 strata=strata,
-                failure_mode=row.get("failure_mode") if pd.notna(row.get("failure_mode")) else None,
-                trajectory_ref=row.get("trajectory_ref") if pd.notna(row.get("trajectory_ref")) else None,
+                failure_mode=row["failure_mode"] if "failure_mode" in row.index and pd.notna(row["failure_mode"]) else None,
+                trajectory_ref=row["trajectory_ref"] if "trajectory_ref" in row.index and pd.notna(row["trajectory_ref"]) else None,
             ))
         return store
 

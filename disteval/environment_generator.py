@@ -273,11 +273,18 @@ class EnvironmentGenerator:
         Build a verifier command that scores the checkpoint in isolation.
 
         This is a best-effort extraction: we wrap the condition source from the
-        test.sh into a standalone Python snippet. Full isolation would require
+        test.sh into a standalone shell snippet. Full isolation would require
         a harness that runs the original test.sh in a sandbox.
         """
-        # Use the condition source as a verifier hint.
-        cmd = f"python3 -c \"import json; exec(open('tasks/{task_base}/tests/test.sh').read())\""
+        if not spec.condition_source.strip():
+            return None
+        # Run the checkpoint-specific condition in the task environment.
+        # The condition source is a shell fragment that exits 0 when the
+        # checkpoint passes.
+        cmd = (
+            f"cd tasks/{task_base} && "
+            f"bash -c {repr(spec.condition_source)}"
+        )
         return cmd
 
     def _build_initial_state(self, task_base: str) -> InitialState:
@@ -294,8 +301,9 @@ class EnvironmentGenerator:
                         continue
                     try:
                         files[str(rel)] = f.read_text()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        import warnings
+                        warnings.warn(f"Failed to read {f}: {e}")
             seed_files = [str(f.relative_to(task_dir)) for f in sorted(task_dir.rglob("*.json"))]
 
         return InitialState(

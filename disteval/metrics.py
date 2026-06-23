@@ -71,10 +71,14 @@ def pass_at_k(df: pd.DataFrame, k: int) -> float:
     """Unbiased pass@k (Chen et al.): P(at least one of k trials succeeds), averaged
     over tasks. Measures *peak capability* -- "can it ever do this".
     """
+    if "task" not in df.columns or "success" not in df.columns:
+        raise ValueError("DataFrame must have 'task' and 'success' columns")
     vals = []
     for n, c in _per_task_counts(df):
         if n < k:
             vals.append(float(c > 0))  # not enough trials; fall back to empirical
+        elif c < 0 or c > n or k < 0:
+            vals.append(float("nan"))  # corrupted / invalid data
         else:
             vals.append(1.0 - comb(n - c, k) / comb(n, k))
     return float(np.mean(vals)) if vals else float("nan")
@@ -86,10 +90,14 @@ def pass_hat_k(df: pd.DataFrame, k: int) -> float:
     Measures *reliability/consistency* (tau-bench). The gap between pass@k and
     pass^k is the reliability gap -- the single most important thing a mean hides.
     """
+    if "task" not in df.columns or "success" not in df.columns:
+        raise ValueError("DataFrame must have 'task' and 'success' columns")
     vals = []
     for n, c in _per_task_counts(df):
         if n < k:
             vals.append(float(c == n))
+        elif c < 0 or c > n or k < 0:
+            vals.append(float("nan"))  # corrupted / invalid data
         else:
             vals.append(comb(c, k) / comb(n, k))
     return float(np.mean(vals)) if vals else float("nan")

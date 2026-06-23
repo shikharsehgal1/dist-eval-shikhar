@@ -69,7 +69,10 @@ def plot_performance_profile(
     ax.set_ylabel("Fraction of episodes scoring ≥ τ", fontsize=12)
     ax.set_title(title, fontsize=13, fontweight="bold")
     ax.legend(fontsize=10)
-    ax.set_xlim(0, 1)
+    # Derive x-limits from data so scores outside [0, 1] are still visible.
+    x_min = scores_all.min() - 0.05
+    x_max = scores_all.max() + 0.05
+    ax.set_xlim(x_min, x_max)
     ax.set_ylim(0, 1.02)
     ax.grid(alpha=0.25)
     fig.tight_layout()

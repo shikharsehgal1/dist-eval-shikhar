@@ -66,7 +66,7 @@ def _extract_description(lines_before: list[str]) -> str:
         stripped = line.strip()
         if stripped.startswith("#"):
             comments.insert(0, stripped.lstrip("#").strip())
-        elif stripped == "" or stripped.startswith("#"):
+        elif stripped == "":
             # Continue scanning past blank lines to grab the nearest comment block.
             continue
         else:

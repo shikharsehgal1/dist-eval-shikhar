@@ -326,7 +326,7 @@ class OutcomePredictor:
 
     def predict_proba(self, features: TrajectoryFeatures) -> float:
         """Return P(high outcome) given features. 0.0-1.0."""
-        if self.weights is None or self.mean is None:
+        if self.weights is None or self.mean is None or self.std is None:
             return 0.5
         x = self._feature_vector(features)
         xs = (x - self.mean) / self.std
@@ -385,6 +385,8 @@ class TrajectoryMonitor:
     """Real-time trajectory monitor loaded with past TrajectoryRecords."""
 
     def __init__(self, records: list[TrajectoryRecord]):
+        if not records:
+            raise ValueError("TrajectoryMonitor requires at least one trajectory record")
         self.records = records
         self.featurizer = TrajectoryFeaturizer()
         self.predictor = OutcomePredictor().fit(records)
@@ -453,8 +455,8 @@ class TrajectoryMonitor:
         scores = []
         for r in candidates:
             r_vec = self._tool_vector(r.tool_sequence)
-            denom = np.linalg.norm(query_vec) * np.linalg.norm(r_vec)
-            sim = float(query_vec @ r_vec) / denom if denom > 0 else 0.0
+            # _tool_vector already L2-normalizes, so dot product is cosine similarity.
+            sim = float(query_vec @ r_vec)
             scores.append((sim, r))
 
         scores.sort(key=lambda x: (-x[0], x[1].score))

@@ -199,6 +199,11 @@ class TestTrajectoryMonitor:
         from disteval.trajectory_monitor import TrajectoryMonitor
         return TrajectoryMonitor.from_job_dirs(JOB_DIRS)
 
+    def test_empty_records_raises(self):
+        from disteval.trajectory_monitor import TrajectoryMonitor
+        with pytest.raises(ValueError, match="at least one trajectory record"):
+            TrajectoryMonitor([])
+
     @pytest.mark.skipif(not HAS_DATA, reason="job dirs not present")
     def test_loads_records(self, monitor):
         assert len(monitor.records) > 0

@@ -29,17 +29,18 @@ def ks(a: np.ndarray, b: np.ndarray) -> dict:
 def prob_improvement(a: np.ndarray, b: np.ndarray) -> float:
     """P(A > B) for a random A-episode vs a random B-episode (ties = 0.5).
 
-    Mann-Whitney-style. ~0.5 means indistinguishable; pair with a center metric
+    Pairwise comparison. ~0.5 means indistinguishable; pair with a center metric
     because it ignores magnitude.
     """
     a = np.asarray(a, float)
     b = np.asarray(b, float)
-    # vectorized via rank statistic
-    u, _ = stats.mannwhitneyu(a, b, alternative="two-sided")
-    return float(u / (len(a) * len(b)))
+    # vectorized pairwise comparison
+    greater = np.sum(a[:, None] > b[None, :])
+    ties = np.sum(a[:, None] == b[None, :])
+    return float((greater + 0.5 * ties) / (len(a) * len(b)))
 
 
-def stochastic_dominance(a: np.ndarray, b: np.ndarray, grid: int = 200) -> dict:
+def stochastic_dominance(a: np.ndarray, b: np.ndarray, grid: int = 200, tol: float = 1e-9) -> dict:
     """First- and second-order stochastic dominance of A over B (higher = better).
 
     FSD: CDF_A(x) <= CDF_B(x) for all x  -> A is preferred by *every* increasing
@@ -49,16 +50,26 @@ def stochastic_dominance(a: np.ndarray, b: np.ndarray, grid: int = 200) -> dict:
     """
     a = np.asarray(a, float)
     b = np.asarray(b, float)
-    xs = np.linspace(min(a.min(), b.min()), max(a.max(), b.max()), grid)
+    lo, hi = min(a.min(), b.min()), max(a.max(), b.max())
+    if lo == hi:
+        # Constant/degenerate distributions: both dominate each other trivially.
+        return {
+            "FSD_A_dominates_B": True,
+            "FSD_B_dominates_A": True,
+            "SSD_A_dominates_B": True,
+            "SSD_B_dominates_A": True,
+        }
+    xs = np.linspace(lo, hi, grid)
     Fa = np.array([(a <= x).mean() for x in xs])
     Fb = np.array([(b <= x).mean() for x in xs])
-    fsd_a_over_b = bool(np.all(Fa <= Fb + 1e-9))
-    fsd_b_over_a = bool(np.all(Fb <= Fa + 1e-9))
+    fsd_a_over_b = bool(np.all(Fa <= Fb + tol))
+    fsd_b_over_a = bool(np.all(Fb <= Fa + tol))
     # second order: integrate CDFs
-    Ia = np.cumsum(Fa) * (xs[1] - xs[0])
-    Ib = np.cumsum(Fb) * (xs[1] - xs[0])
-    ssd_a_over_b = bool(np.all(Ia <= Ib + 1e-9))
-    ssd_b_over_a = bool(np.all(Ib <= Ia + 1e-9))
+    dx = xs[1] - xs[0]
+    Ia = np.cumsum(Fa) * dx
+    Ib = np.cumsum(Fb) * dx
+    ssd_a_over_b = bool(np.all(Ia <= Ib + tol))
+    ssd_b_over_a = bool(np.all(Ib <= Ia + tol))
     return {
         "FSD_A_dominates_B": fsd_a_over_b,
         "FSD_B_dominates_A": fsd_b_over_a,

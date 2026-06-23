@@ -183,6 +183,21 @@ class TestPassAtK:
         df = _task_df({"t1": [True, False, True, False, False]})
         assert pass_at_k(df, k=1) <= pass_at_k(df, k=2) + 1e-9
 
+    def test_missing_columns_raise(self):
+        import pandas as pd
+        df = pd.DataFrame({"score": [0.5, 0.6]})
+        with pytest.raises(ValueError, match="'task' and 'success' columns"):
+            pass_at_k(df, k=1)
+
+    def test_corrupted_success_count_returns_nan(self):
+        # Impossible counts (success values > 1) should not crash; return NaN.
+        import pandas as pd
+        df = pd.DataFrame({
+            "task": ["t1", "t1", "t1", "t1"],
+            "success": [2, 2, 2, 2],  # corrupted: counts > n
+        })
+        assert np.isnan(pass_at_k(df, k=1))
+
 
 # ---------------------------------------------------------------------------
 # pass_hat_k (pass^k)
@@ -224,6 +239,12 @@ class TestPassHatK:
         # n < k, not all succeed → fallback = 0.0
         df = _task_df({"t1": [True, False]})
         assert pass_hat_k(df, k=3) == pytest.approx(0.0)
+
+    def test_missing_columns_raise(self):
+        import pandas as pd
+        df = pd.DataFrame({"score": [0.5, 0.6]})
+        with pytest.raises(ValueError, match="'task' and 'success' columns"):
+            pass_hat_k(df, k=1)
 
 
 # ---------------------------------------------------------------------------

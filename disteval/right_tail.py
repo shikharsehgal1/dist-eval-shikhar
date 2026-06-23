@@ -204,7 +204,7 @@ def task_outcome_profile(
 
     threshold = reinforce_threshold * q_star
     reinforce_idx = [i for i, s in enumerate(scores) if float(s) >= threshold and q_star > 0]
-    contrast_idx  = [i for i, s in enumerate(scores) if float(s) < threshold]
+    contrast_idx = [i for i, s in enumerate(scores) if float(s) < threshold and q_star > 0]
 
     return TaskOutcomeProfile(
         task=task, model=model, scores=list(scores),

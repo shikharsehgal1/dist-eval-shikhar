@@ -146,6 +146,12 @@ class TestProbImprovement:
         # b is on average higher than a → P(A > B) < 0.5
         assert prob_improvement(a, b) < 0.5
 
+    def test_ties_count_as_half(self):
+        a = np.array([1.0, 2, 3])
+        b = np.array([1.0, 2, 3])
+        # 3 ties → 3 * 0.5 / 9 = 0.5
+        assert prob_improvement(a, b) == pytest.approx(0.5)
+
 
 # ---------------------------------------------------------------------------
 # stochastic_dominance
@@ -213,3 +219,11 @@ class TestStochasticDominance:
         result = stochastic_dominance(A, B)
         if result["FSD_A_dominates_B"]:
             assert result["SSD_A_dominates_B"] is True
+
+    def test_constant_arrays(self):
+        """Degenerate constant distributions should not crash."""
+        A = np.array([5.0, 5, 5, 5])
+        B = np.array([5.0, 5, 5, 5])
+        result = stochastic_dominance(A, B)
+        assert result["FSD_A_dominates_B"] is True
+        assert result["FSD_B_dominates_A"] is True

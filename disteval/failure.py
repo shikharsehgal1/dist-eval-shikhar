@@ -14,6 +14,11 @@ def failure_distribution(df: pd.DataFrame, by: list[str] | None = None) -> pd.Da
     Only non-success episodes contribute. Returns a tidy frame:
     [<by...>, failure_mode, n, share_of_failures].
     """
+    if "success" not in df.columns:
+        raise ValueError("DataFrame must have a 'success' column")
+    if by and any(c not in df.columns for c in by):
+        missing = [c for c in by if c not in df.columns]
+        raise ValueError(f"Stratum columns not found in DataFrame: {missing}")
     fails = df[~df["success"].astype(bool)].copy()
     if fails.empty:
         return pd.DataFrame(columns=(by or []) + ["failure_mode", "n", "share_of_failures"])

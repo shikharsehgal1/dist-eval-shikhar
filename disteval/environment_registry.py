@@ -109,11 +109,16 @@ class EnvironmentRegistry:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
+        if not isinstance(data, dict):
+            raise ValueError(f"Registry JSON must be an object, got {type(data).__name__}")
+
         self.environments = {}
         self.edges = []
         self.parent_tasks = []
 
-        for item in data.get("environments", []):
+        for i, item in enumerate(data.get("environments", [])):
+            if not isinstance(item, dict):
+                raise ValueError(f"Environment entry {i} must be an object, got {type(item).__name__}")
             env = self._dict_to_env(item)
             self.register(env)
 
@@ -132,6 +137,13 @@ class EnvironmentRegistry:
     def _dict_to_env(item: dict) -> GenEnv:
         """Reconstruct a GenEnv from a serialized dict."""
         from .environment_generator import InitialState, RewardSpec, TerminationSpec
+
+        required_keys = ["task_id", "parent_task", "sub_task_depth", "instruction",
+                         "entry_step", "exit_step", "phase_tag", "reward",
+                         "initial_state", "termination"]
+        missing = [k for k in required_keys if k not in item]
+        if missing:
+            raise ValueError(f"GenEnv dict missing required keys: {missing}")
 
         reward = RewardSpec(**item["reward"])
         initial_state = InitialState(**item["initial_state"])

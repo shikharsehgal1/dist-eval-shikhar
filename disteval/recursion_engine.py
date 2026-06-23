@@ -296,7 +296,14 @@ class RecursionEngine:
 
         for idx, boundary in enumerate(boundaries[:-1]):
             next_boundary = boundaries[idx + 1]
-            entry_step = boundary.entry_step if boundary.entry_step is not None else 0
+            if boundary.entry_step is not None:
+                entry_step = boundary.entry_step
+            elif idx > 0:
+                entry_step = boundaries[idx - 1].exit_step
+                if entry_step is None:
+                    entry_step = 0
+            else:
+                entry_step = 0
             exit_step = next_boundary.exit_step
             if exit_step is None:
                 exit_step = -1
@@ -405,11 +412,12 @@ class RecursionEngine:
                 # Pad with synthetic boundaries based on the last known step index.
                 last_step = boundaries[-1].exit_step if boundaries else None
                 last_step = last_step if last_step is not None else 10
-                while len(boundaries) < n_specs:
+                n_needed = n_specs - len(boundaries)
+                for synth_i in range(n_needed):
                     boundaries.append(
                         PhaseBoundary(
                             entry_step=None,
-                            exit_step=last_step + len(boundaries),
+                            exit_step=last_step + synth_i + 1,
                             label="synthetic",
                             confidence=0.5,
                             phase_tag="unknown",

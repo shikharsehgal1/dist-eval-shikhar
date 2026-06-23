@@ -169,10 +169,12 @@ def print_leaderboard(summaries: list[dict]) -> None:
             vals = []
             row = f"  {diff_label:<8}  {metric:<12}"
             for s in summaries:
-                v = s["strata"].get(diff, {}).get(key, float("nan"))
+                v = s["strata"].get(diff, {}).get(key, None)
                 vals.append(v)
-                row += f"  {v:>14.3f}"
-            # color the winner
+                if v is None or (isinstance(v, float) and np.isnan(v)):
+                    row += f"  {'—':>14}"
+                else:
+                    row += f"  {v:>14.3f}"
             print(row)
         print()
 

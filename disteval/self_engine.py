@@ -303,11 +303,13 @@ class SelfEngine:
         memory: Optional[TrajectoryMemory] = None,
         recursion_engine: Optional[Any] = None,
         enable_recursion: bool = False,
+        tasks_dir: str = "tasks",
     ):
         self.store = store
         self.job_dirs = job_dirs
         self.agent_name = agent_name
         self.model_name = model_name
+        self.tasks_dir = tasks_dir
         self.recursion_engine = recursion_engine
         self.enable_recursion = enable_recursion and (recursion_engine is not None)
 
@@ -316,8 +318,9 @@ class SelfEngine:
         for jd in job_dirs:
             try:
                 self._traj_records.extend(load_trajectory_records(jd))
-            except Exception:
-                pass
+            except Exception as e:
+                import warnings
+                warnings.warn(f"Failed to load trajectories from {jd}: {e}")
 
         # Build monitor (uses trajectory_monitor.TrajectoryRecord)
         if monitor is not None:
@@ -348,8 +351,9 @@ class SelfEngine:
                 )
                 try:
                     self.memory.add(mem_rec)
-                except Exception:
-                    pass
+                except Exception as e:
+                    import warnings
+                    warnings.warn(f"Failed to add memory record: {e}")
 
         self._cycle = 0
 
@@ -393,8 +397,9 @@ class SelfEngine:
             try:
                 s = load_harbor_job(run_dir, tasks_dir=tasks_dir)
                 stores.append(s)
-            except Exception:
-                pass
+            except Exception as e:
+                import warnings
+                warnings.warn(f"Failed to load Harbor job from {run_dir}: {e}")
 
         if not stores:
             raise ValueError(f"No valid Harbor job directories found in: {job_dirs}")
@@ -412,6 +417,7 @@ class SelfEngine:
             job_dirs=resolved_dirs,
             agent_name=agent_name,
             model_name=model_name,
+            tasks_dir=tasks_dir,
         )
 
         if enable_recursion and RecursionEngine is not None:
@@ -436,6 +442,7 @@ class SelfEngine:
             self.job_dirs,
             self.agent_name,
             self.model_name,
+            tasks_dir=self.tasks_dir,
             enable_recursion=self.enable_recursion,
         )
         self.store = new.store
@@ -821,7 +828,7 @@ class SelfEngine:
         if mem_results:
             top_mem = mem_results[0]
             mem_note = (
-                f" Memory #{1} (score={top_mem.entry.record.score:.2f}) "
+                f" Memory #{top_mem.rank} (score={top_mem.entry.record.score:.2f}) "
                 "shows a successful approach."
             )
 

@@ -92,6 +92,11 @@ class TestFailureDistributionBasic:
         assert timeout_row["n"].iloc[0] == 3
         assert crash_row["n"].iloc[0] == 1
 
+    def test_missing_success_column_raises(self):
+        df = pd.DataFrame({"failure_mode": ["timeout", "crash"]})
+        with pytest.raises(ValueError, match="'success' column"):
+            failure_distribution(df)
+
 
 # ---------------------------------------------------------------------------
 # Unlabeled / NaN failure modes

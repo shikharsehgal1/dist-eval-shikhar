@@ -98,6 +98,12 @@ class TestTaskOutcomeProfile:
             p = task_outcome_profile("t", scores, model="a")
             assert p.gap >= -1e-12
 
+    def test_stuck_task_has_empty_reinforce_and_contrast(self):
+        p = task_outcome_profile("t", [0.0, 0.0, 0.0], model="a")
+        assert p.kind == "stuck"
+        assert p.reinforce_idx == []
+        assert p.contrast_idx == []
+
 
 # ── right_tail_analysis ───────────────────────────────────────────────────────
 

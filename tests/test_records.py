@@ -227,6 +227,45 @@ class TestRecordStoreSlice:
 
 
 # ---------------------------------------------------------------------------
+# RecordStore – Parquet round-trip
+# ---------------------------------------------------------------------------
+
+class TestRecordStoreParquet:
+    def test_roundtrip_preserves_optional_columns(self, store):
+        with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as f:
+            path = f.name
+        try:
+            store.to_parquet(path)
+            loaded = RecordStore.from_parquet(path)
+            assert len(loaded) == len(store)
+            for orig, rec in zip(store._records, loaded._records):
+                assert orig.failure_mode == rec.failure_mode
+                assert orig.trajectory_ref == rec.trajectory_ref
+        finally:
+            os.unlink(path)
+
+    def test_from_parquet_missing_optional_columns(self):
+        df = pd.DataFrame({
+            "run_id": ["r1"],
+            "model": ["m"],
+            "task": ["t1"],
+            "episode": [0],
+            "score": [0.5],
+            "success": [True],
+        })
+        with tempfile.NamedTemporaryFile(suffix=".parquet", delete=False) as f:
+            path = f.name
+        try:
+            df.to_parquet(path)
+            loaded = RecordStore.from_parquet(path)
+            assert len(loaded) == 1
+            assert loaded._records[0].failure_mode is None
+            assert loaded._records[0].trajectory_ref is None
+        finally:
+            os.unlink(path)
+
+
+# ---------------------------------------------------------------------------
 # RecordStore – JSONL round-trip
 # ---------------------------------------------------------------------------
 

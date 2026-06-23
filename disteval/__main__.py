@@ -256,7 +256,7 @@ def handle_engine(remaining_args: List[str]) -> None:
         print(f"  Model: {args.model}")
         print(f"  Job directories: {len(args.job_dirs)}")
         if hasattr(plan, 'summary'):
-            print(f"  Summary: {plan.summary}")
+            print(f"  Summary:\n{plan.summary()}")
         
         # Save plan to JSON
         plan_dict = plan.to_dict() if hasattr(plan, 'to_dict') else vars(plan)
