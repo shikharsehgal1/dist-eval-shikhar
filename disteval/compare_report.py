@@ -84,43 +84,41 @@ def build_agent_summary(store: RecordStore, agent_name: str) -> dict:
 # Terminal output
 # ─────────────────────────────────────────────────────────────────────────────
 
-def print_leaderboard(summaries: list[dict]) -> None:
-    """Print Harbor-style (mean-only) ranking vs disteval ranking side by side."""
-    _hr(f"DISTEVAL 3-AGENT LEADERBOARD  ({len(summaries)} agents, {summaries[0]['n']}–{summaries[-1]['n']} trials each)")
+_LEADERBOARD_METRICS = [
+    ("Mean",         "mean",         "Harbor leaderboard metric"),
+    ("IQM",          "iqm",          "Outlier-resistant center"),
+    ("CVaR@0.1",     "cvar@0.1",     "Expected score in worst 10% of runs"),
+    ("pass@3",       "pass@3",       "Can it ever solve the task?"),
+    ("pass^3",       "pass^3",       "Does it ALWAYS solve the task?"),
+    ("Success rate", "success_rate", "Fraction of episodes fully passing"),
+]
 
-    # Harbor ranking
-    harbor_rank = sorted(summaries, key=lambda s: -s["mean"])
+
+def _print_harbor_ranking(summaries: list[dict], harbor_rank: list[dict]) -> None:
+    """Print the mean-only ranking that a standard Harbor leaderboard would show."""
     print("\n  ┌──── Harbor sees only this ─────────────────────────────────┐")
     for i, s in enumerate(harbor_rank, 1):
         bar = "█" * int(s["mean"] * 20)
         print(f"  │  #{i}  {s['agent']:<30}  mean={s['mean']:.3f}  {bar}")
     print("  └────────────────────────────────────────────────────────────┘")
 
-    # Full metric table
-    METRICS = [
-        ("Mean",            "mean",         "Harbor leaderboard metric"),
-        ("IQM",             "iqm",          "Outlier-resistant center"),
-        ("CVaR@0.1",        "cvar@0.1",     "Expected score in worst 10% of runs"),
-        ("pass@3",          "pass@3",       "Can it ever solve the task?"),
-        ("pass^3",          "pass^3",       "Does it ALWAYS solve the task?"),
-        ("Success rate",    "success_rate", "Fraction of episodes fully passing"),
-    ]
 
+def _print_metric_table(summaries: list[dict]) -> dict[str, int]:
+    """Print the full distributional metric table; return per-agent win counts."""
     _hr("FULL DISTRIBUTIONAL COMPARISON", width=72)
     names = [s["agent"][:16] for s in summaries]
     header = f"  {'Metric':<18}" + "".join(f"  {n:>16}" for n in names) + "  Best"
     print(header)
     print("  " + "─" * (18 + len(summaries) * 18 + 8))
 
-    ranking_wins = {s["agent"]: 0 for s in summaries}
-    for label, key, desc in METRICS:
+    ranking_wins: dict[str, int] = {s["agent"]: 0 for s in summaries}
+    for label, key, _desc in _LEADERBOARD_METRICS:
         vals = [s[key] for s in summaries]
         best_val = max(vals)
         best_agents = [s["agent"] for s in summaries if abs(s[key] - best_val) < 1e-9]
         row = f"  {label:<18}"
         for s in summaries:
-            v = s[key]
-            cell = f"{v:>16.3f}"
+            cell = f"{s[key]:>16.3f}"
             if s["agent"] in best_agents and len(best_agents) < len(summaries):
                 cell = _color(cell, "32")  # green = winner
             row += "  " + cell
@@ -130,32 +128,60 @@ def print_leaderboard(summaries: list[dict]) -> None:
         for a in best_agents:
             if len(best_agents) < len(summaries):
                 ranking_wins[a] += 1
+    return ranking_wins
 
-    # Disteval ranking
+
+def _print_disteval_ranking(
+    summaries: list[dict],
+    harbor_rank: list[dict],
+    ranking_wins: dict[str, int],
+) -> list[dict]:
+    """Print the disteval reliability ranking; return the disteval-ranked list."""
     disteval_rank = sorted(summaries, key=lambda s: -(s["cvar@0.1"] * 2 + s["pass^3"] + s["iqm"]))
     print()
     print("  ┌──── disteval reliability ranking ─────────────────────────┐")
     for i, s in enumerate(disteval_rank, 1):
         wins = ranking_wins[s["agent"]]
-        harbor_pos = next(j+1 for j, h in enumerate(harbor_rank) if h["agent"] == s["agent"])
+        harbor_pos = next(j + 1 for j, h in enumerate(harbor_rank) if h["agent"] == s["agent"])
         flip = f"  ↕ (was #{harbor_pos} on Harbor)" if i != harbor_pos else ""
         print(f"  │  #{i}  {s['agent']:<28}  wins {wins}/5 metrics{flip}")
     print("  └────────────────────────────────────────────────────────────┘")
+    return disteval_rank
 
-    # Inversion check
+
+def _print_inversion_check(
+    summaries: list[dict],
+    harbor_rank: list[dict],
+    disteval_rank: list[dict],
+) -> None:
+    """Highlight ranking inversions between Harbor and disteval."""
     if harbor_rank[0]["agent"] != disteval_rank[0]["agent"]:
         winner_harbor = harbor_rank[0]["agent"]
         winner_dist   = disteval_rank[0]["agent"]
         _hr("⚡ RANKING INVERSION DETECTED", width=72)
-        print(f"  Harbor #1: {_color(winner_harbor, '33')}  (mean={harbor_rank[0]['mean']:.3f})")
+        print(f"  Harbor #1:   {_color(winner_harbor, '33')}  (mean={harbor_rank[0]['mean']:.3f})")
         print(f"  disteval #1: {_color(winner_dist, '32')}  (more reliable tail + consistency)")
-        cvar_gap = summaries[next(i for i,s in enumerate(summaries) if s['agent']==winner_dist)]['cvar@0.1'] \
-                 - summaries[next(i for i,s in enumerate(summaries) if s['agent']==winner_harbor)]['cvar@0.1']
+        idx_dist   = next(i for i, s in enumerate(summaries) if s["agent"] == winner_dist)
+        idx_harbor = next(i for i, s in enumerate(summaries) if s["agent"] == winner_harbor)
+        cvar_gap = summaries[idx_dist]["cvar@0.1"] - summaries[idx_harbor]["cvar@0.1"]
         print(f"  CVaR gap: {winner_dist} has {abs(cvar_gap):.3f} better tail floor")
-        print(f"  → The mean rewarded {winner_harbor} for peak shots; disteval found {winner_dist} is more consistent in deployment")
+        print(
+            f"  → The mean rewarded {winner_harbor} for peak shots; "
+            f"disteval found {winner_dist} is more consistent in deployment"
+        )
     else:
         print(f"\n  Harbor and disteval agree on #1: {_color(harbor_rank[0]['agent'], '32')}")
         print("  But distributional metrics reveal important per-agent tail risk differences ↑")
+
+
+def print_leaderboard(summaries: list[dict]) -> None:
+    """Print Harbor-style (mean-only) ranking vs disteval ranking side by side."""
+    _hr(f"DISTEVAL 3-AGENT LEADERBOARD  ({len(summaries)} agents, {summaries[0]['n']}–{summaries[-1]['n']} trials each)")
+    harbor_rank = sorted(summaries, key=lambda s: -s["mean"])
+    _print_harbor_ranking(summaries, harbor_rank)
+    ranking_wins = _print_metric_table(summaries)
+    disteval_rank = _print_disteval_ranking(summaries, harbor_rank, ranking_wins)
+    _print_inversion_check(summaries, harbor_rank, disteval_rank)
 
     # Per-difficulty breakdown
     _hr("PER-DIFFICULTY BREAKDOWN", width=72)

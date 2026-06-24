@@ -16,7 +16,6 @@ Available subcommands:
 import argparse
 import json
 import sys
-from typing import List
 
 
 def main() -> None:
@@ -122,22 +121,36 @@ optional arguments:
     sys.exit(0)
 
 
+_SIMPLE_SUBCOMMAND_DESCRIPTIONS: dict[str, str] = {
+    "report": "Generate evaluation reports",
+    "compare": "Generate comparison reports",
+    "sim": "Run training simulations",
+}
+
+
+def _print_simple_subcommand_help_and_exit(subcommand: str) -> None:
+    """Print a minimal help message for simple subcommands and exit."""
+    desc = _SIMPLE_SUBCOMMAND_DESCRIPTIONS.get(subcommand, subcommand)
+    print(
+        f"usage: disteval {subcommand} [-h]\n\n{desc}\n\n"
+        "optional arguments:\n  -h, --help  show this help message and exit\n"
+    )
+    sys.exit(0)
+
+
 def print_report_help_and_exit() -> None:
     """Print report subcommand help and exit."""
-    print("usage: disteval report [-h]\n\nGenerate evaluation reports\n\noptional arguments:\n  -h, --help  show this help message and exit\n")
-    sys.exit(0)
+    _print_simple_subcommand_help_and_exit("report")
 
 
 def print_compare_help_and_exit() -> None:
     """Print compare subcommand help and exit."""
-    print("usage: disteval compare [-h]\n\nGenerate comparison reports\n\noptional arguments:\n  -h, --help  show this help message and exit\n")
-    sys.exit(0)
+    _print_simple_subcommand_help_and_exit("compare")
 
 
 def print_sim_help_and_exit() -> None:
     """Print sim subcommand help and exit."""
-    print("usage: disteval sim [-h]\n\nRun training simulations\n\noptional arguments:\n  -h, --help  show this help message and exit\n")
-    sys.exit(0)
+    _print_simple_subcommand_help_and_exit("sim")
 
 
 def print_train_help_and_exit() -> None:
@@ -160,7 +173,7 @@ optional arguments:
     sys.exit(0)
 
 
-def handle_report(remaining_args: List[str]) -> None:
+def handle_report(remaining_args: list[str]) -> None:
     """Delegate to disteval.report.main(), passing through all args."""
     sys.argv = ["disteval-report"] + remaining_args
     try:
@@ -171,7 +184,7 @@ def handle_report(remaining_args: List[str]) -> None:
         sys.exit(1)
 
 
-def handle_compare(remaining_args: List[str]) -> None:
+def handle_compare(remaining_args: list[str]) -> None:
     """Delegate to disteval.compare_report.main(), passing through all args."""
     sys.argv = ["disteval-compare"] + remaining_args
     try:
@@ -182,7 +195,7 @@ def handle_compare(remaining_args: List[str]) -> None:
         sys.exit(1)
 
 
-def handle_sim(remaining_args: List[str]) -> None:
+def handle_sim(remaining_args: list[str]) -> None:
     """Delegate to disteval.training_sim.main(), passing through all args."""
     sys.argv = ["disteval-sim"] + remaining_args
     try:
@@ -193,7 +206,7 @@ def handle_sim(remaining_args: List[str]) -> None:
         sys.exit(1)
 
 
-def handle_train(remaining_args: List[str]) -> None:
+def handle_train(remaining_args: list[str]) -> None:
     """Handle the 'train' subcommand for running a DPO trainer on a curriculum."""
     parser = argparse.ArgumentParser(
         prog="disteval train",
@@ -224,7 +237,6 @@ def handle_train(remaining_args: List[str]) -> None:
 
     try:
         with open(args.curriculum, "r", encoding="utf-8") as f:
-            import json
             curriculum = json.load(f)
     except (OSError, json.JSONDecodeError) as e:
         print(f"Error loading curriculum: {e}", file=sys.stderr)
@@ -255,7 +267,7 @@ def handle_train(remaining_args: List[str]) -> None:
         sys.exit(1)
 
 
-def handle_engine(remaining_args: List[str]) -> None:
+def handle_engine(remaining_args: list[str]) -> None:
     """Handle the 'engine' subcommand for running SelfEngine on Harbor job directories."""
     parser = argparse.ArgumentParser(
         prog="disteval engine",

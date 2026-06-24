@@ -5,10 +5,24 @@
 disteval does two things that no other eval framework does together:
 
 1. **Measures the full outcome distribution** of agent runs — not just the mean,
-   but tail risk, consistency, and stochastic dominance.
+   but tail risk, consistency, stochastic dominance, and multi-run confidence
+   intervals that expose whether a reported improvement is real or eval noise.
 2. **Automatically generates training data** from those runs — no human labels,
    no synthetic data. If an agent sometimes solves a task and sometimes fails,
    those two trajectories are a ready-made DPO training pair.
+
+Three design principles drive every decision:
+
+- **Rigorous multi-run evaluation**: running an agent 8× on each task (standard
+  practice) is worthless if you only report the mean. disteval reports CIs,
+  per-run repeatability, and whether a two-point gap is within eval noise.
+- **Criterion-level failure analysis**: aggregate pass/fail per rubric criterion
+  across all episodes to surface *which specific requirement* an agent fails
+  most — actionable at the task-design and training level.
+- **Data efficiency**: the DPO curriculum disteval generates is proof that
+  hundreds (not tens of thousands) of targeted trajectory pairs produce
+  measurable capability gain — because they come from the exact tasks where
+  the agent's knowledge is incomplete, not from random sampling.
 
 ---
 
@@ -272,6 +286,54 @@ compare.prob_improvement(a, b)        # 0.546 — P(A > B)
 compare.stochastic_dominance(a, b)    # {"FSD_A_dominates_B": True, ...}
 ```
 
+### Criterion-level failure analysis (rubric grading)
+
+Real evaluation rubrics score agents against multiple pass/fail criteria. Two
+agents with identical aggregate success rates can fail on entirely different
+requirements. `criterion_failure_rates` pinpoints which rubric items are broken:
+
+```python
+from disteval.failure import criterion_failure_rates, top_failing_criteria
+
+# episodes: list of dicts, each with a "criteria" key mapping criterion → bool
+episodes = [
+    {"criteria": {"output_format": True, "cost_within_budget": False, "no_data_loss": True}, "difficulty": "hard"},
+    {"criteria": {"output_format": False, "cost_within_budget": False, "no_data_loss": True}, "difficulty": "hard"},
+    {"criteria": {"output_format": True,  "cost_within_budget": True,  "no_data_loss": True}, "difficulty": "easy"},
+]
+
+df = criterion_failure_rates(episodes)
+# Returns: criterion | n_episodes | n_failed | failure_rate (sorted by failure_rate desc)
+# → cost_within_budget: 2/3 failed (0.667) — most actionable rubric weakness
+
+top3 = top_failing_criteria(episodes, n=3, by=["difficulty"])
+# Stratified: which criteria fail most on "hard" vs "easy" tasks?
+```
+
+### Multi-run evaluation reliability
+
+A standard single-run bootstrap CI is a *lower bound* on true run-to-run
+variance — it can't capture env seed variance or LLM nondeterminism across
+runs. `repeat.py` measures the actual meta-distribution:
+
+```python
+from disteval.repeat import meta_distribution, bootstrap_vs_repeat, is_gap_real
+
+# Run your eval n times, collect a list of RecordStores
+stores = [run_eval(seed=i) for i in range(8)]
+
+meta = meta_distribution(stores, stat_fn=lambda df: df["score"].mean())
+print(meta["ci_width"])    # true run-to-run CI width
+
+diag = bootstrap_vs_repeat(stores, stat_fn=lambda df: df["score"].mean())
+print(diag["underconfidence_ratio"])
+# If >> 1, your single-run bootstrap CI is overconfident — the reported
+# error bars are too tight and a 2-point improvement may be noise.
+
+verdict = is_gap_real(stores_A, stores_B, stat_fn=lambda df: df["score"].mean())
+print(verdict["P(A>B on a fresh re-run)"])   # decision-relevant probability
+```
+
 ---
 
 ## File layout
@@ -283,8 +345,8 @@ disteval/
   metrics.py              — IQM, CVaR, VaR, pass@k, pass^k
   bootstrap.py            — stratified bootstrap CI, performance profile
   compare.py              — Wasserstein, KS, prob_improvement, stochastic dominance
-  failure.py              — failure-mode distribution per stratum
-  repeat.py               — repeated-eval meta-distribution
+  failure.py              — failure-mode distribution + criterion-level rubric analysis
+  repeat.py               — repeated-eval meta-distribution, bootstrap underconfidence check
   right_tail.py           — right-tail gap Δ, consistency κ, RECOVERABLE taxonomy
   self_engine.py          — SelfEngine: full eval → training loop
   trajectory_monitor.py   — real-time outcome prediction from tool-call sequence
@@ -298,6 +360,9 @@ disteval/
     inspect_log.py        — Inspect .eval log → RecordStore
     rliable_bridge.py     — RecordStore → rliable matrix
     generic.py            — any (score, trajectory) source → RecordStore
+    swebench_adapter.py   — SWE-bench predictions + SWE-agent trajectories → RecordStore
+  logging.py              — CycleLogger: per-cycle κ tracking, plateau detection, JSON/CSV export
+  training_harness.py     — DPOTrainerBase, NoOpTrainer, SimulatedTrainer, TRL/Axolotl stubs
 
 TRAJECTORY_FORMAT.md      — spec: what disteval reads
 CURRICULUM_FORMAT.md      — spec: what disteval engine outputs

@@ -473,92 +473,17 @@ class SelfEngine:
             cycle = self._cycle
             self._cycle += 1
 
-        # ── STEP 1: OBSERVE ────────────────────────────────────────────────
-        # Pass model_name=None — each engine is instantiated per agent,
-        # so the store already contains only that agent's records.
-        report = right_tail_analysis(self.store, model_name=None)
-
-        # Consistency index κ
-        kappa = (
-            report.sum_q_bar / report.sum_q_star
-            if report.sum_q_star > 0 else 1.0
-        )
-
-        # Observability: start cycle log
-        if self.logger is not None:
-            self.logger.log_cycle_start(cycle, report.n_tasks, kappa)
-            self.logger.log_taxonomy(
-                n_solid=report.n_solid,
-                n_recoverable=report.n_recoverable,
-                n_stuck=report.n_stuck,
-                recoverable_score_left=report.recoverable_score_left,
-            )
-
-        # ── STEP 2 + 3 + 4: Build curriculum ──────────────────────────────
-        curriculum = []
-        for profile in report.priority_tasks:   # already RECOVERABLE, sorted by gap
-            task_item = self._build_task_improvement(profile)
-            curriculum.append(task_item)
-            if self.logger is not None:
-                self.logger.log_task_improvement(
-                    task=profile.task,
-                    kind=profile.kind,
-                    gap=profile.gap,
-                    priority_score=task_item.priority_score,
-                    difficulty=profile.difficulty,
-                    n_training_pairs=len(task_item.training_pairs),
-                    divergence_step=task_item.divergence_step,
-                    predicted_gain=task_item.predicted_gain,
-                )
-
-        # Sort by priority_score descending (gap × (1-consistency))
-        curriculum.sort(key=lambda x: x.priority_score, reverse=True)
-
-        # ── RECURSION (optional, default-disabled) ─────────────────────────
-        sub_task_graph = None
-        recursion_context = None
-        n_decomposed = 0
-        if self.enable_recursion and self.recursion_engine is not None:
-            sub_task_graph = self.recursion_engine.decompose(report, self._traj_records)
-            recursion_context = {
-                "enabled": True,
-                "max_depth": self.recursion_engine.config.max_depth,
-                "depth_reached": 0,
-                "terminated_early": [],
-            }
-            n_decomposed = len(sub_task_graph.sub_tasks)
-            # Attach sub-tasks to their parent TaskImprovement items.
-            self._attach_sub_tasks(curriculum, sub_task_graph)
-
-        # ── STEP 5: SIMULATE (optional) ────────────────────────────────────
+        report, kappa = self._observe(cycle)
+        curriculum = self._build_curriculum(report)
+        sub_task_graph, recursion_context, n_decomposed = self._run_recursion(curriculum, report)
         self._attach_predicted_gains(curriculum, report)
-
         predicted_total = (
             sum(t.predicted_gain for t in curriculum if t.predicted_gain is not None)
             or None
         )
+        self._log_cycle_end(cycle, kappa, predicted_total, report, n_decomposed)
 
-        # Detect plateau: κ improved by < 1% since last cycle
-        prev_kappa = getattr(self, "_last_kappa", None)
-        delta_kappa = (kappa - prev_kappa) if prev_kappa is not None else 0.0
-        plateau_detected = bool(
-            prev_kappa is not None and abs(delta_kappa) < 0.01
-        )
-        self._last_kappa = kappa
-
-        if self.logger is not None:
-            self.logger.log_cycle_end(
-                cycle=cycle,
-                kappa_new=kappa,
-                delta_kappa=delta_kappa,
-                plateau_detected=plateau_detected,
-                predicted_total_gain=predicted_total,
-                cycle_complete=(report.n_recoverable == 0),
-                recursion_enabled=self.enable_recursion,
-                n_decomposed=n_decomposed,
-            )
-
-        plan = SelfImprovementPlan(
+        return SelfImprovementPlan(
             agent_name=self.agent_name,
             model_name=self.model_name,
             cycle=cycle,
@@ -578,7 +503,78 @@ class SelfEngine:
             sub_task_graph=sub_task_graph.to_dict() if sub_task_graph else None,
             n_decomposed=n_decomposed,
         )
-        return plan
+
+    # ── run_cycle helpers ────────────────────────────────────────────────────
+
+    def _observe(self, cycle: int):
+        """STEP 1 — run right_tail_analysis and emit the cycle-start log."""
+        report = right_tail_analysis(self.store, model_name=None)
+        kappa = (
+            report.sum_q_bar / report.sum_q_star
+            if report.sum_q_star > 0 else 1.0
+        )
+        if self.logger is not None:
+            self.logger.log_cycle_start(cycle, report.n_tasks, kappa)
+            self.logger.log_taxonomy(
+                n_solid=report.n_solid,
+                n_recoverable=report.n_recoverable,
+                n_stuck=report.n_stuck,
+                recoverable_score_left=report.recoverable_score_left,
+            )
+        return report, kappa
+
+    def _build_curriculum(self, report) -> list:
+        """STEPS 2-4 — build and sort the ranked curriculum."""
+        curriculum = []
+        for profile in report.priority_tasks:   # already RECOVERABLE, sorted by gap
+            task_item = self._build_task_improvement(profile)
+            curriculum.append(task_item)
+            if self.logger is not None:
+                self.logger.log_task_improvement(
+                    task=profile.task,
+                    kind=profile.kind,
+                    gap=profile.gap,
+                    priority_score=task_item.priority_score,
+                    difficulty=profile.difficulty,
+                    n_training_pairs=len(task_item.training_pairs),
+                    divergence_step=task_item.divergence_step,
+                    predicted_gain=task_item.predicted_gain,
+                )
+        curriculum.sort(key=lambda x: x.priority_score, reverse=True)
+        return curriculum
+
+    def _run_recursion(self, curriculum: list, report):
+        """Optional recursion decomposition step (default-disabled)."""
+        if not (self.enable_recursion and self.recursion_engine is not None):
+            return None, None, 0
+        sub_task_graph = self.recursion_engine.decompose(report, self._traj_records)
+        recursion_context = {
+            "enabled": True,
+            "max_depth": self.recursion_engine.config.max_depth,
+            "depth_reached": 0,
+            "terminated_early": [],
+        }
+        n_decomposed = len(sub_task_graph.sub_tasks)
+        self._attach_sub_tasks(curriculum, sub_task_graph)
+        return sub_task_graph, recursion_context, n_decomposed
+
+    def _log_cycle_end(self, cycle: int, kappa: float, predicted_total, report, n_decomposed: int) -> None:
+        """Detect plateau and emit the cycle-end log entry."""
+        prev_kappa = getattr(self, "_last_kappa", None)
+        delta_kappa = (kappa - prev_kappa) if prev_kappa is not None else 0.0
+        plateau_detected = bool(prev_kappa is not None and abs(delta_kappa) < 0.01)
+        self._last_kappa = kappa
+        if self.logger is not None:
+            self.logger.log_cycle_end(
+                cycle=cycle,
+                kappa_new=kappa,
+                delta_kappa=delta_kappa,
+                plateau_detected=plateau_detected,
+                predicted_total_gain=predicted_total,
+                cycle_complete=(report.n_recoverable == 0),
+                recursion_enabled=self.enable_recursion,
+                n_decomposed=n_decomposed,
+            )
 
     # ── Internal helpers ─────────────────────────────────────────────────────
 
@@ -709,6 +705,7 @@ class SelfEngine:
             high_steps = self.monitor.load_trajectory_steps(high_path)
             low_steps  = self.monitor.load_trajectory_steps(low_path)
         except Exception:
+            # Trajectory files may be absent or malformed; 0 means no divergence found.
             return 0
 
         max_check = min(len(high_steps), len(low_steps), 20)
@@ -850,6 +847,7 @@ class SelfEngine:
                     with open(path) as f:
                         return json.load(f)
                 except Exception:
+                    # File exists but is unreadable or invalid JSON; skip it.
                     pass
         return None
 

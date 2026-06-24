@@ -1,9 +1,9 @@
-"""Tests for disteval.failure – failure_distribution."""
+"""Tests for disteval.failure – failure_distribution, criterion_failure_rates."""
 import pandas as pd
 import numpy as np
 import pytest
 
-from disteval.failure import failure_distribution
+from disteval.failure import failure_distribution, criterion_failure_rates, top_failing_criteria
 
 
 # ---------------------------------------------------------------------------
@@ -215,3 +215,94 @@ class TestFailureDistributionReturnType:
         # Most frequent failure mode should come first (sort descending by n)
         assert result.iloc[0]["failure_mode"] == "timeout"
         assert result.iloc[1]["failure_mode"] == "crash"
+
+
+# ---------------------------------------------------------------------------
+# criterion_failure_rates
+# ---------------------------------------------------------------------------
+
+class TestCriterionFailureRates:
+    def _episodes(self):
+        return [
+            {"criteria": {"cost_ok": True,  "format_ok": False, "output_correct": True},  "difficulty": "easy"},
+            {"criteria": {"cost_ok": False, "format_ok": False, "output_correct": False}, "difficulty": "hard"},
+            {"criteria": {"cost_ok": True,  "format_ok": True,  "output_correct": True},  "difficulty": "easy"},
+            {"criteria": {"cost_ok": False, "format_ok": False, "output_correct": True},  "difficulty": "hard"},
+        ]
+
+    def test_empty_returns_empty_df(self):
+        df = criterion_failure_rates([])
+        assert df.empty
+        assert "failure_rate" in df.columns
+
+    def test_basic_failure_rates(self):
+        eps = self._episodes()
+        df = criterion_failure_rates(eps)
+        assert set(df.columns) == {"criterion", "n_episodes", "n_failed", "failure_rate"}
+        # format_ok failed 3/4 times → highest failure rate
+        top = df.iloc[0]
+        assert top["criterion"] == "format_ok"
+        assert top["failure_rate"] == pytest.approx(0.75)
+
+    def test_failure_rate_sorted_descending(self):
+        eps = self._episodes()
+        df = criterion_failure_rates(eps)
+        rates = df["failure_rate"].tolist()
+        assert rates == sorted(rates, reverse=True)
+
+    def test_stratified_by_difficulty(self):
+        eps = self._episodes()
+        df = criterion_failure_rates(eps, by=["difficulty"])
+        assert "difficulty" in df.columns
+        # Each stratum is independent
+        for diff in ["easy", "hard"]:
+            sub = df[df["difficulty"] == diff]
+            assert not sub.empty
+
+    def test_episode_without_criteria_is_skipped(self):
+        eps = [
+            {"criteria": {"cost_ok": False}},
+            {"difficulty": "hard"},           # no criteria key
+            {"criteria": {}},                  # empty criteria
+        ]
+        df = criterion_failure_rates(eps)
+        assert len(df) == 1
+        assert df.iloc[0]["criterion"] == "cost_ok"
+
+    def test_all_pass_gives_zero_failure_rate(self):
+        eps = [{"criteria": {"x": True, "y": True}} for _ in range(5)]
+        df = criterion_failure_rates(eps)
+        assert (df["failure_rate"] == 0.0).all()
+
+    def test_all_fail_gives_one_failure_rate(self):
+        eps = [{"criteria": {"x": False}} for _ in range(3)]
+        df = criterion_failure_rates(eps)
+        assert df.iloc[0]["failure_rate"] == pytest.approx(1.0)
+
+    def test_n_episodes_correct(self):
+        eps = [
+            {"criteria": {"a": True}},
+            {"criteria": {"a": False}},
+            {"criteria": {"a": True}},
+        ]
+        df = criterion_failure_rates(eps)
+        assert df.iloc[0]["n_episodes"] == 3
+        assert df.iloc[0]["n_failed"] == 1
+
+
+class TestTopFailingCriteria:
+    def test_returns_top_n(self):
+        eps = [
+            {"criteria": {"a": False, "b": True,  "c": False, "d": False, "e": False, "f": True}},
+            {"criteria": {"a": False, "b": False, "c": False, "d": True,  "e": False, "f": True}},
+        ]
+        df = top_failing_criteria(eps, n=3)
+        assert len(df) == 3
+        # all returned criteria have failure_rate >= those not returned
+        all_df = criterion_failure_rates(eps)
+        assert df["failure_rate"].min() >= all_df.iloc[3]["failure_rate"]
+
+    def test_n_larger_than_criteria_returns_all(self):
+        eps = [{"criteria": {"x": False, "y": True}}]
+        df = top_failing_criteria(eps, n=10)
+        assert len(df) == 2  # only 2 criteria exist

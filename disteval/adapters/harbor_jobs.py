@@ -116,6 +116,7 @@ def _build_task_metadata_index(tasks_dir: str) -> dict[str, dict]:
                 index[task_name] = meta
                 index[task_name.split("/")[-1]] = meta
         except Exception:
+            # Malformed or missing task.toml; skip this entry.
             pass
     return index
 
