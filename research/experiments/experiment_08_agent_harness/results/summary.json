@@ -1,0 +1,32 @@
+{
+  "n_tasks": 6,
+  "comparison": [
+    {
+      "method": "harness",
+      "loc": 42,
+      "n_records": 6,
+      "validation_errors": 0,
+      "error_rate": 0.0,
+      "records_per_loc": 0.143,
+      "error_free_records_per_loc": 0.143
+    },
+    {
+      "method": "manual_jsonl",
+      "loc": 78,
+      "n_records": 6,
+      "validation_errors": 6,
+      "error_rate": 1.0,
+      "records_per_loc": 0.077,
+      "error_free_records_per_loc": 0.0
+    },
+    {
+      "method": "adhoc_adapter",
+      "loc": 64,
+      "n_records": 6,
+      "validation_errors": 6,
+      "error_rate": 1.0,
+      "records_per_loc": 0.094,
+      "error_free_records_per_loc": 0.0
+    }
+  ]
+}

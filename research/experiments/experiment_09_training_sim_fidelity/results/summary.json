@@ -1,0 +1,7 @@
+{
+  "n_bootstrap": 1000,
+  "spearman_rho": 1.0,
+  "p_value": 0.0,
+  "absolute_mae": 0.0008618870901530117,
+  "normalized_mae": 0.20628982123314746
+}

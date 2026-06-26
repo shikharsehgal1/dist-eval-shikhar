@@ -1,0 +1,5 @@
+method,loo_accuracy
+monitor,0.94
+majority,0.76
+first_step,0.54
+random,0.51

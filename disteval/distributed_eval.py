@@ -257,16 +257,31 @@ class DistributedEvalPool:
                 )
             )
 
+    @staticmethod
+    def _weighted_median(values: list[int], weights: list[float]) -> int:
+        """Weighted median: the value where cumulative weight reaches 50%."""
+        sorted_pairs = sorted(zip(values, weights), key=lambda x: x[0])
+        sorted_vals = [v for v, _ in sorted_pairs]
+        sorted_w = np.array([w for _, w in sorted_pairs])
+        cum_weights = np.cumsum(sorted_w)
+        target = cum_weights[-1] / 2.0
+        idx = int(np.searchsorted(cum_weights, target))
+        return int(sorted_vals[idx])
+
     def build_consensus_graph(
         self,
         min_votes: int = 2,
         entry_tolerance: int = 2,
+        use_confidence_weights: bool = True,
     ) -> list[ConsensusNode]:
         """Build consensus boundaries from ingested sub-task graphs.
 
         Boundaries are grouped by (parent_task, phase_tag) and then clustered by
         entry_step within ``entry_tolerance``. A consensus node requires at
         least ``min_votes`` agents.
+
+        When ``use_confidence_weights`` is True, the entry and exit boundaries are
+        computed as weighted medians using each variant's confidence score.
         """
         from collections import defaultdict
 
@@ -291,8 +306,13 @@ class DistributedEvalPool:
             for cluster in clusters:
                 if len(cluster) < min_votes:
                     continue
-                entry = int(np.median([v.entry_step for v in cluster]))
-                exit_ = int(np.median([v.exit_step for v in cluster]))
+                if use_confidence_weights:
+                    weights = [v.confidence for v in cluster]
+                    entry = self._weighted_median([v.entry_step for v in cluster], weights)
+                    exit_ = self._weighted_median([v.exit_step for v in cluster], weights)
+                else:
+                    entry = int(np.median([v.entry_step for v in cluster]))
+                    exit_ = int(np.median([v.exit_step for v in cluster]))
                 consensus.append(
                     ConsensusNode(
                         parent_task=parent,
@@ -337,6 +357,105 @@ class DistributedEvalPool:
                 )
             )
         return sorted(aggregates, key=lambda a: -a.disagreement_score)
+
+    def aggregate_by_task_ivw(self) -> list[TaskAggregate]:
+        """Inverse-variance weighted aggregation per task across agents.
+
+        Given scores x_i from agents with estimated noise variances σ_i², the
+        minimum-variance unbiased aggregate is:
+
+            μ̂_t = Σ_i w_i x_i / Σ_i w_i,   w_i = 1 / σ_i²
+
+        and Var(μ̂_t) = 1 / Σ_i w_i. This reduces to the simple mean when all agents
+        have equal variance.
+        """
+        aggregates = []
+        for task, records in self._task_records.items():
+            scores = np.array([r.score for r in records], dtype=float)
+            agent_vars = self._agent_variances()
+            weights = np.array([1.0 / max(agent_vars.get(r.agent_name, 1e-6), 1e-6) for r in records])
+            ivw_mean = float(np.sum(weights * scores) / np.sum(weights))
+            ivw_var = float(1.0 / np.sum(weights))
+            best_idx = int(np.argmax(scores))
+            worst_idx = int(np.argmin(scores))
+            aggregates.append(
+                TaskAggregate(
+                    task=task,
+                    n_records=len(records),
+                    mean_score=ivw_mean,
+                    std_score=float(np.sqrt(ivw_var)),
+                    min_score=float(np.min(scores)),
+                    max_score=float(np.max(scores)),
+                    best_agent=records[best_idx].agent_name,
+                    worst_agent=records[worst_idx].agent_name,
+                    disagreement_score=float(np.max(scores) - np.min(scores)),
+                )
+            )
+        return sorted(aggregates, key=lambda a: -a.disagreement_score)
+
+    def aggregate_by_task_robust(self, loss: str = "huber", k: float = 1.345, max_iter: int = 10) -> list[TaskAggregate]:
+        """Robust M-estimation aggregation per task (down-weights outlier agents).
+
+        Solves
+
+            μ̂ = argmin_μ Σ_i ρ(x_i - μ; k)
+
+        via iterative reweighted least squares. Huber's loss is:
+
+            ρ(r) = r²/2            for |r| ≤ kσ
+            ρ(r) = kσ|r| - (kσ)²/2 for |r| > kσ
+
+        where σ is the MAD-based scale estimate.
+        """
+        aggregates = []
+        for task, records in self._task_records.items():
+            scores = np.array([r.score for r in records], dtype=float)
+            best_idx = int(np.argmax(scores))
+            worst_idx = int(np.argmin(scores))
+            weights = np.ones(len(scores))
+            for _ in range(max_iter):
+                mu = float(np.average(scores, weights=weights))
+                residuals = scores - mu
+                sigma = float(np.median(np.abs(residuals)) / 0.6745)
+                if sigma < 1e-9:
+                    break
+                scaled = residuals / sigma
+                if loss == "huber":
+                    psi = np.where(np.abs(scaled) <= k, scaled, k * np.sign(scaled))
+                elif loss == "bisquare":
+                    psi = np.where(np.abs(scaled) <= k, scaled * (1.0 - (scaled / k) ** 2) ** 2, 0.0)
+                else:
+                    raise ValueError(f"Unknown robust loss: {loss}")
+                new_weights = np.clip(psi / (scaled + 1e-10), 0.0, 1.0)
+                if np.allclose(weights, new_weights, atol=1e-4):
+                    break
+                weights = new_weights
+            robust_mean = float(np.average(scores, weights=weights))
+            robust_std = float(np.sqrt(np.average((scores - robust_mean) ** 2, weights=weights)))
+            aggregates.append(
+                TaskAggregate(
+                    task=task,
+                    n_records=len(records),
+                    mean_score=robust_mean,
+                    std_score=robust_std,
+                    min_score=float(np.min(scores)),
+                    max_score=float(np.max(scores)),
+                    best_agent=records[best_idx].agent_name,
+                    worst_agent=records[worst_idx].agent_name,
+                    disagreement_score=float(np.max(scores) - np.min(scores)),
+                )
+            )
+        return sorted(aggregates, key=lambda a: -a.disagreement_score)
+
+    def _agent_variances(self) -> dict[str, float]:
+        """Estimate per-agent score variance across all tasks."""
+        agent_scores: dict[str, list[float]] = {}
+        for r in self.records:
+            agent_scores.setdefault(r.agent_name, []).append(r.score)
+        return {
+            agent: float(np.var(scores, ddof=1)) if len(scores) > 1 else 1.0
+            for agent, scores in agent_scores.items()
+        }
 
     def generate_cross_agent_pairs(
         self,

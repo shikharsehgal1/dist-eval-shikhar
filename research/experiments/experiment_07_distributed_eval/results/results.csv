@@ -1,0 +1,8 @@
+agent,baseline,ci_width,meta_ci_width,underconfidence_ratio
+A,single_agent_single_run,0.06817401195920592,,
+B,single_agent_single_run,0.06044528092110357,,
+C,single_agent_single_run,0.048094098081426506,,
+A,single_agent_multi_run,,0.05550124328540684,0.9094321004389473
+B,single_agent_multi_run,,0.050779141656381976,0.5987120176990403
+C,single_agent_multi_run,,0.06405845753886374,0.8905952018384048
+all,multi_agent_multi_run,,0.11716476277998644,1.6185153130007834

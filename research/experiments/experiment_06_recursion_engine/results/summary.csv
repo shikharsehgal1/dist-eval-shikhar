@@ -1,0 +1,4 @@
+strategy,mean_parent_solved,mean_sub_tasks_solved
+flat_retry,0.311,0.622
+random_decomposition,0.072,0.542
+recursion_engine,0.568,1.513

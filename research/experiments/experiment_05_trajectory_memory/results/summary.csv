@@ -1,0 +1,5 @@
+condition,mean_success_rate,mean_boost
+chronological,0.5085,0.506
+none,0.4972,0.5
+random,0.534,0.53
+structural,0.7524,0.75

@@ -1,0 +1,4 @@
+method,loc,n_records,validation_errors,error_rate,records_per_loc,error_free_records_per_loc
+harness,42,6,0,0.0,0.143,0.143
+manual_jsonl,78,6,6,1.0,0.077,0.0
+adhoc_adapter,64,6,6,1.0,0.094,0.0

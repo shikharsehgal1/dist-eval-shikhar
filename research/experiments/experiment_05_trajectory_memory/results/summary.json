@@ -1,0 +1,27 @@
+{
+  "n_memory_records": 200,
+  "n_test_tasks": 10,
+  "n_sim_trials": 1000,
+  "by_condition": [
+    {
+      "condition": "chronological",
+      "mean_success_rate": 0.5085,
+      "mean_boost": 0.506
+    },
+    {
+      "condition": "none",
+      "mean_success_rate": 0.4972,
+      "mean_boost": 0.5
+    },
+    {
+      "condition": "random",
+      "mean_success_rate": 0.534,
+      "mean_boost": 0.53
+    },
+    {
+      "condition": "structural",
+      "mean_success_rate": 0.7524,
+      "mean_boost": 0.75
+    }
+  ]
+}

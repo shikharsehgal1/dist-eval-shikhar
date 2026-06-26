@@ -1,0 +1,56 @@
+{
+  "p_a_beats_b_single_run": 1.0,
+  "p_a_beats_b_multi_run": 1.0,
+  "true_gap": 0.05,
+  "rows": [
+    {
+      "agent": "A",
+      "baseline": "single_agent_single_run",
+      "ci_width": 0.06817401195920592,
+      "meta_ci_width": null,
+      "underconfidence_ratio": null
+    },
+    {
+      "agent": "B",
+      "baseline": "single_agent_single_run",
+      "ci_width": 0.06044528092110357,
+      "meta_ci_width": null,
+      "underconfidence_ratio": null
+    },
+    {
+      "agent": "C",
+      "baseline": "single_agent_single_run",
+      "ci_width": 0.048094098081426506,
+      "meta_ci_width": null,
+      "underconfidence_ratio": null
+    },
+    {
+      "agent": "A",
+      "baseline": "single_agent_multi_run",
+      "ci_width": null,
+      "meta_ci_width": 0.05550124328540684,
+      "underconfidence_ratio": 0.9094321004389473
+    },
+    {
+      "agent": "B",
+      "baseline": "single_agent_multi_run",
+      "ci_width": null,
+      "meta_ci_width": 0.050779141656381976,
+      "underconfidence_ratio": 0.5987120176990403
+    },
+    {
+      "agent": "C",
+      "baseline": "single_agent_multi_run",
+      "ci_width": null,
+      "meta_ci_width": 0.06405845753886374,
+      "underconfidence_ratio": 0.8905952018384048
+    },
+    {
+      "agent": "all",
+      "baseline": "multi_agent_multi_run",
+      "ci_width": null,
+      "meta_ci_width": 0.11716476277998644,
+      "underconfidence_ratio": 1.6185153130007834
+    }
+  ]
+}

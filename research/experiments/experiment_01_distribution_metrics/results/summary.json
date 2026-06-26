@@ -1,0 +1,32 @@
+{
+  "mean_equality_check": {
+    "consistent": 0.5,
+    "inconsistent": 0.4999,
+    "tail_heavy": 0.5
+  },
+  "kappa_range": 0.4844,
+  "mean_range": 6.9e-05,
+  "agreement": [
+    {
+      "metric": "iqm",
+      "spearman_rho": -0.5,
+      "p_value": 0.6666666666666667
+    },
+    {
+      "metric": "cvar_0.1",
+      "spearman_rho": 0.5,
+      "p_value": 0.6666666666666667
+    },
+    {
+      "metric": "pass_hat_4",
+      "spearman_rho": 0.5,
+      "p_value": 0.6666666666666667
+    },
+    {
+      "metric": "kappa",
+      "spearman_rho": 0.5,
+      "p_value": 0.6666666666666667
+    }
+  ],
+  "key_finding": "Means are equal but \u03ba spans widely, showing distribution metrics capture hidden inconsistency"
+}

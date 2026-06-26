@@ -131,11 +131,30 @@ class TaskOutcomeProfile:
     reinforce_idx: list[int] = field(default_factory=list)
     contrast_idx:  list[int] = field(default_factory=list)
 
+    # Information-theoretic extension
+    outcome_entropy: float = 0.0             # H[Y_t] = uncertainty of score distribution
+
     # Recursive self-improvement extensions (optional, default-disabled)
     parent_task: Optional[str] = None        # parent task if this is a sub-task
     sub_task_depth: int = 0                  # recursion depth (0 = root task)
     sub_task_profiles: list["TaskOutcomeProfile"] = field(default_factory=list)
     recursive_gap: float = 0.0               # gap propagated from sub-task gaps
+
+
+def _outcome_entropy(scores: list[float], n_bins: int = 5) -> float:
+    """Empirical Shannon entropy of the score distribution.
+
+    H[Y] = -Σ p(y) log p(y)
+
+    Discretizes scores into ``n_bins`` histogram bins and returns the entropy in nats.
+    """
+    arr = np.array(scores, dtype=float)
+    if len(arr) < 2:
+        return 0.0
+    counts, _ = np.histogram(arr, bins=n_bins, range=(arr.min(), arr.max()))
+    probs = counts / counts.sum()
+    probs = probs[probs > 0]
+    return float(-np.sum(probs * np.log(probs)))
 
 
 @dataclass
@@ -213,6 +232,7 @@ def task_outcome_profile(
         residuals=residuals,
         reinforce_idx=reinforce_idx,
         contrast_idx=contrast_idx,
+        outcome_entropy=_outcome_entropy(scores),
         parent_task=parent_task,
         sub_task_depth=sub_task_depth,
     )

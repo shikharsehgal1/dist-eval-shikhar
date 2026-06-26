@@ -118,6 +118,7 @@ class TaskImprovement:
     predicted_rounds_to_threshold: Optional[float] = None
 
     recommendation: str = ""           # human-readable action string
+    priority_score_eig: float = 0.0      # entropy-based priority: outcome_entropy × (1 - consistency)
 
     # Recursive self-improvement extensions (optional, default-disabled)
     sub_tasks: list["TaskImprovement"] = field(default_factory=list)
@@ -210,6 +211,7 @@ class SelfImprovementPlan:
                 "consistency": t.consistency,
                 "gap": t.gap,
                 "priority_score": t.priority_score,
+                "priority_score_eig": t.priority_score_eig,
                 "predicted_gain": t.predicted_gain,
                 "predicted_gain_ci": list(t.predicted_gain_ci) if t.predicted_gain_ci else None,
                 "predicted_rounds_to_threshold": t.predicted_rounds_to_threshold,
@@ -305,6 +307,9 @@ class SelfEngine:
         enable_recursion: bool = False,
         tasks_dir: str = "tasks",
         logger: Optional[Any] = None,
+        curriculum_scheduler: Optional[Any] = None,
+        thompson_sampling_scheduler: Optional[Any] = None,
+        use_eig_priority: bool = False,
     ):
         self.store = store
         self.job_dirs = job_dirs
@@ -314,6 +319,9 @@ class SelfEngine:
         self.recursion_engine = recursion_engine
         self.enable_recursion = enable_recursion and (recursion_engine is not None)
         self.logger = logger
+        self.curriculum_scheduler = curriculum_scheduler
+        self.thompson_sampling_scheduler = thompson_sampling_scheduler
+        self.use_eig_priority = use_eig_priority
 
         # Load trajectory records (trajectory_monitor.TrajectoryRecord schema)
         self._traj_records = []
@@ -540,7 +548,17 @@ class SelfEngine:
                     divergence_step=task_item.divergence_step,
                     predicted_gain=task_item.predicted_gain,
                 )
-        curriculum.sort(key=lambda x: x.priority_score, reverse=True)
+        # If a Bayesian curriculum scheduler is provided and has historical data,
+        # re-rank by the learned GP model; otherwise use the heuristic priority score.
+        if self.curriculum_scheduler is not None and len(self.curriculum_scheduler._X) >= 2:
+            curriculum = self.curriculum_scheduler.rank(curriculum)
+        elif self.thompson_sampling_scheduler is not None:
+            # Thompson Sampling ranking encodes posterior uncertainty into the order.
+            curriculum = self.thompson_sampling_scheduler.rank(curriculum)
+        elif self.use_eig_priority:
+            curriculum.sort(key=lambda x: x.priority_score_eig, reverse=True)
+        else:
+            curriculum.sort(key=lambda x: x.priority_score, reverse=True)
         return curriculum
 
     def _run_recursion(self, curriculum: list, report):
@@ -591,6 +609,8 @@ class SelfEngine:
 
         # Priority score: gap × (1 - consistency) — how much can we gain AND how far to go
         priority_score = profile.gap * (1.0 - profile.consistency)
+        # Information-theoretic variant: outcome entropy × inconsistency
+        priority_score_eig = getattr(profile, "outcome_entropy", 0.0) * (1.0 - profile.consistency)
 
         # Recommendation
         rec = self._generate_recommendation(profile, training_pairs, mem_results)
@@ -604,6 +624,7 @@ class SelfEngine:
             consistency=profile.consistency,
             gap=profile.gap,
             priority_score=priority_score,
+            priority_score_eig=priority_score_eig,
             training_pairs=training_pairs,
             memory_results=mem_results,
             recommendation=rec,

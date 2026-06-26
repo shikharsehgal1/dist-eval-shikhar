@@ -1,0 +1,21 @@
+{
+  "n_tasks": 10,
+  "n_runs": 100,
+  "summary": [
+    {
+      "strategy": "flat_retry",
+      "mean_parent_solved": 0.311,
+      "mean_sub_tasks_solved": 0.622
+    },
+    {
+      "strategy": "random_decomposition",
+      "mean_parent_solved": 0.072,
+      "mean_sub_tasks_solved": 0.542
+    },
+    {
+      "strategy": "recursion_engine",
+      "mean_parent_solved": 0.568,
+      "mean_sub_tasks_solved": 1.513
+    }
+  ]
+}

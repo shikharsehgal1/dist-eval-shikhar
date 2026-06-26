@@ -1,0 +1,9 @@
+{
+  "tasks": 6,
+  "kendall_tau_se_vs_oracle": 0.9999999999999999,
+  "kendall_tau_gap_vs_oracle": 0.7333333333333333,
+  "spearman_rho_se_vs_oracle": 1.0,
+  "kappa_before": 0.7771496922998012,
+  "kappa_after": 0.9271496922998013,
+  "delta_kappa": 0.15000000000000002
+}

@@ -1,0 +1,258 @@
+[
+  {
+    "mean_equality_check": {
+      "consistent": 0.5,
+      "inconsistent": 0.4999,
+      "tail_heavy": 0.5
+    },
+    "kappa_range": 0.4844,
+    "mean_range": 6.9e-05,
+    "agreement": [
+      {
+        "metric": "iqm",
+        "spearman_rho": -0.5,
+        "p_value": 0.6666666666666667
+      },
+      {
+        "metric": "cvar_0.1",
+        "spearman_rho": 0.5,
+        "p_value": 0.6666666666666667
+      },
+      {
+        "metric": "pass_hat_4",
+        "spearman_rho": 0.5,
+        "p_value": 0.6666666666666667
+      },
+      {
+        "metric": "kappa",
+        "spearman_rho": 0.5,
+        "p_value": 0.6666666666666667
+      }
+    ],
+    "key_finding": "Means are equal but \u03ba spans widely, showing distribution metrics capture hidden inconsistency",
+    "experiment": "experiment_01_distribution_metrics",
+    "status": "ok"
+  },
+  {
+    "n_bootstrap": 1000,
+    "selection_size": 5,
+    "comparisons": [
+      {
+        "baseline": "random_sampling",
+        "p_disteval_gt_baseline": 0.8260000000000001,
+        "mean_diff": 0.0021709684057716833,
+        "cohens_d": 1.396849372492483
+      },
+      {
+        "baseline": "top_k_hardest",
+        "p_disteval_gt_baseline": 1.0,
+        "mean_diff": 0.005870797703996518,
+        "cohens_d": 8.018512824655389
+      },
+      {
+        "baseline": "all_tasks",
+        "p_disteval_gt_baseline": 1.0,
+        "mean_diff": 0.004930796858327451,
+        "cohens_d": 6.715411929819837
+      },
+      {
+        "baseline": "solid_only",
+        "p_disteval_gt_baseline": 1.0,
+        "mean_diff": 0.005870797703996518,
+        "cohens_d": 8.018512824655389
+      }
+    ],
+    "experiment": "experiment_02_recoverable_training",
+    "status": "ok"
+  },
+  {
+    "tasks": 6,
+    "kendall_tau_se_vs_oracle": 0.9999999999999999,
+    "kendall_tau_gap_vs_oracle": 0.7333333333333333,
+    "spearman_rho_se_vs_oracle": 1.0,
+    "kappa_before": 0.7771496922998012,
+    "kappa_after": 0.9271496922998013,
+    "delta_kappa": 0.15000000000000002,
+    "experiment": "experiment_03_self_engine_oracle",
+    "status": "ok"
+  },
+  {
+    "n_trajectories": 200,
+    "monitor_accuracy": 0.94,
+    "majority_accuracy": 0.76,
+    "first_step_accuracy": 0.54,
+    "random_accuracy": 0.51,
+    "experiment": "experiment_04_trajectory_monitor",
+    "status": "ok"
+  },
+  {
+    "n_memory_records": 200,
+    "n_test_tasks": 10,
+    "n_sim_trials": 1000,
+    "by_condition": [
+      {
+        "condition": "chronological",
+        "mean_success_rate": 0.5085,
+        "mean_boost": 0.506
+      },
+      {
+        "condition": "none",
+        "mean_success_rate": 0.4972,
+        "mean_boost": 0.5
+      },
+      {
+        "condition": "random",
+        "mean_success_rate": 0.534,
+        "mean_boost": 0.53
+      },
+      {
+        "condition": "structural",
+        "mean_success_rate": 0.7524,
+        "mean_boost": 0.75
+      }
+    ],
+    "experiment": "experiment_05_trajectory_memory",
+    "status": "ok"
+  },
+  {
+    "n_tasks": 10,
+    "n_runs": 100,
+    "summary": [
+      {
+        "strategy": "flat_retry",
+        "mean_parent_solved": 0.311,
+        "mean_sub_tasks_solved": 0.622
+      },
+      {
+        "strategy": "random_decomposition",
+        "mean_parent_solved": 0.072,
+        "mean_sub_tasks_solved": 0.542
+      },
+      {
+        "strategy": "recursion_engine",
+        "mean_parent_solved": 0.568,
+        "mean_sub_tasks_solved": 1.513
+      }
+    ],
+    "experiment": "experiment_06_recursion_engine",
+    "status": "ok"
+  },
+  {
+    "p_a_beats_b_single_run": 1.0,
+    "p_a_beats_b_multi_run": 1.0,
+    "true_gap": 0.05,
+    "rows": [
+      {
+        "agent": "A",
+        "baseline": "single_agent_single_run",
+        "ci_width": 0.06817401195920592,
+        "meta_ci_width": null,
+        "underconfidence_ratio": null
+      },
+      {
+        "agent": "B",
+        "baseline": "single_agent_single_run",
+        "ci_width": 0.06044528092110357,
+        "meta_ci_width": null,
+        "underconfidence_ratio": null
+      },
+      {
+        "agent": "C",
+        "baseline": "single_agent_single_run",
+        "ci_width": 0.048094098081426506,
+        "meta_ci_width": null,
+        "underconfidence_ratio": null
+      },
+      {
+        "agent": "A",
+        "baseline": "single_agent_multi_run",
+        "ci_width": null,
+        "meta_ci_width": 0.05550124328540684,
+        "underconfidence_ratio": 0.9094321004389473
+      },
+      {
+        "agent": "B",
+        "baseline": "single_agent_multi_run",
+        "ci_width": null,
+        "meta_ci_width": 0.050779141656381976,
+        "underconfidence_ratio": 0.5987120176990403
+      },
+      {
+        "agent": "C",
+        "baseline": "single_agent_multi_run",
+        "ci_width": null,
+        "meta_ci_width": 0.06405845753886374,
+        "underconfidence_ratio": 0.8905952018384048
+      },
+      {
+        "agent": "all",
+        "baseline": "multi_agent_multi_run",
+        "ci_width": null,
+        "meta_ci_width": 0.11716476277998644,
+        "underconfidence_ratio": 1.6185153130007834
+      }
+    ],
+    "experiment": "experiment_07_distributed_eval",
+    "status": "ok"
+  },
+  {
+    "n_tasks": 6,
+    "comparison": [
+      {
+        "method": "harness",
+        "loc": 42,
+        "n_records": 6,
+        "validation_errors": 0,
+        "error_rate": 0.0,
+        "records_per_loc": 0.143,
+        "error_free_records_per_loc": 0.143
+      },
+      {
+        "method": "manual_jsonl",
+        "loc": 78,
+        "n_records": 6,
+        "validation_errors": 6,
+        "error_rate": 1.0,
+        "records_per_loc": 0.077,
+        "error_free_records_per_loc": 0.0
+      },
+      {
+        "method": "adhoc_adapter",
+        "loc": 64,
+        "n_records": 6,
+        "validation_errors": 6,
+        "error_rate": 1.0,
+        "records_per_loc": 0.094,
+        "error_free_records_per_loc": 0.0
+      }
+    ],
+    "experiment": "experiment_08_agent_harness",
+    "status": "ok"
+  },
+  {
+    "n_bootstrap": 1000,
+    "spearman_rho": 1.0,
+    "p_value": 0.0,
+    "absolute_mae": 0.0008618870901530117,
+    "normalized_mae": 0.20628982123314746,
+    "experiment": "experiment_09_training_sim_fidelity",
+    "status": "ok"
+  },
+  {
+    "default_gain": 0.020890199162539203,
+    "bo_gain": 0.10511126354730882,
+    "grid_best_gain": 0.10511126354730882,
+    "bo_params": {
+      "alpha": 0.7794886170764324,
+      "dpo_bonus": 2.732802803305494,
+      "k": 8.0
+    },
+    "grid_best_params": {
+      "alpha": 0.6,
+      "dpo_bonus": 3.0,
+      "k": 8
+    },
+    "experiment": "experiment_10_bayesian_optimization",
+    "status": "ok"
+  }
+]

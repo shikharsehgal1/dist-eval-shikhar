@@ -9,6 +9,15 @@ from disteval.distributed_eval import (
 )
 
 
+def _make_pool() -> DistributedEvalPool:
+    pool = DistributedEvalPool()
+    pool.add(DistributedEvalRecord(agent_name="A", model_name="mA", task="t1", score=0.9))
+    pool.add(DistributedEvalRecord(agent_name="A", model_name="mA", task="t2", score=0.8))
+    pool.add(DistributedEvalRecord(agent_name="B", model_name="mB", task="t1", score=0.5))
+    pool.add(DistributedEvalRecord(agent_name="B", model_name="mB", task="t2", score=0.4))
+    return pool
+
+
 # ---------------------------------------------------------------------------
 # Consensus graph aggregation
 # ---------------------------------------------------------------------------
@@ -188,3 +197,55 @@ def test_require_checkpoints(pool):
     )
     pairs = pool.generate_cross_agent_pairs(min_gap=0.1, require_checkpoints=True)
     assert all(p.task != "tasks/hard-1" for p in pairs)
+
+
+# ---------------------------------------------------------------------------
+# Robust aggregation and weighted consensus
+# ---------------------------------------------------------------------------
+
+
+def test_ivw_aggregation_reduces_to_mean_with_equal_variance():
+    pool = _make_pool()
+    agg_simple = {a.task: a.mean_score for a in pool.aggregate_by_task()}
+    agg_ivw = {a.task: a.mean_score for a in pool.aggregate_by_task_ivw()}
+    assert agg_simple == pytest.approx(agg_ivw)
+
+
+def test_ivw_aggregation_weights_low_variance_agent_more():
+    pool = DistributedEvalPool()
+    # Agent A is consistent (low variance across tasks); agent B is noisy.
+    for score in [0.81, 0.80, 0.79]:
+        pool.add(DistributedEvalRecord(agent_name="A", model_name="mA", task="t1", score=score))
+    for score in [0.95, 0.50, 0.65]:
+        pool.add(DistributedEvalRecord(agent_name="B", model_name="mB", task="t1", score=score))
+    agg = pool.aggregate_by_task_ivw()
+    assert len(agg) == 1
+    # IVW mean should be closer to A's mean (0.80) than B's mean (0.70).
+    assert agg[0].mean_score > 0.75
+
+
+def test_robust_aggregation_downweights_outlier():
+    pool = DistributedEvalPool()
+    for agent, score in [("A", 0.80), ("B", 0.81), ("C", 0.82), ("D", 0.79), ("E", 0.05)]:
+        pool.add(DistributedEvalRecord(agent_name=agent, model_name=agent, task="t1", score=score))
+    robust = pool.aggregate_by_task_robust(loss="huber")
+    simple = pool.aggregate_by_task()
+    assert robust[0].mean_score > simple[0].mean_score
+
+
+def test_weighted_consensus_prefers_high_confidence():
+    pool = DistributedEvalPool()
+    pool.ingest("agent-A", {"n_tasks": 1}, {
+        "sub_tasks": [
+            {"parent_task": "t1", "phase_tag": "explore", "entry_step": 10, "exit_step": 20, "confidence": 0.9}
+        ]
+    })
+    pool.ingest("agent-B", {"n_tasks": 1}, {
+        "sub_tasks": [
+            {"parent_task": "t1", "phase_tag": "explore", "entry_step": 4, "exit_step": 14, "confidence": 0.1}
+        ]
+    })
+    consensus = pool.build_consensus_graph(min_votes=2, entry_tolerance=10, use_confidence_weights=True)
+    assert len(consensus) == 1
+    # Weighted median should be closer to 10 than to 4.
+    assert consensus[0].entry_step > 7

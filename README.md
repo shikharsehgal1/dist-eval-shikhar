@@ -181,6 +181,107 @@ See [CURRICULUM_FORMAT.md](CURRICULUM_FORMAT.md) for the full spec.
 
 ---
 
+## Mathematical foundations
+
+disteval's choices are not ad-hoc heuristics. Each primitive is backed by a
+specific statistical or decision-theoretic model.
+
+### Distribution metrics
+
+For a task with scores `x_1, ..., x_n`:
+
+- **IQM** (interquartile mean): mean after removing the lowest and highest 25%.
+  Robust to outliers while retaining more data than the median.
+- **CVaR@α** (conditional value at risk): average of the worst `α` fraction of
+  outcomes. In disteval, `α = 0.1` measures tail risk — how bad the agent can
+  get on a bad run.
+- **pass^k**: probability that all `k` independent runs succeed. This is the
+  deployment-relevant consistency metric.
+
+### Right-tail taxonomy
+
+For each task `t`:
+
+```
+Q*(t) = max_i score_i(t)        # demonstrated capability
+Q̄(t) = mean_i score_i(t)         # what standard RL optimizes
+Δ(t) = Q*(t) - Q̄(t)              # recoverable gap
+κ(t) = Q̄(t) / Q*(t)              # consistency index (0-1)
+```
+
+A task is **RECOVERABLE** when `Q*(t) > 0` and `Δ(t) > 0`. The training pair
+is automatically `(reinforce, contrast) = (argmax_i score_i(t), argmin_i score_i(t))`.
+
+### Curriculum ranking
+
+The default heuristic ranks by leverage:
+
+```
+priority(t) = Δ(t) · (1 - κ(t))
+```
+
+An information-theoretic alternative is also available:
+
+```
+priority_eig(t) = H[score(t)] · (1 - κ(t))
+```
+
+where `H[score(t)]` is the empirical Shannon entropy of the per-task score
+distribution. It prioritizes tasks whose outcomes are both uncertain and
+recoverable.
+
+### Optimal control formulation
+
+Curriculum scheduling can be modeled as a finite-horizon MDP with state
+` s = (κ_1, ..., κ_n, t) `, action `a ∈ {1, ..., n, STOP}`, deterministic
+transition
+
+```
+κ_i' = min(1, κ_i + α · Δ(i) · (1 - κ_i))
+```
+
+and reward `R(s, a=i) = α · Δ(i) · (1 - κ_i)`. The Bellman optimality equation
+is
+
+```
+V*(s) = max_a [ R(s, a) + γ · V*(s') ]
+```
+
+`disteval.curriculum_optimizer` provides value iteration and rolling-horizon MPC
+solvers for this MDP.
+
+### Bayesian optimization
+
+Training hyperparameters such as the DPO learning rate `α` and the right-tail
+bonus `β` are tuned via Gaussian Process Bayesian optimization. The surrogate
+models the objective `f(x) = mean_score_after_training(x)` and the acquisition
+function balances posterior mean (exploitation) and posterior variance
+(exploration). `disteval.bayesian_optimization.optimize_dpo_hyperparameters`
+exposes this for `(α, β, k)`.
+
+### Robust distributed aggregation
+
+When multiple agents evaluate the same task with different reliability, the
+minimum-variance unbiased aggregate is the inverse-variance weighted mean:
+
+```
+μ̂_t = Σ_i w_i · x_i / Σ_i w_i,    w_i = 1 / σ_i²
+```
+
+For outlier agents, `aggregate_by_task_robust` uses M-estimation (Huber loss)
+via iterative reweighted least squares. Consensus boundaries use confidence-
+weighted medians instead of plain medians.
+
+### Thompson Sampling for online task selection
+
+`disteval.bayesian_optimization.ThompsonSamplingScheduler` maintains a Gaussian
+posterior over feature weights `θ` and samples `θ̃ ~ N(μ, Σ)` at each cycle to
+select the task with highest predicted reward `x_i^T θ̃`. This is a contextual
+bandit with linear payoffs (LinTS; Agrawal & Goyal 2013) and provides
+principled exploration-exploitation trade-offs.
+
+---
+
 ## Bring your own agent — no Harbor required
 
 disteval works with any agent that produces a score per attempt and a trajectory
@@ -334,6 +435,35 @@ verdict = is_gap_real(stores_A, stores_B, stat_fn=lambda df: df["score"].mean())
 print(verdict["P(A>B on a fresh re-run)"])   # decision-relevant probability
 ```
 
+### Agent harness for running and recording episodes
+
+If you want disteval to capture the agent lifecycle itself instead of only
+reading logs from Harbor or Inspect, use the harness:
+
+```python
+from disteval.agent_harness import AgentHarness, Agent, TaskSpec
+
+class MyAgent(Agent):
+    def run_step(self, context):
+        # ... call LLM, return tool calls ...
+        return Step(tool_calls=[ToolCall("read_file", {"file_path": "task.md"})])
+
+harness = AgentHarness(
+    agent=MyAgent(),
+    executor=MyToolExecutor(),
+    verifier=MyVerifier(),
+    agent_name="my-agent",
+)
+
+result = harness.run_episode(TaskSpec(id="task-1", instruction="..."), output_dir="runs/")
+result.store.to_jsonl("runs/records.jsonl")
+```
+
+The harness manages the agent lifecycle (intent, tool execution, memory,
+verification, and persistence) and writes records and trajectories in the
+exact format the rest of disteval consumes. See
+[`research/agent_harness.md`](research/agent_harness.md) for the design mapping.
+
 ---
 
 ## File layout
@@ -363,10 +493,12 @@ disteval/
     swebench_adapter.py   — SWE-bench predictions + SWE-agent trajectories → RecordStore
   logging.py              — CycleLogger: per-cycle κ tracking, plateau detection, JSON/CSV export
   training_harness.py     — DPOTrainerBase, NoOpTrainer, SimulatedTrainer, TRL/Axolotl stubs
+  agent_harness.py        — lifecycle wrapper for running agents and capturing trajectories
 
 TRAJECTORY_FORMAT.md      — spec: what disteval reads
 CURRICULUM_FORMAT.md      — spec: what disteval engine outputs
 THEORY.md                 — mathematical argument for right-tail training
+research/agent_harness.md — mapping the "agent harness" concept to disteval
 ```
 
 ---

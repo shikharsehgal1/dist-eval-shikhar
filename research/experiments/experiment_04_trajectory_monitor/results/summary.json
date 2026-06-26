@@ -1,0 +1,7 @@
+{
+  "n_trajectories": 200,
+  "monitor_accuracy": 0.94,
+  "majority_accuracy": 0.76,
+  "first_step_accuracy": 0.54,
+  "random_accuracy": 0.51
+}

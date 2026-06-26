@@ -202,6 +202,7 @@ def apply_training_effect(
     report: RightTailReport,
     alpha: float = ALPHA,
     strategy: str = "generic",
+    dpo_bonus: float = DPO_BONUS,
 ) -> list[float]:
     """
     Apply the training effect model to get new scores for each episode.
@@ -209,7 +210,7 @@ def apply_training_effect(
     For each task:
       - If RECOVERABLE:
           * disteval_right_tail strategy (DPO-style with paired reinforce+contrast):
-              improvement = α * DPO_BONUS * q_star * (1 - current_mean)
+              improvement = α * dpo_bonus * q_star * (1 - current_mean)
               when both reinforce AND contrast trajectories are selected for the task.
               This reflects that paired preference data (DPO) is ~50% more sample-
               efficient than BC on positives only (Rafailov et al. 2023).
@@ -263,8 +264,8 @@ def apply_training_effect(
                     has_reinforce = float(sel_arr.max()) >= 0.9 * q_star if q_star > 0 else False
                     has_contrast  = float(sel_arr.min()) < 0.9 * q_star  if q_star > 0 else False
                     if has_reinforce and has_contrast and q_star > 0:
-                        # Full DPO signal: paired preference → use DPO_BONUS
-                        improvement = alpha * DPO_BONUS * q_star * (1.0 - current_mean)
+                        # Full DPO signal: paired preference → use dpo_bonus
+                        improvement = alpha * dpo_bonus * q_star * (1.0 - current_mean)
                     else:
                         # Only one type: fall back to standard BC
                         sel_mean = float(sel_arr.mean())
@@ -354,12 +355,13 @@ def _fast_apply_improvement(
     sel_by_task: dict[str, np.ndarray],
     alpha: float = ALPHA,
     strategy: str = "generic",
+    dpo_bonus: float = DPO_BONUS,
 ) -> dict[str, np.ndarray]:
     """
     Fast (no EpisodeRecord objects) training-effect application.
     Returns updated task_scores dict with new score arrays.
 
-    For disteval_right_tail: applies DPO_BONUS when both reinforce and contrast
+    For disteval_right_tail: applies dpo_bonus when both reinforce and contrast
     trajectories are present for a RECOVERABLE task.
     """
     new_task_scores: dict[str, np.ndarray] = {}
@@ -378,7 +380,7 @@ def _fast_apply_improvement(
                     has_reinforce = bool(np.any(sel >= thr))
                     has_contrast  = bool(np.any(sel < thr))
                     if has_reinforce and has_contrast:
-                        imp = alpha * DPO_BONUS * q_star_local * (1.0 - cur_mean)
+                        imp = alpha * dpo_bonus * q_star_local * (1.0 - cur_mean)
                     else:
                         imp = alpha * float(sel.mean()) * (1.0 - cur_mean)
                 else:
