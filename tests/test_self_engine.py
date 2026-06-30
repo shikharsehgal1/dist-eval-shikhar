@@ -37,6 +37,38 @@ class TestSelfEngineFromJobDirs:
         assert plan.summary() is not None
         assert isinstance(plan.to_dict(), dict)
 
+    def test_run_cycle_with_logger_does_not_crash(self):
+        """Regression: _build_curriculum referenced a nonexistent
+        TaskImprovement.divergence_step, crashing run_cycle whenever a logger
+        was attached (no test exercised the logger path). Build an engine
+        directly with injected (empty) monitor/memory and a synthetic store
+        containing one RECOVERABLE task."""
+        from disteval.logging import CycleLogger
+        from disteval.records import EpisodeRecord, RecordStore
+        from disteval.trajectory_memory import TrajectoryMemory
+
+        store = RecordStore()
+        # A RECOVERABLE task: high peak (q*≈1) but inconsistent mean.
+        for ep, score in enumerate([1.0, 0.0, 1.0, 0.0]):
+            store.add(EpisodeRecord(
+                run_id="r0", model="m", task="flaky_task", episode=ep,
+                score=score, success=score >= 0.99,
+            ))
+
+        logger = CycleLogger(agent_name="a", model_name="m")
+        # Inject monitor=object() / empty memory so __init__ skips Harbor loading;
+        # with no trajectory records the curriculum has empty training_pairs,
+        # which is exactly the branch the divergence_step fix must handle.
+        engine = SelfEngine(
+            store=store, job_dirs=[], agent_name="a", model_name="m",
+            monitor=object(), memory=TrajectoryMemory(), logger=logger,
+        )
+        plan = engine.run_cycle(1)  # must not raise AttributeError
+        assert plan.cycle == 1
+        assert plan.n_recoverable >= 1
+        assert logger.cycles, "logger should have captured the cycle"
+        assert logger.cycles[0].tasks, "logger should have captured the task"
+
     def test_plan_serialisation_roundtrip(self):
         # Minimal unit test: build a plan directly without filesystem deps.
         from disteval.self_engine import SelfImprovementPlan

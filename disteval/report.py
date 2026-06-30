@@ -281,7 +281,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="disteval: distribution-first agent reliability report"
     )
-    parser.add_argument("jobs_dir", help="Harbor jobs/ directory for one agent run")
+    parser.add_argument("jobs_dir", help="Harbor jobs/ directory, or a generic .jsonl/.json records file")
     parser.add_argument("--output-dir", "-o", default="disteval_output",
                         help="Directory to save plots and JSON summary")
     parser.add_argument("--agent", "-a", default="Agent",
@@ -296,15 +296,21 @@ def main(argv: list[str] | None = None) -> None:
                         help="Named reward key to use as primary score")
     args = parser.parse_args(argv)
 
-    # Load the Harbor job
-    print(f"Loading Harbor job from: {args.jobs_dir}")
-    store = load_harbor_job(
-        args.jobs_dir,
-        run_id="run0",
-        tasks_dir=args.tasks_dir,
-        success_threshold=args.success_threshold,
-        reward_key=args.reward_key,
-    )
+    # Load the records: a generic .jsonl/.json file (the "bring your own agent"
+    # path) or a Harbor job directory.
+    if os.path.isfile(args.jobs_dir):
+        from .adapters.generic import load_records
+        print(f"Loading generic records from: {args.jobs_dir}")
+        store = load_records(args.jobs_dir, success_threshold=args.success_threshold)
+    else:
+        print(f"Loading Harbor job from: {args.jobs_dir}")
+        store = load_harbor_job(
+            args.jobs_dir,
+            run_id="run0",
+            tasks_dir=args.tasks_dir,
+            success_threshold=args.success_threshold,
+            reward_key=args.reward_key,
+        )
     n_total = len(store)
     n_infra = len(store.df()[store.df()["failure_mode"] == "missing_reward"])
 

@@ -38,6 +38,8 @@ def main() -> None:
             print_compare_help_and_exit()
         elif subcommand == "sim":
             print_sim_help_and_exit()
+        elif subcommand == "train":
+            print_train_help_and_exit()
         else:
             print_help_and_exit()
     

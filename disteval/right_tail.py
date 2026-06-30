@@ -186,6 +186,16 @@ class RightTailReport:
     sub_task_profiles: dict[str, list[TaskOutcomeProfile]] = field(default_factory=dict)
     recursive_gap: float = 0.0               # total gap propagated from sub-tasks
 
+    @property
+    def consistency_index(self) -> float:
+        """κ = Σq̄ / Σq* — fraction of achievable (right-tail) score actually realized.
+
+        1.0 means the agent performs at its own peak on every task; lower values
+        quantify the score lost to run-to-run inconsistency rather than missing
+        capability. Returns 1.0 when there is no achievable score (Σq* == 0).
+        """
+        return self.sum_q_bar / self.sum_q_star if self.sum_q_star > 0 else 1.0
+
 
 # ── Core analysis ─────────────────────────────────────────────────────────────
 

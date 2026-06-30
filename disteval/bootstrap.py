@@ -20,6 +20,7 @@ __all__ = [
     "performance_profile",
     "analytical_ci",
     "binomial_ci",
+    "confidence_sequence",
 ]
 
 
@@ -91,6 +92,55 @@ def analytical_ci(x: np.ndarray, ci: float = 0.95) -> dict:
     lo, hi = point - z * se, point + z * se
     return {"point": point, "lo": float(lo), "hi": float(hi),
             "width": float(hi - lo), "ci": ci}
+
+
+def confidence_sequence(x: np.ndarray, ci: float = 0.95, lo: float = 0.0, hi: float = 1.0) -> dict:
+    """Anytime-valid confidence sequence for the mean of bounded scores.
+
+    A fixed-n CI (analytical_ci/binomial_ci) is only valid if you fix the sample
+    size in advance; if you keep adding eval runs and stop as soon as the CI
+    excludes a threshold, you p-hack and the stated coverage is a lie. A
+    confidence sequence is valid *simultaneously at every sample size*, so you may
+    peek after each run and stop early without inflating error.
+
+    This is a Hoeffding confidence sequence built by a union bound over sample
+    sizes with weights alpha_t = alpha * 6 / (pi^2 t^2) (which sum to alpha). It
+    is conservative but provably valid for i.i.d. observations in [lo, hi]; for
+    tighter (empirical-Bernstein) sequences see Howard et al. 2021.
+
+    Returns the running interval at the final sample size plus the full per-step
+    bounds, so callers can find the first t where the interval clears a bound.
+    """
+    x = np.asarray(x, dtype=float)
+    n = x.size
+    if n == 0:
+        return {"point": float("nan"), "lo": float("nan"), "hi": float("nan"),
+                "width": float("nan"), "ci": ci, "n": 0,
+                "running_mean": [], "running_lo": [], "running_hi": []}
+    rng = hi - lo
+    if rng <= 0:
+        raise ValueError("hi must be greater than lo")
+    t = np.arange(1, n + 1)
+    alpha = 1 - ci
+    # Hoeffding: P(|mean_t - mu| >= eps) <= 2 exp(-2 t eps^2 / range^2). Spend
+    # alpha_t = alpha * 6/(pi^2 t^2) at each t; union bound over t keeps the whole
+    # sequence valid at level (1 - alpha).
+    alpha_t = alpha * 6.0 / (np.pi**2 * t**2)
+    radius = rng * np.sqrt(np.log(2.0 / alpha_t) / (2.0 * t))
+    running_mean = np.cumsum(x) / t
+    running_lo = np.clip(running_mean - radius, lo, hi)
+    running_hi = np.clip(running_mean + radius, lo, hi)
+    return {
+        "point": float(running_mean[-1]),
+        "lo": float(running_lo[-1]),
+        "hi": float(running_hi[-1]),
+        "width": float(running_hi[-1] - running_lo[-1]),
+        "ci": ci,
+        "n": int(n),
+        "running_mean": running_mean.tolist(),
+        "running_lo": running_lo.tolist(),
+        "running_hi": running_hi.tolist(),
+    }
 
 
 def binomial_ci(k: int, n: int, ci: float = 0.95, method: str = "clopper-pearson") -> dict:

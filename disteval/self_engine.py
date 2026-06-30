@@ -545,7 +545,10 @@ class SelfEngine:
                     priority_score=task_item.priority_score,
                     difficulty=profile.difficulty,
                     n_training_pairs=len(task_item.training_pairs),
-                    divergence_step=task_item.divergence_step,
+                    divergence_step=(
+                        task_item.training_pairs[0].structural_divergence_step
+                        if task_item.training_pairs else 0
+                    ),
                     predicted_gain=task_item.predicted_gain,
                 )
         # If a Bayesian curriculum scheduler is provided and has historical data,

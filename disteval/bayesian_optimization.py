@@ -301,9 +301,13 @@ class ThompsonSamplingScheduler:
     def update(self, x: np.ndarray, reward: float) -> None:
         """Observe a training outcome (feature vector, reward) and update the posterior."""
         x = np.asarray(x, dtype=float).reshape(self.d)
-        self.Sigma_inv += np.outer(x, x) / self.sigma2
+        # The posterior-mean update must use the PRIOR precision Σ_{t-1}⁻¹ against the
+        # prior mean μ_{t-1} (see class docstring). Capture it before updating Σ⁻¹;
+        # `+ np.outer(...)` allocates a new array, so `Sigma_inv_old` keeps the old one.
+        Sigma_inv_old = self.Sigma_inv
+        self.Sigma_inv = self.Sigma_inv + np.outer(x, x) / self.sigma2
         self.Sigma = np.linalg.inv(self.Sigma_inv)
-        self.mu = self.Sigma @ (self.Sigma_inv @ self.mu + x * reward / self.sigma2)
+        self.mu = self.Sigma @ (Sigma_inv_old @ self.mu + x * reward / self.sigma2)
 
     def select(self, task_features: dict[str, np.ndarray]) -> str:
         """Sample θ̃ ~ N(μ, Σ) and return the task with highest predicted reward."""

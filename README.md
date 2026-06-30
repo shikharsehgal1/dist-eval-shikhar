@@ -85,7 +85,11 @@ disteval report   jobs/<run>/               # single-agent distribution report +
 disteval compare  jobs/run_A/ jobs/run_B/   # head-to-head leaderboard comparison
 disteval engine   jobs/<run>/               # generate training curriculum
 disteval sim      jobs/<run>/               # Monte Carlo training simulation
+disteval train    --curriculum plan.json    # train a policy from a curriculum (DPO)
 ```
+
+`disteval report` also accepts a generic `.jsonl`/`.json` records file directly
+(see "Bring your own agent" below).
 
 Or invoke by module: `python -m disteval <subcommand>`.
 
@@ -119,6 +123,22 @@ metrics.cvar(df["score"].values, 0.1)     # 0.000 — tail collapses
 metrics.pass_at_k(df, k=3)               # 0.889
 metrics.pass_hat_k(df, k=3)              # 0.400 — only 40% fully consistent
 ```
+
+**Statistical-rigor toolkit.** Beyond the headline aggregates, disteval ships
+the primitives that keep multi-run comparisons honest:
+
+- `metrics.reliability_decay` / `variance_amplification_factor` — the *shape* of
+  the pass^k decay curve and how much long-horizon tasks amplify variance.
+- `bootstrap.confidence_sequence` — anytime-valid CIs so you can add runs and
+  stop early without p-hacking the stated coverage.
+- `compare.adjust_pvalues` (Benjamini-Hochberg / Holm) — multiple-comparison
+  correction for leaderboards and per-criterion failure tests.
+- `compare.min_detectable_effect` / `required_n` — power analysis: is your
+  "no significant difference" just an underpowered run?
+- `compare.score_length_bias` — flags score↔length correlation, the classic
+  reward-hacking signature, before you turn runs into DPO pairs.
+- `metrics.grpo_advantages` — group-relative (GRPO-style) advantages over the
+  multiple runs per task.
 
 ### Step 2 — classify every task as SOLID / RECOVERABLE / STUCK
 
@@ -315,12 +335,16 @@ with open("runs.jsonl", "w") as f:
 store = load_records("runs.jsonl")
 ```
 
-Then run the same CLI:
+Then run the report CLI directly on the file:
 
 ```bash
 disteval report runs.jsonl --agent my-agent
-disteval engine runs.jsonl --agent my-agent --output plan.json
 ```
+
+> The distribution **report** works from a flat records file. The **engine**
+> curriculum step additionally needs per-step trajectory files (for structural
+> divergence localization), so point it at Harbor-style job directories rather
+> than a flat `.jsonl`.
 
 See [TRAJECTORY_FORMAT.md](TRAJECTORY_FORMAT.md) for the full record and
 trajectory file specifications.

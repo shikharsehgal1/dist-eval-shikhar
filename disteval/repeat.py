@@ -48,6 +48,11 @@ def meta_distribution(
     ci: float = 0.95,
 ) -> dict:
     """Distribution of an aggregate statistic across repeated whole evals."""
+    if not stores:
+        nan = float("nan")
+        return {"values": [], "n_repeats": 0, "mean": nan, "std": 0.0,
+                "min": nan, "max": nan, "spread": nan,
+                "ci_lo": nan, "ci_hi": nan, "ci_width": nan}
     vals = np.array([stat_fn(s.df()) for s in stores], dtype=float)
     lo, hi = np.quantile(vals, [(1 - ci) / 2, 1 - (1 - ci) / 2])
     return {

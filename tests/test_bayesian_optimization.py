@@ -72,6 +72,26 @@ def test_thompson_sampling_updates_posterior():
     assert scheduler.mu[0] > 0.0
 
 
+def test_thompson_sampling_posterior_matches_closed_form():
+    """After several updates with a moving mean, the posterior must equal the
+    closed-form Bayesian-linear-regression solution (regression test for the
+    posterior-mean update using the prior, not posterior, precision)."""
+    rng = np.random.default_rng(0)
+    d = 3
+    lam, sigma = 2.0, 0.1
+    sched = ThompsonSamplingScheduler(feature_dim=d, lambda_prior=lam, sigma_noise=sigma, seed=1)
+    X = rng.normal(size=(6, d))
+    r = rng.normal(size=6)
+    for xi, ri in zip(X, r):
+        sched.update(xi, float(ri))
+
+    sigma2 = sigma**2
+    Sigma_inv = (1.0 / lam) * np.eye(d) + X.T @ X / sigma2
+    mu_expected = np.linalg.inv(Sigma_inv) @ (X.T @ r / sigma2)
+    np.testing.assert_allclose(sched.mu, mu_expected, rtol=1e-7, atol=1e-7)
+    np.testing.assert_allclose(sched.Sigma_inv, Sigma_inv, rtol=1e-7, atol=1e-7)
+
+
 def test_thompson_sampling_selects_highest_reward_task():
     """With a deterministic posterior mean, select the task with highest dot product."""
     scheduler = ThompsonSamplingScheduler(feature_dim=2, lambda_prior=1e-6, sigma_noise=1e-6, seed=42)

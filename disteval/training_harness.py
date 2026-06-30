@@ -184,8 +184,15 @@ class TRLReferenceTrainer(DPOTrainerBase):
         examples = self._plan_to_dpo_examples(curriculum)
         self._write_dataset(examples, os.path.join(output_dir, "dpo_dataset.jsonl"))
 
-        # Reference skeleton: return a not-implemented score map.
-        # A real implementation would instantiate the trainer here.
+        # Reference skeleton: it writes a real DPO dataset but does NOT train.
+        # The returned scores are placeholders, not measured results.
+        import warnings
+        warnings.warn(
+            "TRLReferenceTrainer is a reference skeleton: it wrote a DPO dataset but "
+            "did not run training. The returned per-task scores are placeholders (1.0), "
+            "not measured post-training results.",
+            stacklevel=2,
+        )
         return {
             ex.task: 1.0
             for ex in examples
@@ -230,6 +237,15 @@ learning_rate: 5e-7
 """
             )
 
+        # Reference skeleton: it writes a dataset + Axolotl config but does NOT
+        # train. The returned scores are placeholders, not measured results.
+        import warnings
+        warnings.warn(
+            "AxolotlReferenceTrainer is a reference skeleton: it wrote a DPO dataset and "
+            "an Axolotl config but did not run training. The returned per-task scores are "
+            "placeholders (1.0), not measured post-training results.",
+            stacklevel=2,
+        )
         return {ex.task: 1.0 for ex in examples}
 
 
