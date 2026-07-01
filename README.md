@@ -139,6 +139,24 @@ the primitives that keep multi-run comparisons honest:
   reward-hacking signature, before you turn runs into DPO pairs.
 - `metrics.grpo_advantages` — group-relative (GRPO-style) advantages over the
   multiple runs per task.
+- `compare.bradley_terry` — joint MLE ranking of ≥3 systems from a pairwise win
+  matrix, with bootstrap CIs and a ranking-instability flag (the Chatbot-Arena
+  method), plus `compare.win_matrix_from_pairs`.
+- `irt` — 2-parameter item response theory: fit per-task difficulty and
+  discrimination and per-agent ability, then `irt.select_items` picks the most
+  *informative* tasks so you can match a full-bank ability estimate with far
+  fewer items (adaptive/efficient eval).
+- `ppi` — prediction-powered inference: debias an LLM-judge score column using a
+  small gold calibration set, with a tighter CI than gold labels alone.
+
+**Self-improvement safeguards (opt-in).** The recursive `run_cycle`/`reload`
+loop is a self-consuming training process, which can collapse. `SelfEngine` now
+accepts `accumulate_trajectories=True` (keep past trajectories across cycles
+rather than replacing them) and `diversity_threshold` (drop near-duplicate
+reinforce trajectories so the loop doesn't narrow the output distribution).
+`training_sim.overoptimized_gain` / `optimal_training_amount` model the
+hump-shaped reward-overoptimization curve (gold reward rises, peaks, then
+regresses) so a planner knows when to stop.
 
 ### Step 2 — classify every task as SOLID / RECOVERABLE / STUCK
 

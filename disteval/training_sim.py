@@ -194,6 +194,52 @@ def select_random(
     return [records[i] for i in idx]
 
 
+# ── Reward-overoptimization model ─────────────────────────────────────────────
+
+def overoptimized_gain(
+    gap: float,
+    training_amount,
+    alpha: float = 0.6,
+    kl_coef: float = 0.15,
+):
+    """Gao-style hump-shaped gold-reward gain as a function of training amount.
+
+    The default disteval effect model is monotone: more training → more gain,
+    forever. Real proxy-reward optimization is not — gold reward rises, peaks,
+    then *regresses* as the policy overfits the (imperfect) preference signal and
+    drifts from the reference (Gao et al. 2023, "Scaling Laws for Reward Model
+    Overoptimization"; Rafailov et al. 2024 for direct alignment).
+
+    Modeled as a downward parabola in the training amount ``t`` (a KL-distance /
+    training-budget proxy):
+
+        gain(t) = gap * clip(alpha * t - kl_coef * t^2, 0, 1)
+
+    which rises, peaks at ``t* = alpha / (2 * kl_coef)``, then declines. Set
+    ``kl_coef = 0`` to recover the monotone (no-overoptimization) model. Accepts
+    a scalar or array ``training_amount``.
+    """
+    t = np.asarray(training_amount, dtype=float)
+    frac = np.clip(alpha * t - kl_coef * t**2, 0.0, 1.0)
+    gain = float(gap) * frac
+    return float(gain) if gain.ndim == 0 else gain
+
+
+def optimal_training_amount(alpha: float = 0.6, kl_coef: float = 0.15) -> dict:
+    """Training amount that maximizes gold gain (the peak of the overoptimization
+    hump), and the peak gain fraction.
+
+    Beyond ``t_star`` additional training *reduces* gold reward — the point a
+    curriculum/MPC planner should stop. With ``kl_coef <= 0`` there is no
+    overoptimization, so the peak is unbounded (``t_star = inf``).
+    """
+    if kl_coef <= 0:
+        return {"t_star": float("inf"), "peak_frac": 1.0}
+    t_star = alpha / (2.0 * kl_coef)
+    peak_frac = min(1.0, alpha * t_star - kl_coef * t_star**2)
+    return {"t_star": float(t_star), "peak_frac": float(peak_frac)}
+
+
 # ── Training effect model ─────────────────────────────────────────────────────
 
 def apply_training_effect(

@@ -21,6 +21,8 @@ __all__ = [
     "min_detectable_effect",
     "required_n",
     "score_length_bias",
+    "bradley_terry",
+    "win_matrix_from_pairs",
 ]
 
 
@@ -209,6 +211,137 @@ def score_length_bias(scores: np.ndarray, lengths: np.ndarray, threshold: float 
     rho, p = float(res.statistic), float(res.pvalue)
     flagged = bool(np.isfinite(p) and p < 0.05 and abs(rho) >= threshold)
     return {"rho": rho, "p": p, "n": int(s.size), "flagged": flagged}
+
+
+def win_matrix_from_pairs(pairs, items: list | None = None) -> tuple[np.ndarray, list]:
+    """Build a K×K win matrix from pairwise outcomes for Bradley-Terry ranking.
+
+    ``pairs`` is an iterable of ``(a, b, s)`` where ``s`` is a's result against
+    b: 1.0 = a won, 0.0 = b won, 0.5 = tie. ``items`` fixes the row/column order;
+    if omitted it is inferred (sorted) from the pairs. Returns ``(win_matrix,
+    items)`` where ``win_matrix[i][j]`` is the (possibly fractional, for ties)
+    number of wins of item i over item j.
+    """
+    pairs = list(pairs)
+    if items is None:
+        seen = set()
+        for a, b, _ in pairs:
+            seen.add(a)
+            seen.add(b)
+        items = sorted(seen)
+    idx = {name: i for i, name in enumerate(items)}
+    k = len(items)
+    w = np.zeros((k, k), dtype=float)
+    for a, b, s in pairs:
+        s = float(s)
+        w[idx[a], idx[b]] += s
+        w[idx[b], idx[a]] += 1.0 - s
+    return w, list(items)
+
+
+def bradley_terry(
+    win_matrix: np.ndarray,
+    ci: float | None = None,
+    reg: float = 1e-3,
+    n_boot: int = 1000,
+    seed: int = 0,
+    max_iter: int = 1000,
+    tol: float = 1e-9,
+) -> dict:
+    """Bradley-Terry MLE ranking of N systems from a pairwise win matrix.
+
+    The pairwise ``prob_improvement`` only ranks two systems; Bradley-Terry
+    jointly fits a strength per system so a full leaderboard is consistent (the
+    de-facto standard since Chatbot Arena moved from Elo to a BT MLE). Fit by the
+    MM algorithm (Hunter 2004). A small symmetric ``reg`` pseudo-count keeps
+    strengths finite when a system wins or loses all its games.
+
+    ``win_matrix[i][j]`` = wins of i over j (fractional allowed for ties). With
+    ``ci`` set (e.g. 0.95) a parametric bootstrap resamples each pair's games
+    from the fitted probabilities and returns per-system CIs on the log-strength
+    plus a ``ranking_unstable`` flag when any CIs overlap the top system's.
+
+    Returns {strengths (log scale, mean-centered), probs (sum to 1), ranking
+    (indices best-first), n_items, iterations, and — if ci — strength_lo/hi,
+    ranking_unstable, and rank_flip_prob (bootstrap P(runner-up >= top))}.
+    """
+    W = np.asarray(win_matrix, dtype=float).copy()
+    k = W.shape[0]
+    if W.ndim != 2 or W.shape[1] != k:
+        raise ValueError("win_matrix must be square (K x K)")
+    if k < 2:
+        raise ValueError("need at least 2 systems to rank")
+    np.fill_diagonal(W, 0.0)
+    # Symmetric regularization: a tiny shared prior game between every pair.
+    if reg > 0:
+        W = W + reg * (1.0 - np.eye(k))
+
+    games = W + W.T           # n_ij, symmetric
+    wins = W.sum(axis=1)      # W_i, total wins per system
+
+    def _fit(wins_vec, games_mat):
+        p = np.ones(k)
+        for it in range(max_iter):
+            p_old = p.copy()
+            for i in range(k):
+                denom = 0.0
+                for j in range(k):
+                    if j == i:
+                        continue
+                    denom += games_mat[i, j] / (p[i] + p[j])
+                p[i] = wins_vec[i] / denom if denom > 0 else p[i]
+            p /= p.sum()
+            if np.max(np.abs(p - p_old)) < tol:
+                break
+        return p, it + 1
+
+    p, iters = _fit(wins, games)
+    strengths = np.log(p)
+    strengths -= strengths.mean()  # center for identifiability
+    ranking = np.argsort(strengths)[::-1]
+
+    out = {
+        "strengths": strengths,
+        "probs": p,
+        "ranking": ranking,
+        "n_items": k,
+        "iterations": iters,
+    }
+
+    if ci is not None:
+        rng = np.random.default_rng(seed)
+        # Fitted win probability for each ordered pair.
+        P = p[:, None] / (p[:, None] + p[None, :])
+        boot = np.empty((n_boot, k))
+        n_int = np.rint(games).astype(int)
+        for b in range(n_boot):
+            Wb = np.zeros((k, k))
+            for i in range(k):
+                for j in range(i + 1, k):
+                    n_ij = n_int[i, j]
+                    if n_ij <= 0:
+                        continue
+                    wins_i = rng.binomial(n_ij, P[i, j])
+                    Wb[i, j] = wins_i
+                    Wb[j, i] = n_ij - wins_i
+            if reg > 0:
+                Wb = Wb + reg * (1.0 - np.eye(k))
+            pb, _ = _fit(Wb.sum(axis=1), Wb + Wb.T)
+            sb = np.log(pb)
+            boot[b] = sb - sb.mean()
+        lo, hi = np.quantile(boot, [(1 - ci) / 2, 1 - (1 - ci) / 2], axis=0)
+        out["strength_lo"] = lo
+        out["strength_hi"] = hi
+        out["ci"] = ci
+        best = ranking[0]
+        others = np.arange(k) != best
+        # Unstable if ANY other system's CI reaches the top system's lower CI.
+        out["ranking_unstable"] = bool(np.any(hi[others] >= lo[best]))
+        # Bootstrap probability the top system is caught/overtaken by the runner-up.
+        second = ranking[1]
+        out["rank_flip_prob"] = float(np.mean(boot[:, second] >= boot[:, best]))
+
+    return out
 
 
 def compare_distributions(a: np.ndarray, b: np.ndarray) -> dict:

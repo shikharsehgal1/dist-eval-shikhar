@@ -55,6 +55,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional, Any
 
+import numpy as np
 
 from .records import RecordStore
 from .right_tail import right_tail_analysis, RightTailReport, TaskOutcomeProfile
@@ -310,6 +311,8 @@ class SelfEngine:
         curriculum_scheduler: Optional[Any] = None,
         thompson_sampling_scheduler: Optional[Any] = None,
         use_eig_priority: bool = False,
+        accumulate_trajectories: bool = False,
+        diversity_threshold: Optional[float] = None,
     ):
         self.store = store
         self.job_dirs = job_dirs
@@ -322,6 +325,15 @@ class SelfEngine:
         self.curriculum_scheduler = curriculum_scheduler
         self.thompson_sampling_scheduler = thompson_sampling_scheduler
         self.use_eig_priority = use_eig_priority
+        # Anti-collapse safeguards (both default-disabled, opt-in):
+        #  - accumulate_trajectories: keep past trajectories across reload cycles
+        #    (accumulation) rather than replacing them, which provably prevents
+        #    the model collapse of a self-consuming training loop.
+        #  - diversity_threshold: drop near-duplicate reinforce trajectories
+        #    (tool-sequence cosine > threshold) so the loop doesn't reinforce the
+        #    same behaviour repeatedly and narrow the output distribution.
+        self.accumulate_trajectories = accumulate_trajectories
+        self.diversity_threshold = diversity_threshold
 
         # Load trajectory records (trajectory_monitor.TrajectoryRecord schema)
         self._traj_records = []
@@ -342,28 +354,8 @@ class SelfEngine:
         if memory is not None:
             self.memory = memory
         else:
-            from .trajectory_memory import TrajectoryRecord as MemTrajectoryRecord
             self.memory = TrajectoryMemory()
-            for rec in self._traj_records:
-                # Convert monitor.TrajectoryRecord → memory.TrajectoryRecord
-                feat = rec.features
-                mem_rec = MemTrajectoryRecord(
-                    trial_id=rec.trial_id,
-                    task_path=rec.task_path,
-                    agent_name=rec.agent_name,
-                    score=rec.score,
-                    tool_sequence=rec.tool_sequence,
-                    traj_path=rec.traj_path,
-                    n_steps=feat.n_steps,
-                    first_write_pos=feat.first_write_pos,
-                    n_exec=feat.n_exec,
-                    n_search=feat.n_search,
-                )
-                try:
-                    self.memory.add(mem_rec)
-                except Exception as e:
-                    import warnings
-                    warnings.warn(f"Failed to add memory record: {e}")
+            self._populate_memory(self.memory, self._traj_records)
 
         self._cycle = 0
 
@@ -448,8 +440,41 @@ class SelfEngine:
 
         return engine
 
-    def reload(self) -> None:
-        """Reload all data from job dirs — call after external training step."""
+    @staticmethod
+    def _populate_memory(memory: "TrajectoryMemory", traj_records: list) -> None:
+        """Convert monitor TrajectoryRecords and add them to a TrajectoryMemory."""
+        from .trajectory_memory import TrajectoryRecord as MemTrajectoryRecord
+
+        for rec in traj_records:
+            feat = rec.features
+            mem_rec = MemTrajectoryRecord(
+                trial_id=rec.trial_id,
+                task_path=rec.task_path,
+                agent_name=rec.agent_name,
+                score=rec.score,
+                tool_sequence=rec.tool_sequence,
+                traj_path=rec.traj_path,
+                n_steps=feat.n_steps,
+                first_write_pos=feat.first_write_pos,
+                n_exec=feat.n_exec,
+                n_search=feat.n_search,
+            )
+            try:
+                memory.add(mem_rec)
+            except Exception as e:
+                import warnings
+                warnings.warn(f"Failed to add memory record: {e}")
+
+    def reload(self, accumulate: Optional[bool] = None) -> None:
+        """Reload all data from job dirs — call after external training step.
+
+        With accumulation on (``accumulate=True`` or ``accumulate_trajectories``
+        set at construction), past trajectories are kept and merged with the
+        freshly loaded ones rather than replaced. Accumulation prevents the model
+        collapse that a replace-only self-consuming training loop is prone to.
+        """
+        if accumulate is None:
+            accumulate = self.accumulate_trajectories
         new = self.__class__.from_job_dirs(
             self.job_dirs,
             self.agent_name,
@@ -457,10 +482,41 @@ class SelfEngine:
             tasks_dir=self.tasks_dir,
             enable_recursion=self.enable_recursion,
         )
-        self.store = new.store
-        self._traj_records = new._traj_records
-        self.monitor = new.monitor
-        self.memory = new.memory
+        if not accumulate:
+            self.store = new.store
+            self._traj_records = new._traj_records
+            self.monitor = new.monitor
+            self.memory = new.memory
+            self.recursion_engine = new.recursion_engine
+            return
+
+        # Accumulate: union old + new, de-duplicated.
+        merged_store = RecordStore()
+        seen_ep = set()
+        for rec in list(self.store._records) + list(new.store._records):
+            key = (rec.run_id, rec.model, rec.task, rec.episode)
+            if key in seen_ep:
+                continue
+            seen_ep.add(key)
+            merged_store.add(rec)
+        self.store = merged_store
+
+        merged_traj = []
+        seen_tr = set()
+        for r in list(self._traj_records) + list(new._traj_records):
+            if r.trial_id in seen_tr:
+                continue
+            seen_tr.add(r.trial_id)
+            merged_traj.append(r)
+        self._traj_records = merged_traj
+
+        if merged_traj:
+            self.monitor = TrajectoryMonitor(merged_traj)
+            self.memory = TrajectoryMemory()
+            self._populate_memory(self.memory, merged_traj)
+        else:
+            self.monitor = new.monitor
+            self.memory = new.memory
         self.recursion_engine = new.recursion_engine
 
     # ── Core cycle ──────────────────────────────────────────────────────────
@@ -714,7 +770,49 @@ class SelfEngine:
                 structural_divergence_step=divergence_step,
             ))
 
+        if self.diversity_threshold is not None:
+            pairs = self._diversity_filter(pairs)
         return pairs
+
+    def _diversity_filter(self, pairs: list) -> list:
+        """Drop pairs whose reinforce trajectory is a near-duplicate of one already
+        kept (tool-sequence cosine > diversity_threshold).
+
+        Reinforcing the same behaviour repeatedly narrows the output distribution
+        — a documented self-improvement failure mode. Trajectories with no tool
+        data are always kept (their similarity cannot be assessed).
+        """
+        tau = self.diversity_threshold
+        # Map trajectory path -> tool-count vector (bag of tools) from loaded records.
+        tool_seqs: dict[str, list] = {
+            r.traj_path: list(r.tool_sequence) for r in self._traj_records if r.traj_path
+        }
+        vocab = sorted({t for seq in tool_seqs.values() for t in seq})
+        idx = {t: i for i, t in enumerate(vocab)}
+
+        def vec(path: str):
+            seq = tool_seqs.get(path)
+            if not seq or not vocab:
+                return None
+            v = np.zeros(len(vocab))
+            for t in seq:
+                if t in idx:
+                    v[idx[t]] += 1.0
+            norm = np.linalg.norm(v)
+            return v / norm if norm > 0 else None
+
+        kept: list = []
+        kept_vecs: list = []
+        for p in pairs:
+            v = vec(p.reinforce_traj_path)
+            if v is None:
+                kept.append(p)
+                continue
+            if any(float(v @ kv) > tau for kv in kept_vecs):
+                continue  # near-duplicate reinforce trajectory — skip
+            kept.append(p)
+            kept_vecs.append(v)
+        return kept
 
     def _find_divergence_step(self, high_path: str, low_path: str) -> int:
         """
