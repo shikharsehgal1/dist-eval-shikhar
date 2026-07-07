@@ -21,7 +21,7 @@ from . import self_engine
 from . import recursion_engine, environment_generator, environment_registry, distributed_eval
 from . import logging, training_harness, agent_harness
 from . import bayesian_optimization, curriculum_optimizer
-from . import irt, ppi
+from . import irt, ppi, shrinkage, evt, best_arm
 from . import adapters
 from .records import EpisodeRecord, RecordStore
 
@@ -32,6 +32,6 @@ __all__ = [
     "recursion_engine", "environment_generator", "environment_registry", "distributed_eval",
     "logging", "training_harness", "agent_harness",
     "bayesian_optimization", "curriculum_optimizer",
-    "irt", "ppi",
+    "irt", "ppi", "shrinkage", "evt", "best_arm",
     "adapters",
 ]

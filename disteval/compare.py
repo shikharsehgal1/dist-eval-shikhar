@@ -23,6 +23,10 @@ __all__ = [
     "score_length_bias",
     "bradley_terry",
     "win_matrix_from_pairs",
+    "conformal_interval",
+    "mmd_test",
+    "energy_distance",
+    "energy_test",
 ]
 
 
@@ -342,6 +346,157 @@ def bradley_terry(
         out["rank_flip_prob"] = float(np.mean(boot[:, second] >= boot[:, best]))
 
     return out
+
+
+def conformal_interval(scores: np.ndarray, alpha: float = 0.1, two_sided: bool = True) -> dict:
+    """Distribution-free prediction interval for an agent's NEXT-run score.
+
+    Split conformal prediction: from a calibration sample it returns an interval
+    that contains the next run's score with marginal probability >= 1-alpha under
+    exchangeability alone (no Gaussian/parametric assumption). Unlike
+    `metrics.var_at`/`cvar`, which are empirical quantiles with no coverage
+    guarantee, this comes with one. Use ``two_sided=False`` for a one-sided lower
+    bound ("how bad could the next run realistically be").
+
+    The one-sided bound is an order statistic and is *exact* finite-sample. The
+    two-sided interval centers on the sample median (estimated from the same
+    calibration data), so its coverage is approximate rather than exactly
+    finite-sample — well-calibrated in practice (see tests).
+
+    Returns {lo, hi, center, alpha, coverage_target}. Bounds may be +/-inf when n
+    is too small to certify the requested coverage.
+    """
+    x = np.asarray(scores, dtype=float)
+    x = x[np.isfinite(x)]
+    n = x.size
+    if n == 0:
+        raise ValueError("need at least one calibration score")
+    ct = 1 - alpha
+    if two_sided:
+        center = float(np.median(x))
+        resid = np.abs(x - center)
+        rank = int(np.ceil((n + 1) * (1 - alpha)))
+        if rank > n:
+            q = float("inf")
+        else:
+            q = float(np.sort(resid)[rank - 1])
+        return {"lo": center - q, "hi": center + q, "center": center,
+                "alpha": alpha, "coverage_target": ct}
+    # One-sided lower prediction bound: the floor(alpha*(n+1))-th order statistic.
+    idx = int(np.floor(alpha * (n + 1)))
+    lo = -float("inf") if idx < 1 else float(np.sort(x)[idx - 1])
+    return {"lo": lo, "hi": float("inf"), "center": float(np.median(x)),
+            "alpha": alpha, "coverage_target": ct}
+
+
+def _as_2d(a: np.ndarray) -> np.ndarray:
+    a = np.asarray(a, dtype=float)
+    return a.reshape(-1, 1) if a.ndim == 1 else a
+
+
+def _pairwise_dists(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Euclidean distance matrix between rows of a and b."""
+    d2 = np.sum(a**2, axis=1)[:, None] + np.sum(b**2, axis=1)[None, :] - 2 * a @ b.T
+    return np.sqrt(np.maximum(d2, 0.0))
+
+
+def mmd_test(a: np.ndarray, b: np.ndarray, bandwidth="median", n_perm: int = 1000, seed: int = 0) -> dict:
+    """Maximum Mean Discrepancy two-sample test (RBF kernel, permutation p-value).
+
+    MMD is an *omnibus* test: consistent against ANY distributional difference —
+    mean, variance, shape, multimodality — unlike KS (sup-norm, weak in the tails)
+    or Mann-Whitney (only stochastic ordering). It works in arbitrary dimension,
+    so `a`/`b` may be (n,) score arrays or (n, d) joint vectors, e.g.
+    (score, length, steps) to catch same-score-different-behaviour differences.
+    Bandwidth defaults to the median heuristic (Gretton et al. 2012, JMLR).
+
+    Returns {mmd2 (unbiased squared MMD), p, bandwidth, n_perm}.
+    """
+    A, B = _as_2d(a), _as_2d(b)
+    m, n = A.shape[0], B.shape[0]
+    if m < 2 or n < 2:
+        raise ValueError("each sample needs at least 2 observations")
+    pooled = np.vstack([A, B])
+    dists = _pairwise_dists(pooled, pooled)
+    if bandwidth == "median":
+        iu = np.triu_indices(dists.shape[0], k=1)
+        med = np.median(dists[iu])
+        sigma = med if med > 0 else 1.0
+    else:
+        sigma = float(bandwidth)
+    K = np.exp(-(dists**2) / (2 * sigma**2))
+
+    def _mmd2(idx_a, idx_b):
+        Kaa = K[np.ix_(idx_a, idx_a)]
+        Kbb = K[np.ix_(idx_b, idx_b)]
+        Kab = K[np.ix_(idx_a, idx_b)]
+        ma, nb = len(idx_a), len(idx_b)
+        term_a = (Kaa.sum() - np.trace(Kaa)) / (ma * (ma - 1))
+        term_b = (Kbb.sum() - np.trace(Kbb)) / (nb * (nb - 1))
+        return term_a + term_b - 2 * Kab.mean()
+
+    all_idx = np.arange(m + n)
+    obs = _mmd2(all_idx[:m], all_idx[m:])
+    rng = np.random.default_rng(seed)
+    count = 0
+    for _ in range(n_perm):
+        perm = rng.permutation(m + n)
+        if _mmd2(perm[:m], perm[m:]) >= obs:
+            count += 1
+    p = (1 + count) / (n_perm + 1)
+    return {"mmd2": float(obs), "p": float(p), "bandwidth": float(sigma), "n_perm": n_perm}
+
+
+def energy_distance(a: np.ndarray, b: np.ndarray) -> float:
+    """Energy distance: 2·E‖X−Y‖ − E‖X−X'‖ − E‖Y−Y'‖ (>= 0, zero iff equal).
+
+    A kernel-free omnibus discrepancy (equivalent to MMD with the distance
+    kernel; Székely & Rizzo 2013) — no bandwidth to choose. Works in any
+    dimension. Complements the 1D `wasserstein` with a full-distribution measure.
+    """
+    A, B = _as_2d(a), _as_2d(b)
+    m, n = A.shape[0], B.shape[0]
+    dab = _pairwise_dists(A, B).mean()
+    # Within-sample terms average over independent pairs only: exclude the zero
+    # self-distance diagonal (else daa/dbb are biased low and the distance high).
+    daa = _pairwise_dists(A, A).sum() / (m * (m - 1)) if m > 1 else 0.0
+    dbb = _pairwise_dists(B, B).sum() / (n * (n - 1)) if n > 1 else 0.0
+    return float(max(2 * dab - daa - dbb, 0.0))
+
+
+def energy_test(a: np.ndarray, b: np.ndarray, n_perm: int = 1000, seed: int = 0) -> dict:
+    """Energy-distance (E-statistic) two-sample test with a permutation p-value.
+
+    Same omnibus power as `mmd_test` but with no kernel/bandwidth to choose.
+    Returns {energy_distance, statistic (=mn/(m+n)·E), p, n_perm}.
+    """
+    A, B = _as_2d(a), _as_2d(b)
+    m, n = A.shape[0], B.shape[0]
+    if m < 2 or n < 2:
+        raise ValueError("each sample needs at least 2 observations")
+    pooled = np.vstack([A, B])
+    D = _pairwise_dists(pooled, pooled)
+
+    def _energy(idx_a, idx_b):
+        ma, nb = len(idx_a), len(idx_b)
+        dab = D[np.ix_(idx_a, idx_b)].mean()
+        # Exclude the zero self-distance diagonal from the within-sample terms.
+        daa = D[np.ix_(idx_a, idx_a)].sum() / (ma * (ma - 1)) if ma > 1 else 0.0
+        dbb = D[np.ix_(idx_b, idx_b)].sum() / (nb * (nb - 1)) if nb > 1 else 0.0
+        return max(2 * dab - daa - dbb, 0.0)
+
+    idx = np.arange(m + n)
+    e_obs = _energy(idx[:m], idx[m:])
+    stat = (m * n) / (m + n) * e_obs
+    rng = np.random.default_rng(seed)
+    count = 0
+    for _ in range(n_perm):
+        perm = rng.permutation(m + n)
+        if _energy(perm[:m], perm[m:]) >= e_obs:
+            count += 1
+    p = (1 + count) / (n_perm + 1)
+    return {"energy_distance": float(e_obs), "statistic": float(stat),
+            "p": float(p), "n_perm": n_perm}
 
 
 def compare_distributions(a: np.ndarray, b: np.ndarray) -> dict:

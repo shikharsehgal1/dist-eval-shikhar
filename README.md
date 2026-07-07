@@ -148,6 +148,28 @@ the primitives that keep multi-run comparisons honest:
   fewer items (adaptive/efficient eval).
 - `ppi` — prediction-powered inference: debias an LLM-judge score column using a
   small gold calibration set, with a tighter CI than gold labels alone.
+- `bootstrap.betting_cs` — a variance-adaptive betting confidence sequence
+  (Waudby-Smith & Ramdas), far tighter than the Hoeffding `confidence_sequence`
+  in the near-0/near-1 pass-rate regime, still valid under continuous peeking.
+- `shrinkage` — empirical-Bayes partial pooling for the few-runs-per-task regime:
+  `empirical_bayes_passrate` (Beta-Binomial), positive-part `james_stein`, and
+  `eb_credible_interval` — stabilizes noisy per-task estimates and curbs the
+  winner's-curse when ranking many tasks.
+- `evt` — extreme value theory for the risk tail: a peaks-over-threshold GPD fit
+  (`fit_gpd_pot`) that *extrapolates* `evt_var`/`evt_cvar` beyond the observed
+  runs (empirical CVaR@0.01 with 8 runs is just `min`), plus a Hill tail index
+  for heavy unbounded metrics — all flagged `low_confidence` at small n and
+  paired with `evt_bootstrap_ci`.
+- `compare.conformal_interval` — distribution-free prediction interval for an
+  agent's next-run score with finite-sample coverage (no parametric assumption).
+- `compare.mmd_test` / `energy_distance` / `energy_test` — omnibus two-sample
+  tests that catch *any* distributional difference (e.g. same-mean-different-
+  variance), unlike KS/Mann-Whitney; work on joint (score, length, steps) too.
+- `metrics.divergences` — TV / Hellinger / KL / χ² / Rényi between two agents'
+  outcome distributions in one call.
+- `best_arm` — pure-exploration bandits (`sequential_halving`,
+  `successive_elimination`) that spend an eval budget adaptively to identify the
+  best of K agents/configs, with fixed-budget or fixed-confidence guarantees.
 
 **Self-improvement safeguards (opt-in).** The recursive `run_cycle`/`reload`
 loop is a self-consuming training process, which can collapse. `SelfEngine` now

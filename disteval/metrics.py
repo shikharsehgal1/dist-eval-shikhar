@@ -23,6 +23,7 @@ __all__ = [
     "reliability_decay",
     "variance_amplification_factor",
     "grpo_advantages",
+    "divergences",
     "summarize",
     "optimality_gap",
 ]
@@ -188,6 +189,46 @@ def grpo_advantages(scores: np.ndarray, groups: np.ndarray | None = None, eps: f
         vals = s[idx]
         adv[idx] = (vals - vals.mean()) / (vals.std() + eps)
     return adv
+
+
+def divergences(a: np.ndarray, b: np.ndarray, bins="auto", smoothing: float = 1e-9) -> dict:
+    """Sample-based f-divergences between two score distributions on a common grid.
+
+    Complements the sup-norm KS and 1D Wasserstein with divergence *lenses* the
+    repo otherwise lacks. Both samples are binned onto a shared grid (Laplace-
+    smoothed so KL/chi2 stay finite where supports differ) and reduced to:
+
+      - tv        total variation ½Σ|p−q| in [0,1] — "fraction of probability
+                  mass you'd move"; the most interpretable single number.
+      - hellinger a proper bounded [0,1] metric, √(½Σ(√p−√q)²).
+      - kl        KL(a‖b) — asymmetric, tail-sensitive; needs a reference agent.
+      - chi2      Pearson χ²(a‖b).
+      - renyi2    Rényi divergence of order 2.
+
+    Bin-count-sensitive by nature; document/report `n_bins`. Prefer tv/hellinger
+    (bounded, robust) as headline numbers: kl/chi2/renyi2 are unbounded and, when
+    the two supports barely overlap, are dominated by the ``smoothing`` constant
+    rather than the data — treat them as unreliable there. Returns a dict of the
+    above plus ``n_bins``.
+    """
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    if a.size == 0 or b.size == 0:
+        raise ValueError("both samples must be non-empty")
+    edges = np.histogram_bin_edges(np.concatenate([a, b]), bins=bins)
+    p, _ = np.histogram(a, bins=edges, density=False)
+    q, _ = np.histogram(b, bins=edges, density=False)
+    p = p + smoothing
+    q = q + smoothing
+    p = p / p.sum()
+    q = q / q.sum()
+    tv = 0.5 * float(np.sum(np.abs(p - q)))
+    hellinger = float(np.sqrt(0.5 * np.sum((np.sqrt(p) - np.sqrt(q)) ** 2)))
+    kl = float(np.sum(p * np.log(p / q)))
+    chi2 = float(np.sum((p - q) ** 2 / q))
+    renyi2 = float(np.log(np.sum(p**2 / q)))
+    return {"tv": tv, "hellinger": hellinger, "kl": kl, "chi2": chi2,
+            "renyi2": renyi2, "n_bins": len(edges) - 1}
 
 
 # --------------------------------------------------------------------------- #

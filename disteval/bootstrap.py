@@ -21,6 +21,7 @@ __all__ = [
     "analytical_ci",
     "binomial_ci",
     "confidence_sequence",
+    "betting_cs",
 ]
 
 
@@ -140,6 +141,82 @@ def confidence_sequence(x: np.ndarray, ci: float = 0.95, lo: float = 0.0, hi: fl
         "running_mean": running_mean.tolist(),
         "running_lo": running_lo.tolist(),
         "running_hi": running_hi.tolist(),
+    }
+
+
+def betting_cs(x: np.ndarray, ci: float = 0.95, lo: float = 0.0, hi: float = 1.0, grid: int = 200) -> dict:
+    """Betting (hedged-capital) confidence sequence for the mean of bounded scores.
+
+    Like `confidence_sequence`, this is anytime-valid — valid simultaneously at
+    every sample size, so you may peek after each run and stop early. But it is
+    *variance-adaptive* and far tighter than the Hoeffding union-bound sequence,
+    especially in the low-variance regime (pass rates near 0 or 1) that dominates
+    agent evals (Waudby-Smith & Ramdas, "Estimating means of bounded random
+    variables by betting", JRSS-B 2023).
+
+    For each candidate mean m on a grid, it runs a hedged betting martingale
+    K_t(m) = ½∏(1+λ_t(X_t-m)) + ½∏(1-λ_t(X_t-m)); by Ville's inequality the set
+    {m : K_t(m) < 1/α} is a (1-α) confidence sequence. Bets λ_t are a predictable
+    variance-adaptive (aGRAPA-style) plug-in, truncated to keep both capital
+    processes non-negative. Returns the same shape as `confidence_sequence`.
+    """
+    x = np.asarray(x, dtype=float)
+    n = x.size
+    if n == 0:
+        return {"point": float("nan"), "lo": float("nan"), "hi": float("nan"),
+                "width": float("nan"), "ci": ci, "n": 0,
+                "running_mean": [], "running_lo": [], "running_hi": []}
+    rng_width = hi - lo
+    if rng_width <= 0:
+        raise ValueError("hi must be greater than lo")
+    z = (x - lo) / rng_width          # rescale observations to [0, 1]
+    m_grid = np.linspace(0.0, 1.0, grid)
+    alpha = 1 - ci
+    thresh = 1.0 / alpha
+    cap_plus = np.ones(grid)
+    cap_minus = np.ones(grid)
+    # Predictable running mean/variance of z (WSR shifted plug-ins for stability).
+    sum_z = 0.0
+    sum_z2 = 0.0
+    count = 0
+    run_mean, run_lo, run_hi = [], [], []
+    cum = 0.0
+    c = 0.5  # truncation constant keeping both capital processes non-negative
+    for t in range(n):
+        mu_prev = (0.5 + sum_z) / (1 + count)
+        var_prev = (0.25 + (sum_z2 - count * (sum_z / count) ** 2 if count else 0.0)) / (1 + count)
+        var_prev = max(var_prev, 1e-6)
+        # aGRAPA-style predictable bet magnitude per candidate mean, truncated.
+        lam = np.abs(mu_prev - m_grid) / (var_prev + (mu_prev - m_grid) ** 2)
+        lam = np.clip(lam, 0.0, c / np.maximum(m_grid, 1.0 - m_grid))
+        diff = z[t] - m_grid
+        cap_plus *= 1.0 + lam * diff
+        cap_minus *= 1.0 - lam * diff
+        capital = 0.5 * (cap_plus + cap_minus)
+        in_set = capital < thresh
+        if np.any(in_set):
+            m_in = m_grid[in_set]
+            lo_t = lo + rng_width * float(m_in.min())
+            hi_t = lo + rng_width * float(m_in.max())
+        else:
+            lo_t = hi_t = float("nan")
+        cum += z[t]
+        run_mean.append(lo + rng_width * (cum / (t + 1)))
+        run_lo.append(lo_t)
+        run_hi.append(hi_t)
+        sum_z += z[t]
+        sum_z2 += z[t] ** 2
+        count += 1
+    return {
+        "point": run_mean[-1],
+        "lo": run_lo[-1],
+        "hi": run_hi[-1],
+        "width": run_hi[-1] - run_lo[-1],
+        "ci": ci,
+        "n": int(n),
+        "running_mean": run_mean,
+        "running_lo": run_lo,
+        "running_hi": run_hi,
     }
 
 
