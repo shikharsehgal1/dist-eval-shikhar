@@ -1,0 +1,107 @@
+{
+  "agents": {
+    "claude-opus": {
+      "metrics": {
+        "n_episodes": 16,
+        "mean": 0.84166875,
+        "iqm": 1.0,
+        "median": 1.0,
+        "std": 0.3441538739551443,
+        "VaR@0.1": 0.23335,
+        "CVaR@0.1": 0.1,
+        "success_rate": 0.8125,
+        "pass@1": 0.8125,
+        "pass^1": 0.8125,
+        "pass@2": 0.9583333333333334,
+        "pass^2": 0.6666666666666667,
+        "pass@4": 1.0,
+        "pass^4": 0.5
+      },
+      "strict_mean": 0.65416875,
+      "right_tail": {
+        "n_solid": 2,
+        "n_recoverable": 2,
+        "n_stuck": 0,
+        "consistency_index": 0.84166875
+      }
+    },
+    "claude-haiku": {
+      "metrics": {
+        "n_episodes": 16,
+        "mean": 1.0,
+        "iqm": 1.0,
+        "median": 1.0,
+        "std": 0.0,
+        "VaR@0.1": 1.0,
+        "CVaR@0.1": 1.0,
+        "success_rate": 1.0,
+        "pass@1": 1.0,
+        "pass^1": 1.0,
+        "pass@2": 1.0,
+        "pass^2": 1.0,
+        "pass@4": 1.0,
+        "pass^4": 1.0
+      },
+      "strict_mean": 1.0,
+      "right_tail": {
+        "n_solid": 4,
+        "n_recoverable": 0,
+        "n_stuck": 0,
+        "consistency_index": 1.0
+      }
+    }
+  },
+  "aggregation": {
+    "naive": {
+      "count-r": 0.875,
+      "fizzbuzz-15": 0.8083374999999999,
+      "sort-desc": 1.0,
+      "base-7": 1.0
+    },
+    "ivw": {
+      "count-r": 0.9999978892780969,
+      "fizzbuzz-15": 0.9999967636301059,
+      "sort-desc": 1.0,
+      "base-7": 1.0
+    },
+    "huber": {
+      "count-r": 0.9999938050530442,
+      "fizzbuzz-15": 0.9957188573838403,
+      "sort-desc": 1.0,
+      "base-7": 1.0
+    }
+  },
+  "cross_agent_pairs": [
+    {
+      "task": "count-r",
+      "positive": "claude-haiku",
+      "negative": "claude-opus",
+      "gap": 1.0
+    },
+    {
+      "task": "fizzbuzz-15",
+      "positive": "claude-haiku",
+      "negative": "claude-opus",
+      "gap": 0.8
+    }
+  ],
+  "contamination_study": {
+    "n_trials": 200,
+    "corrupt_fraction": 0.15,
+    "results": {
+      "naive": {
+        "mae": 0.116385515625,
+        "std": 0.014096939748443291
+      },
+      "ivw": {
+        "mae": 0.11011440748036083,
+        "std": 0.01925926226000475
+      },
+      "huber": {
+        "mae": 0.08851262338733747,
+        "std": 0.0322002220164487
+      }
+    },
+    "huber_beats_naive": true
+  }
+}

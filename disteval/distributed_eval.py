@@ -370,9 +370,9 @@ class DistributedEvalPool:
         have equal variance.
         """
         aggregates = []
+        agent_vars = self._agent_variances()  # same for every task; compute once
         for task, records in self._task_records.items():
             scores = np.array([r.score for r in records], dtype=float)
-            agent_vars = self._agent_variances()
             weights = np.array([1.0 / max(agent_vars.get(r.agent_name, 1e-6), 1e-6) for r in records])
             ivw_mean = float(np.sum(weights * scores) / np.sum(weights))
             ivw_var = float(1.0 / np.sum(weights))
@@ -426,7 +426,12 @@ class DistributedEvalPool:
                     psi = np.where(np.abs(scaled) <= k, scaled * (1.0 - (scaled / k) ** 2) ** 2, 0.0)
                 else:
                     raise ValueError(f"Unknown robust loss: {loss}")
-                new_weights = np.clip(psi / (scaled + 1e-10), 0.0, 1.0)
+                # w(r) = psi(r)/r, with the correct limit w(0) = 1 (a point at the
+                # center is maximally trusted). Dividing by `scaled + eps` instead
+                # would give near-zero residuals a weight of ~0 — the opposite.
+                near_zero = np.abs(scaled) < 1e-8
+                safe = np.where(near_zero, 1.0, scaled)
+                new_weights = np.where(near_zero, 1.0, np.clip(psi / safe, 0.0, 1.0))
                 if np.allclose(weights, new_weights, atol=1e-4):
                     break
                 weights = new_weights
@@ -461,6 +466,7 @@ class DistributedEvalPool:
         self,
         min_gap: float = 0.1,
         require_checkpoints: bool = False,
+        require_distinct_agents: bool = True,
     ) -> list[CrossAgentPair]:
         """
         Generate cross-agent training pairs for tasks with score disagreement.
@@ -475,6 +481,12 @@ class DistributedEvalPool:
             Minimum score gap to generate a pair.
         require_checkpoints : bool
             If True, only generate pairs when checkpoint breakdowns are available.
+        require_distinct_agents : bool
+            If True (default), the positive and negative records must come from
+            different agents — the module's cross-agent contract. With multiple
+            episodes per agent on a task, the raw best/worst records can both
+            belong to one agent; same-agent pairs are the SelfEngine's job, not
+            this pool's. Set False to allow them.
 
         Returns
         -------
@@ -486,8 +498,30 @@ class DistributedEvalPool:
                 continue
 
             # Use the best and worst agent on this task.
-            best = max(records, key=lambda r: r.score)
-            worst = min(records, key=lambda r: r.score)
+            if require_distinct_agents:
+                # Max-gap pair across DISTINCT agents. Selecting the global best
+                # record first and then constraining only the negative is wrong
+                # under ties (two agents both at 1.0 -> gap 0 even when a large
+                # cross-agent gap exists); search per-agent extremes instead.
+                agent_max: dict[str, DistributedEvalRecord] = {}
+                agent_min: dict[str, DistributedEvalRecord] = {}
+                for r in records:
+                    if r.agent_name not in agent_max or r.score > agent_max[r.agent_name].score:
+                        agent_max[r.agent_name] = r
+                    if r.agent_name not in agent_min or r.score < agent_min[r.agent_name].score:
+                        agent_min[r.agent_name] = r
+                if len(agent_max) < 2:
+                    continue  # only one agent on this task — no cross-agent pair
+                best, worst, best_gap = None, None, -float("inf")
+                for pa, pr in agent_max.items():
+                    for na, nr in agent_min.items():
+                        if pa == na:
+                            continue
+                        if pr.score - nr.score > best_gap:
+                            best, worst, best_gap = pr, nr, pr.score - nr.score
+            else:
+                best = max(records, key=lambda r: r.score)
+                worst = min(records, key=lambda r: r.score)
             gap = best.score - worst.score
 
             if gap < min_gap:
