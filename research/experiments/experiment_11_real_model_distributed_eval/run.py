@@ -32,10 +32,23 @@ RESULTS = HERE / "results"
 sys.path.insert(0, str(HERE.parent.parent.parent))
 
 N_EPISODES = 4
+
+# Agents are (backend, model). "cli" runs the Claude Code CLI headless (an
+# agent-wrapped model, using the CLI's own auth); "api" calls the raw model
+# through the Anthropic SDK (requires ANTHROPIC_API_KEY in the environment —
+# read from env only, never stored). Comparing the two surfaces is part of the
+# experiment: the CLI wraps the same model in an agent scaffold.
 AGENTS = {
-    "claude-opus": "opus",
-    "claude-haiku": "haiku",
+    "cli-opus": ("cli", "opus"),
+    "cli-haiku": ("cli", "haiku"),
+    "api-opus": ("api", "claude-opus-4-8"),
+    "api-haiku": ("api", "claude-haiku-4-5"),
 }
+
+
+def _api_agents_available() -> bool:
+    import os
+    return bool(os.environ.get("ANTHROPIC_API_KEY"))
 
 
 # ── Tasks: deterministic prompts with exact expected outputs ─────────────────
@@ -50,10 +63,13 @@ AGENTS = {
 # scored 0.0) — report both, never just one.
 
 def _normalize(out: str) -> str:
-    """Strip markdown code fences and surrounding whitespace."""
+    """Strip markdown artifacts (code fences, bold, inline code) and whitespace."""
     lines = [ln for ln in out.strip().splitlines()]
     lines = [ln for ln in lines if not ln.strip().startswith("```")]
-    return "\n".join(lines).strip()
+    text = "\n".join(lines)
+    for marker in ("**", "`"):
+        text = text.replace(marker, "")
+    return text.strip()
 
 
 def _score_exact(expected: str):
@@ -64,9 +80,13 @@ def _score_exact(expected: str):
         norm = _normalize(out)
         if norm == expected:
             return 1.0
-        # Accept a correct final line after shown work.
+        # Accept a correct final line (or final token, e.g. "answer: 202")
+        # after shown work — capability, not formatting, is this channel.
         last = norm.splitlines()[-1].strip() if norm else ""
-        return 1.0 if last == expected else 0.0
+        if last == expected:
+            return 1.0
+        tokens = last.replace(":", " ").split()
+        return 1.0 if tokens and tokens[-1] == expected else 0.0
 
     return strict, lenient
 
@@ -130,16 +150,39 @@ def score_output(task: str, output: str, ok: bool) -> tuple[float, float]:
     return float(strict_fn(output)), float(lenient_fn(output))
 
 
-def run_episode(agent: str, model_flag: str, task: str, episode: int) -> dict:
+def _call_cli(prompt: str, model_flag: str) -> tuple[str, bool]:
+    proc = subprocess.run(
+        ["claude", "-p", prompt, "--model", model_flag],
+        capture_output=True, text=True, timeout=180,
+    )
+    return proc.stdout, proc.returncode == 0
+
+
+def _call_api(prompt: str, model_id: str) -> tuple[str, bool]:
+    import anthropic
+    client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
+    try:
+        r = client.messages.create(
+            model=model_id, max_tokens=1024,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        if r.stop_reason == "refusal":
+            return "", False
+        text = "".join(b.text for b in r.content if b.type == "text")
+        return text, True
+    except anthropic.APIStatusError:
+        return "", False
+
+
+def run_episode(agent: str, backend: str, model: str, task: str, episode: int) -> dict:
     spec = TASKS[task]
     try:
-        proc = subprocess.run(
-            ["claude", "-p", spec["prompt"], "--model", model_flag],
-            capture_output=True, text=True, timeout=180,
-        )
-        output = proc.stdout
-        strict, lenient = score_output(task, output, proc.returncode == 0)
-        if proc.returncode != 0:
+        if backend == "cli":
+            output, ok = _call_cli(spec["prompt"], model)
+        else:
+            output, ok = _call_api(spec["prompt"], model)
+        strict, lenient = score_output(task, output, ok)
+        if not ok:
             failure = "cli_error"
         elif lenient < 0.99:
             failure = "wrong_output"
@@ -194,14 +237,21 @@ def main() -> None:
         print(f"Re-scored {len(records)} saved records (strict + lenient channels).")
     else:
         # ── 1. Run the real agents ────────────────────────────────────────
+        agents = {
+            name: (backend, model) for name, (backend, model) in AGENTS.items()
+            if backend == "cli" or _api_agents_available()
+        }
+        skipped = set(AGENTS) - set(agents)
+        if skipped:
+            print(f"No ANTHROPIC_API_KEY in env — skipping API agents: {sorted(skipped)}")
         jobs = [
-            (agent, flag, task, ep)
-            for agent, flag in AGENTS.items()
+            (name, backend, model, task, ep)
+            for name, (backend, model) in agents.items()
             for task in TASKS
             for ep in range(N_EPISODES)
         ]
-        print(f"Running {len(jobs)} real episodes ({len(AGENTS)} agents x {len(TASKS)} tasks x {N_EPISODES} eps)...")
-        with ThreadPoolExecutor(max_workers=4) as ex:
+        print(f"Running {len(jobs)} real episodes ({len(agents)} agents x {len(TASKS)} tasks x {N_EPISODES} eps)...")
+        with ThreadPoolExecutor(max_workers=6) as ex:
             records = list(ex.map(lambda j: run_episode(*j), jobs))
 
     with open(rec_path, "w") as f:
@@ -220,7 +270,7 @@ def main() -> None:
     store = load_records(str(rec_path))
     df = store.df()
     summary: dict = {"agents": {}}
-    for agent in AGENTS:
+    for agent in sorted({r["model"] for r in records}):
         adf = df[df["model"] == agent]
         s = metrics.summarize(adf, ks=(1, 2, 4))
         rt = right_tail_analysis(

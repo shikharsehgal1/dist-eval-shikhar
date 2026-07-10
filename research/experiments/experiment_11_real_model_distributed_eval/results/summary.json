@@ -1,31 +1,56 @@
 {
   "agents": {
-    "claude-opus": {
+    "api-haiku": {
       "metrics": {
         "n_episodes": 16,
-        "mean": 0.84166875,
+        "mean": 0.75,
         "iqm": 1.0,
         "median": 1.0,
-        "std": 0.3441538739551443,
-        "VaR@0.1": 0.23335,
-        "CVaR@0.1": 0.1,
-        "success_rate": 0.8125,
-        "pass@1": 0.8125,
-        "pass^1": 0.8125,
-        "pass@2": 0.9583333333333334,
-        "pass^2": 0.6666666666666667,
-        "pass@4": 1.0,
-        "pass^4": 0.5
+        "std": 0.4472135954999579,
+        "VaR@0.1": 0.0,
+        "CVaR@0.1": 0.0,
+        "success_rate": 0.75,
+        "pass@1": 0.75,
+        "pass^1": 0.75,
+        "pass@2": 0.75,
+        "pass^2": 0.75,
+        "pass@4": 0.75,
+        "pass^4": 0.75
       },
-      "strict_mean": 0.65416875,
+      "strict_mean": 0.75,
       "right_tail": {
-        "n_solid": 2,
-        "n_recoverable": 2,
-        "n_stuck": 0,
-        "consistency_index": 0.84166875
+        "n_solid": 3,
+        "n_recoverable": 0,
+        "n_stuck": 1,
+        "consistency_index": 1.0
       }
     },
-    "claude-haiku": {
+    "api-opus": {
+      "metrics": {
+        "n_episodes": 16,
+        "mean": 0.75,
+        "iqm": 1.0,
+        "median": 1.0,
+        "std": 0.4472135954999579,
+        "VaR@0.1": 0.0,
+        "CVaR@0.1": 0.0,
+        "success_rate": 0.75,
+        "pass@1": 0.75,
+        "pass^1": 0.75,
+        "pass@2": 0.75,
+        "pass^2": 0.75,
+        "pass@4": 0.75,
+        "pass^4": 0.75
+      },
+      "strict_mean": 0.5625,
+      "right_tail": {
+        "n_solid": 3,
+        "n_recoverable": 0,
+        "n_stuck": 1,
+        "consistency_index": 1.0
+      }
+    },
+    "cli-haiku": {
       "metrics": {
         "n_episodes": 16,
         "mean": 1.0,
@@ -49,24 +74,49 @@
         "n_stuck": 0,
         "consistency_index": 1.0
       }
+    },
+    "cli-opus": {
+      "metrics": {
+        "n_episodes": 16,
+        "mean": 0.8875,
+        "iqm": 1.0,
+        "median": 1.0,
+        "std": 0.2988508858946214,
+        "VaR@0.1": 0.6,
+        "CVaR@0.1": 0.13335,
+        "success_rate": 0.8125,
+        "pass@1": 0.8125,
+        "pass^1": 0.8125,
+        "pass@2": 0.9583333333333334,
+        "pass^2": 0.6666666666666667,
+        "pass@4": 1.0,
+        "pass^4": 0.5
+      },
+      "strict_mean": 0.6375,
+      "right_tail": {
+        "n_solid": 2,
+        "n_recoverable": 2,
+        "n_stuck": 0,
+        "consistency_index": 0.8875
+      }
     }
   },
   "aggregation": {
     "naive": {
-      "count-r": 0.875,
-      "fizzbuzz-15": 0.8083374999999999,
+      "count-r": 0.4375,
+      "fizzbuzz-15": 0.95,
       "sort-desc": 1.0,
       "base-7": 1.0
     },
     "ivw": {
-      "count-r": 0.9999978892780969,
-      "fizzbuzz-15": 0.9999967636301059,
+      "count-r": 0.9999872010907338,
+      "fizzbuzz-15": 0.9999977607030168,
       "sort-desc": 1.0,
       "base-7": 1.0
     },
     "huber": {
-      "count-r": 0.9999938050530442,
-      "fizzbuzz-15": 0.9957188573838403,
+      "count-r": 0.4375,
+      "fizzbuzz-15": 0.9999994480091433,
       "sort-desc": 1.0,
       "base-7": 1.0
     }
@@ -74,15 +124,15 @@
   "cross_agent_pairs": [
     {
       "task": "count-r",
-      "positive": "claude-haiku",
-      "negative": "claude-opus",
+      "positive": "cli-opus",
+      "negative": "api-opus",
       "gap": 1.0
     },
     {
       "task": "fizzbuzz-15",
-      "positive": "claude-haiku",
-      "negative": "claude-opus",
-      "gap": 0.8
+      "positive": "cli-haiku",
+      "negative": "cli-opus",
+      "gap": 0.7333000000000001
     }
   ],
   "contamination_study": {
@@ -90,16 +140,16 @@
     "corrupt_fraction": 0.15,
     "results": {
       "naive": {
-        "mae": 0.116385515625,
-        "std": 0.014096939748443291
+        "mae": 0.12037500000000001,
+        "std": 0.014861371122333975
       },
       "ivw": {
-        "mae": 0.11011440748036083,
-        "std": 0.01925926226000475
+        "mae": 0.11971145927422619,
+        "std": 0.027010168950112035
       },
       "huber": {
-        "mae": 0.08851262338733747,
-        "std": 0.0322002220164487
+        "mae": 0.048936578812857755,
+        "std": 0.036054001685084165
       }
     },
     "huber_beats_naive": true
