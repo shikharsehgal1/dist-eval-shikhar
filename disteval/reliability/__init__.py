@@ -15,7 +15,18 @@ from .posterior import (
     posterior_from_scores,
 )
 
+from .hierarchical import (
+    HierarchicalFit,
+    HierarchicalSpec,
+    LogitNormalPosterior,
+    fit_hierarchical,
+)
+
 __all__ = [
+    "HierarchicalSpec",
+    "HierarchicalFit",
+    "LogitNormalPosterior",
+    "fit_hierarchical",
     "BetaPrior",
     "TaskPosterior",
     "JEFFREYS_PRIOR",
