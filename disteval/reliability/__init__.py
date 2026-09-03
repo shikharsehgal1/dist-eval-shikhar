@@ -15,6 +15,21 @@ from .posterior import (
     posterior_from_scores,
 )
 
+from .classify import (
+    CATEGORIES,
+    RECOVERABLE,
+    SOLID,
+    STUCK,
+    UNCERTAIN,
+    ReliabilityThresholds,
+    TaskDiagnosis,
+    diagnose,
+    diagnose_many,
+    evidence_weighted_gap,
+    expected_headroom,
+    posterior_gap,
+    rank_by_recoverability,
+)
 from .hierarchical import (
     HierarchicalFit,
     HierarchicalSpec,
@@ -23,6 +38,19 @@ from .hierarchical import (
 )
 
 __all__ = [
+    "ReliabilityThresholds",
+    "TaskDiagnosis",
+    "diagnose",
+    "diagnose_many",
+    "rank_by_recoverability",
+    "posterior_gap",
+    "expected_headroom",
+    "evidence_weighted_gap",
+    "SOLID",
+    "RECOVERABLE",
+    "STUCK",
+    "UNCERTAIN",
+    "CATEGORIES",
     "HierarchicalSpec",
     "HierarchicalFit",
     "LogitNormalPosterior",
