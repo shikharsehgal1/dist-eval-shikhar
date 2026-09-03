@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "disteval"
 version = "0.1.0"
-description = "Distribution-first evaluation and self-improvement for long-horizon AI agents"
+description = "Distributional evaluation and reliability-aware post-training for long-horizon AI agents"
 license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.10"
 keywords = ["ai", "agents", "evaluation", "reinforcement-learning", "dpo", "training"]
 authors = [
-    {name = "Cognition Inc.", email = "dev@cognition.ai"}
+    {name = "Shikhar Sehgal", email = "SHIKHARSEHGAL@uchicago.edu"}
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -29,16 +29,19 @@ dependencies = [
     "pandas",
     "scipy",
     "matplotlib",
+    "pyarrow",
+    "pyyaml",
+    "scikit-learn",
 ]
 
 [project.optional-dependencies]
 inspect = ["inspect-ai"]
 rliable = ["rliable"]
-dev = ["pytest", "pytest-cov", "black", "ruff"]
+dev = ["pytest", "pytest-cov", "black", "ruff", "hypothesis"]
 
 [project.urls]
-Homepage = "https://github.com/cognition-inc/disteval"
-Documentation = "https://github.com/cognition-inc/disteval"
+Homepage = "https://github.com/shikharsehgal1/dist-eval-shikhar"
+Documentation = "https://github.com/shikharsehgal1/dist-eval-shikhar#readme"
 
 [project.scripts]
 disteval = "disteval.__main__:main"
