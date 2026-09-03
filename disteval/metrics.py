@@ -26,6 +26,12 @@ __all__ = [
     "divergences",
     "summarize",
     "optimality_gap",
+    "lower_cvar",
+    "upper_cvar",
+    "lower_quantile",
+    "worst_case",
+    "reliability_gap",
+    "bootstrap_ci",
 ]
 
 
@@ -264,3 +270,79 @@ def optimality_gap(scores: np.ndarray, optimal: float = 1.0) -> float:
     if optimal == 0:
         raise ValueError("optimal score must be non-zero")
     return float((optimal - scores.mean()) / optimal)
+
+
+# --------------------------------------------------------------------------- #
+# Explicitly-named tail risk                                                  #
+# --------------------------------------------------------------------------- #
+# `cvar` above already defaults to the lower tail, but the direction matters
+# enough -- an earlier version of THEORY.md got it backwards -- that the
+# reliability-relevant functionals get unambiguous names.
+def lower_cvar(x: np.ndarray, alpha: float = 0.2) -> float:
+    """Expected shortfall: mean of the worst ``alpha`` fraction of runs.
+
+    THE reliability tail statistic. Answers "when this agent has a bad day, how
+    bad is it?". Monotone: degrading any run in the lower tail lowers it.
+    Domain [0, 1] for normalised scores. Undefined (nan) for an empty sample.
+    """
+    return cvar(x, alpha=alpha, tail="lower")
+
+
+def upper_cvar(x: np.ndarray, alpha: float = 0.2) -> float:
+    """Mean of the *best* ``alpha`` fraction of runs.
+
+    A risk-*seeking* functional describing peak behaviour. Provided for
+    completeness and for the counterexample in the tests. It is **not** a
+    reliability metric: ``[0, 0, 1]`` and ``[1, 1, 1]`` share an upper CVaR of
+    1.0 at alpha=1/3.
+    """
+    return cvar(x, alpha=alpha, tail="upper")
+
+
+def lower_quantile(x: np.ndarray, q: float = 0.1) -> float:
+    """The ``q``-quantile of the run distribution: a pessimistic performance bound."""
+    return var_at(x, alpha=q, tail="lower")
+
+
+def worst_case(x: np.ndarray) -> float:
+    """Minimum observed score. Maximally pessimistic; high variance as an estimator."""
+    x = np.asarray(x, dtype=float)
+    return float(x.min()) if x.size else float("nan")
+
+
+def reliability_gap(df: pd.DataFrame, k: int = 8) -> float:
+    """``pass@k - pass^k``: how much of apparent capability is not reproducible.
+
+    0 means every task the agent can ever do, it always does. Large values mean
+    the headline pass@k number is carried by runs that do not repeat. This is the
+    single number that most directly motivates the rest of this repository.
+    """
+    return pass_at_k(df, k) - pass_hat_k(df, k)
+
+
+def bootstrap_ci(
+    x: np.ndarray,
+    statistic=None,
+    n_boot: int = 2000,
+    level: float = 0.95,
+    seed: int = 0,
+) -> tuple[float, float]:
+    """Percentile bootstrap interval for any statistic of a run sample.
+
+    Used for tail statistics (CVaR, quantiles) where no closed-form interval is
+    available. Note the standard caveat: with ``n`` runs, a lower-tail CVaR at
+    ``alpha`` is effectively an average of ``alpha*n`` points, so at n=8 and
+    alpha=0.1 the interval will be very wide -- correctly so.
+    """
+    x = np.asarray(x, dtype=float)
+    statistic = statistic or lower_cvar
+    if x.size == 0:
+        return (float("nan"), float("nan"))
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, x.size, size=(n_boot, x.size))
+    stats_ = np.array([statistic(x[i]) for i in idx])
+    tail = (1.0 - level) / 2.0
+    return (
+        float(np.quantile(stats_, tail)),
+        float(np.quantile(stats_, 1.0 - tail)),
+    )
