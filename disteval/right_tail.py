@@ -1,104 +1,80 @@
 """
-disteval.right_tail — Right-tail training signal for agentic tasks.
+disteval.right_tail — LEGACY max-based task taxonomy (kept for compatibility).
 
-CORE IDEA
-─────────
-Standard RL collapses each episode to a single scalar reward and optimizes
-E[R]. When an agent runs the same task k times, E[R] treats every attempt
-equally — a perfect run and a zero run are averaged into 0.5.
+.. deprecated:: 0.2
+   Use :mod:`disteval.reliability` instead. This module is retained because its
+   API is referenced by ``self_engine``, ``report``, and external callers, and
+   because ``Q*``/``kappa`` remain useful *descriptive* statistics. It should not
+   be used as a statistical estimate of latent capability. Nothing here is
+   removed; :func:`right_tail_analysis` now also attaches posterior estimates
+   (see ``profile.posterior`` / ``profile.label``) so migration is incremental.
 
-This is wrong for agentic evals. The right question is:
-
-    "The agent solved this task ONCE. Why can't it solve it EVERY time?"
-
-The right tail of the agent's own outcome distribution on a task
-(Q* = max over attempts) represents demonstrated, verified capability.
-The gap (Q* - Q_i) on a failed attempt is NOT a missing skill — it is
-inconsistency. These require completely different interventions.
-
-DEFINITIONS
-───────────
+WHAT THIS MODULE COMPUTES
+─────────────────────────
 For agent A on task t with k attempts producing scores q_1 ... q_k:
 
-    Q*(t)    = max_i q_i          right tail / demonstrated best
-    Q̄(t)     = (1/k) Σ q_i       standard mean (what RL optimizes)
-    δ_i(t)   = Q*(t) - q_i       right-tail residual for attempt i
-    Δ(t)     = Q*(t) - Q̄(t)      right-tail gap for task t   ≥ 0
+    Q*(t)    = max_i q_i          observed best (a descriptive statistic)
+    Q̄(t)     = (1/k) Σ q_i       observed mean
+    δ_i(t)   = Q*(t) - q_i       residual of attempt i below the observed best
+    Δ(t)     = Q*(t) - Q̄(t)      observed spread below the best, ≥ 0
+    κ(t)     = Q̄(t) / Q*(t)      observed consistency ratio ∈ [0,1]
 
-    Total right-tail gap:  Δ_total = Σ_t Δ(t)
+These are honest summaries of the sample. They are *not* estimates of anything
+latent, for two reasons this module previously got wrong:
 
-    Consistency score:     κ(t) = 1 - Δ(t) / max(Q*(t), ε)
-                                 = Q̄(t) / Q*(t)   when Q*(t) > 0
-                           κ = 1 → always achieves its best
-                           κ = 0 → achieved its best only once
+1. **The maximum is biased upward and grows with k.** E[max of k draws] is
+   monotonically increasing in k, so the same agent evaluated 20 times looks
+   strictly more "capable" than evaluated 3 times. A single lucky success is
+   enough to set Q* = 1 and declare the task mastered. This is the classic
+   multiple-comparisons / winner's-curse problem, and it is why
+   :mod:`disteval.reliability.posterior` estimates a posterior over p_t instead.
 
-TASK TAXONOMY
+2. **Δ(t) = 0 does not mean "reliable".** A task run once always has Δ = 0 and
+   is classified SOLID by the rules below. Uncertainty is invisible in this
+   taxonomy; :mod:`disteval.reliability.classify` adds an UNCERTAIN category
+   precisely for this case.
+
+LEGACY TASK TAXONOMY (retained, superseded)
+───────────────────────────────────────────
+    SOLID        Q*(t) > 0,  Δ(t) = 0
+    RECOVERABLE  Q*(t) > 0,  Δ(t) > 0
+    STUCK        Q*(t) = 0
+
+Compare :func:`disteval.reliability.classify.diagnose`, which defines the same
+three names as posterior probability statements and adds UNCERTAIN.
+
+CORRECTION: TAIL RISK
+─────────────────────
+Earlier versions of this module and of ``THEORY.md`` claimed that maximising the
+*upper*-tail CVaR — E[q | q ≥ VaR_{1-α}] — penalises unreliable low-scoring
+runs. **That claim is false.** Upper-tail CVaR ignores the lower tail by
+construction. Concretely, at α = 1/3 on three runs::
+
+    scores [0, 0, 1]  →  upper-tail CVaR_{2/3} = 1.0
+    scores [1, 1, 1]  →  upper-tail CVaR_{2/3} = 1.0
+
+An agent that fails two runs out of three and one that never fails are
+indistinguishable under that objective, which is the opposite of what a
+reliability metric must do. Reliability is a statement about the *bad* tail.
+Use :func:`disteval.metrics.cvar` with ``tail="lower"`` (its default), or the
+explicitly named helpers in :mod:`disteval.metrics`: ``lower_cvar``,
+``worst_case``, ``lower_quantile``. Optimising an upper-tail functional is a
+risk-*seeking* objective; it is a reasonable thing to want when the goal is
+"reach the frontier at least sometimes", but it is not a reliability objective
+and this repository no longer describes it as one.
+
+WHAT SURVIVES
 ─────────────
-Given attempts q_1 ... q_k on task t:
+The useful, correct ideas here are unchanged and now live on a sounder footing:
 
-    SOLID        Q*(t) > 0,  Δ(t) = 0     — consistently achieves its best
-    RECOVERABLE  Q*(t) > 0,  Δ(t) > 0     — knows how, but inconsistent
-    STUCK        Q*(t) = 0                 — has never solved it; needs new skill
+  - Tasks separate into "can do it but not consistently" versus "cannot do it",
+    and those need different interventions.
+  - Within a task, high-scoring and low-scoring attempts form a matched
+    contrastive pair with no human labels required.
+  - Ranking tasks by how much reliability is missing gives a training curriculum.
 
-The right-tail signal only applies to RECOVERABLE tasks.
-For STUCK tasks, the agent needs different training (exploration, new examples).
-
-MATHEMATICAL ARGUMENT FOR RIGHT-TAIL TRAINING
-──────────────────────────────────────────────
-Let π_θ be the agent policy. On task t, it produces outcome distribution
-F_t(q; θ). Standard RL maximizes:
-
-    J_mean(θ) = E_{t,q ~ F_t} [q]
-
-Right-tail training instead maximizes:
-
-    J_rt(θ) = E_t [ E_{q ~ F_t} [q | q ≥ VaR_{1-α}(F_t)] ]
-             = E_t [ CVaR_{1-α}(F_t) ]          (upper-tail CVaR)
-
-Why this is better for agentic tasks:
-
-1. CONSISTENCY vs CAPABILITY separation
-   J_mean rewards a lucky high run the same as a consistent high run.
-   J_rt specifically penalizes variance — you only get credit for the
-   *expected* score in the top-α fraction, so you must be consistently good,
-   not just occasionally good.
-
-2. The recoverable-gap gradient
-   For a RECOVERABLE task, ∂J_rt/∂θ points toward making low attempts look
-   like high attempts (reducing δ_i for the low runs). This is exactly the
-   trajectory-level counterfactual: "you solved this on attempt 2 — what
-   did you do differently? Do that every time."
-
-3. Natural curriculum
-   Tasks sort into SOLID > RECOVERABLE > STUCK. The right-tail signal is
-   zero for SOLID (nothing to improve there) and undefined for STUCK (no
-   demonstrated upper bound to pull toward). It is maximally informative
-   for RECOVERABLE tasks — a non-zero, achievable target exists.
-
-4. Connection to CVaR-RL (distributional RL)
-   Optimizing E[CVaR_{1-α}(F_t)] over tasks is equivalent to a risk-seeking
-   objective over the AGENT'S OWN RETURN DISTRIBUTION, which has been shown
-   to improve tail performance in distributional RL (Bellemare et al., 2017;
-   Dabney et al., 2018). disteval makes this concrete and measurable without
-   needing to modify the training loop — we compute the signal from eval data
-   and show which trajectories to reinforce.
-
-PRACTICAL USE
-─────────────
-Given a RecordStore from k attempts per task, right_tail_analysis() returns:
-
-  - Per-task classification (SOLID / RECOVERABLE / STUCK)
-  - δ_i for each episode (how far it fell below its own best)
-  - κ(t) consistency score per task
-  - Δ_total: total recoverable score left on the table
-  - ranked list of RECOVERABLE tasks by gap (highest-leverage training targets)
-  - For RECOVERABLE episodes: which specific attempts to REINFORCE (the high ones)
-    and which to CONTRAST (the low ones)
-
-The reinforcement target: the high-scoring trajectory within the same task
-is the positive example. Low-scoring trajectories on the same task are
-negative examples. This is a distributional contrastive signal derived
-entirely from the agent's own eval data — no human labels required.
+See ``THEORY.md`` and :mod:`disteval.reliability` for the corrected treatment,
+and :mod:`disteval.selection` for the preference-pair construction.
 """
 from __future__ import annotations
 
@@ -108,6 +84,8 @@ import numpy as np
 import pandas as pd
 
 from .records import RecordStore
+from .reliability.classify import ReliabilityThresholds, diagnose
+from .reliability.posterior import JEFFREYS_PRIOR, BetaPrior, TaskPosterior, posterior_from_scores
 
 
 # ── Data structures ──────────────────────────────────────────────────────────
@@ -139,6 +117,15 @@ class TaskOutcomeProfile:
     sub_task_depth: int = 0                  # recursion depth (0 = root task)
     sub_task_profiles: list["TaskOutcomeProfile"] = field(default_factory=list)
     recursive_gap: float = 0.0               # gap propagated from sub-task gaps
+
+    # Posterior estimates (disteval.reliability). These are the statistically
+    # defensible replacements for q_star/gap/kind; they are attached here so
+    # existing consumers of this dataclass can migrate incrementally.
+    posterior: Optional["TaskPosterior"] = None   # latent-performance posterior
+    label: Optional[str] = None                   # SOLID/RECOVERABLE/STUCK/UNCERTAIN
+    capability: Optional[float] = None            # C_t = P(p_t > tau_cap)
+    reliability: Optional[float] = None           # R_t = P(p_t > tau_rel)
+    recoverability: Optional[float] = None        # expected reliability headroom
 
 
 def _outcome_entropy(scores: list[float], n_bins: int = 5) -> float:
@@ -207,12 +194,19 @@ def task_outcome_profile(
     reinforce_threshold: float = 0.9,   # fraction of q_star to count as "high"
     parent_task: Optional[str] = None,
     sub_task_depth: int = 0,
+    thresholds: Optional[ReliabilityThresholds] = None,
+    prior: BetaPrior = JEFFREYS_PRIOR,
 ) -> TaskOutcomeProfile:
     """
-    Compute the right-tail profile for one (agent, task) cell.
+    Compute the (legacy descriptive) right-tail profile for one (agent, task) cell,
+    with posterior estimates attached.
 
     reinforce_threshold: attempts scoring >= reinforce_threshold * q_star
     are candidates for reinforcement. The rest are contrast examples.
+
+    ``kind`` remains the legacy max-based label. ``label`` carries the posterior
+    classification from :mod:`disteval.reliability.classify` and is what new code
+    should read.
     """
     arr = np.array(scores, dtype=float)
     q_star = float(arr.max())
@@ -235,6 +229,9 @@ def task_outcome_profile(
     reinforce_idx = [i for i, s in enumerate(scores) if float(s) >= threshold and q_star > 0]
     contrast_idx = [i for i, s in enumerate(scores) if float(s) < threshold and q_star > 0]
 
+    post = posterior_from_scores(scores, prior)
+    diag = diagnose(post, task=task, model=model, thresholds=thresholds, scores=scores)
+
     return TaskOutcomeProfile(
         task=task, model=model, scores=list(scores),
         q_star=q_star, q_bar=q_bar, gap=gap, consistency=consistency,
@@ -245,6 +242,11 @@ def task_outcome_profile(
         outcome_entropy=_outcome_entropy(scores),
         parent_task=parent_task,
         sub_task_depth=sub_task_depth,
+        posterior=post,
+        label=diag.label,
+        capability=diag.capability,
+        reliability=diag.reliability,
+        recoverability=diag.recoverability,
     )
 
 
