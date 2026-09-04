@@ -245,11 +245,26 @@ class Trajectory:
         d["events"] = [e.to_dict() for e in self.events]
         return d
 
+    #: Field aliases accepted on input, so records written by different harnesses
+    #: round-trip without a bespoke adapter.
+    _ALIASES = {"task_id": "task", "metadata": "meta", "agent": "model", "id": "trajectory_id"}
+
     @classmethod
     def from_dict(cls, d: dict) -> "Trajectory":
         events = [TrajectoryEvent.from_dict(e) for e in d.get("events", [])]
         known = {f for f in cls.__dataclass_fields__} - {"events"}
-        return cls(events=events, **{k: v for k, v in d.items() if k in known})
+        kwargs = {}
+        for k, v in d.items():
+            key = k if k in known else cls._ALIASES.get(k)
+            if key in known and key not in kwargs:
+                kwargs[key] = v
+        missing = {"trajectory_id", "task", "model"} - set(kwargs)
+        if missing:
+            raise ValueError(
+                f"trajectory record is missing required field(s) {sorted(missing)}; "
+                f"got keys {sorted(d)}"
+            )
+        return cls(events=events, **kwargs)
 
 
 class TrajectorySet:
