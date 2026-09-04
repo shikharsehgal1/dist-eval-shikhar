@@ -9,6 +9,23 @@ from .align import (
     needleman_wunsch,
     structural_similarity,
 )
+from .counterfactual import (
+    EditCosts,
+    Edit,
+    InterventionEstimate,
+    intervention_distance,
+    minimal_intervention,
+)
+from .embed import (
+    EmbeddingConfig,
+    TrajectoryEmbedding,
+    cluster_failures,
+    embed_trajectories,
+    fit_supervised_projection,
+    neighbourhood_distance,
+    project_2d,
+    structural_features,
+)
 from .divergence import (
     DivergenceCandidate,
     DivergenceReport,
@@ -29,6 +46,19 @@ from .events import (
 )
 
 __all__ = [
+    "EmbeddingConfig",
+    "TrajectoryEmbedding",
+    "embed_trajectories",
+    "structural_features",
+    "neighbourhood_distance",
+    "cluster_failures",
+    "project_2d",
+    "fit_supervised_projection",
+    "EditCosts",
+    "Edit",
+    "InterventionEstimate",
+    "minimal_intervention",
+    "intervention_distance",
     "analyse_divergence",
     "divergence_matrix",
     "DivergenceReport",
