@@ -30,6 +30,21 @@ from .classify import (
     posterior_gap,
     rank_by_recoverability,
 )
+from .decomposition import (
+    Decomposition,
+    decompose,
+    milestone_from_events,
+    milestone_from_rubric,
+    milestone_from_score,
+)
+from .rubric import (
+    CriterionProfile,
+    RubricProfile,
+    criterion_posteriors,
+    profile_rubric,
+    root_criterion_profile,
+    rubric_matrix,
+)
 from .recoverability import (
     SIGNAL_NAMES,
     LearnedRecoverability,
@@ -47,6 +62,17 @@ from .hierarchical import (
 )
 
 __all__ = [
+    "Decomposition",
+    "decompose",
+    "milestone_from_rubric",
+    "milestone_from_events",
+    "milestone_from_score",
+    "CriterionProfile",
+    "RubricProfile",
+    "criterion_posteriors",
+    "profile_rubric",
+    "root_criterion_profile",
+    "rubric_matrix",
     "RecoverabilitySignals",
     "RecoverabilityWeights",
     "SIGNAL_NAMES",
