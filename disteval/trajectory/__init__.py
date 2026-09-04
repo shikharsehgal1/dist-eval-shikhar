@@ -9,6 +9,15 @@ from .align import (
     needleman_wunsch,
     structural_similarity,
 )
+from .divergence import (
+    DivergenceCandidate,
+    DivergenceReport,
+    EmbeddingComparator,
+    NullComparator,
+    SemanticComparator,
+    analyse_divergence,
+    divergence_matrix,
+)
 from .events import (
     EVENT_TYPES,
     EventType,
@@ -20,6 +29,13 @@ from .events import (
 )
 
 __all__ = [
+    "analyse_divergence",
+    "divergence_matrix",
+    "DivergenceReport",
+    "DivergenceCandidate",
+    "SemanticComparator",
+    "NullComparator",
+    "EmbeddingComparator",
     "align",
     "Alignment",
     "AlignedPair",
