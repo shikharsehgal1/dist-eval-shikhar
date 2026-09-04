@@ -7,8 +7,12 @@ edited out.
 
 **Nothing here about repeated-run evaluation, Pass@k, Pass^k, CVaR, perturbation
 testing, or preference learning from success/failure trajectories is novel.** All
-of it is prior work, cited below. The one thing this repository puts forward as
-its own contribution is stated in §7, and it is stated as a **hypothesis to be
+of it is prior work, cited below. Nor is the **capability--reliability gap**
+claimed as a novel metric: a gap between demonstrated and dependable performance
+is the same idea as pass@k versus pass^k, as best-of-n versus single-sample, and
+as "capability overhang" in ordinary evaluation practice. What is offered here is
+a specific posterior definition of it at *criterion* granularity, and one
+falsifiable question about it, stated in §7 and stated as a **hypothesis to be
 tested**, not as a result.
 
 ---
@@ -116,6 +120,30 @@ It is a quasi-likelihood, not a generative model. Read the interval as a
 calibrated summary of the mean score, not as an exact posterior under a named
 data-generating process. When you need a fully generative treatment, dichotomise
 at a documented rubric threshold and use the binary path.
+
+### Criterion level is the primary path
+
+Where a rubric grades individual criteria, collapsing it to one number destroys
+information before any analysis begins. A task with ten criteria where nine are
+always satisfied and one is a coin flip has the same pass rate as one where all
+ten are half-right; the first has a single localised execution defect and the
+second suggests the agent does not know the task.
+
+So the primary model is per criterion ``j`` of task ``t``:
+
+$$
+\mathrm{logit}(p_{t,j}) = \mu + \alpha_t + \beta_j + \gamma_{d(t)} + \varepsilon_{t,j}
+$$
+
+fitted by the crossed random-effects machinery of §6, with an empirical-Bayes
+alternative (a moment-fitted Beta prior pooled per criterion across tasks, so
+"did it verify its work" borrows strength wherever that criterion appears) and an
+unpooled baseline for the ablations. Partial pooling matters more here than at
+task level, and the interaction term $\varepsilon_{t,j}$ is what preserves "this
+criterion is specifically unstable *on this task*".
+
+The task-level estimators remain available and are what a benchmark reporting
+only a scalar gets. The pipeline warns when it has to fall back to them.
 
 ---
 
@@ -281,72 +309,113 @@ accuracy against the latent $p_t$ about two thirds of the time.
 
 ---
 
-## 7. Recoverability — the hypothesis
+## 7. The capability--reliability gap, and the hypothesis
 
-Everything above is estimation. This section is the claim under test.
+### The metric
 
-> **Hypothesis.** Tasks where an agent has demonstrated meaningful capability but
-> remains unreliable may provide more sample-efficient post-training data than
-> randomly selected tasks or than simply the hardest tasks.
-
-The intuition: on such a task, successful behaviour *already exists in the model's
-trajectory distribution*. The model has produced a correct run; it just does not
-do so consistently. Training then has a target that the policy can already reach,
-and matched successful and failed trajectories on the same task differ in ways
-attributable to the agent rather than to task difficulty. On a task the model has
-never solved, there is no successful trajectory to contrast against and no
-evidence the behaviour is within reach at all.
-
-That is an argument, not a result. It could be wrong in at least three ways: the
-recoverable tasks might be recoverable precisely because they are nearly solved
-and have little headroom left; the failures might be irreducibly stochastic
-(sampling temperature, environment flakiness) and carry no learnable signal; or
-the improvement might not transfer beyond the tasks trained on.
-
-### The estimator
-
-Ranking tasks needs a scalar. Three are implemented and none is asserted to be
-best:
-
-**Posterior gap** — $C_t\,(1 - R_t)$. The literal reading. Simple and monotone in
-the right directions, but it saturates: any task with clear capability and clear
-unreliability scores near 1 regardless of how much reliability is missing.
-
-**Expected headroom** (default) —
+At a capability threshold $\tau_{\text{cap}}$ and a deployment threshold
+$\tau_{\text{rel}}$, per criterion:
 
 $$
-\rho_t = \frac{\mathbb{E}\!\left[(\tau_{\text{rel}} - p_t)^{+} \cdot \mathbb{1}\{p_t > \tau_{\text{cap}}\}\right]}{\tau_{\text{rel}} - \tau_{\text{cap}}}
+c_{t,j} = P(p_{t,j} > \tau_{\text{cap}} \mid D)
+\qquad
+r_{t,j} = P(p_{t,j} > \tau_{\text{rel}} \mid D)
 $$
 
-the posterior-expected amount of reliability that is missing *given* evidence of
-capability. It is largest for tasks demonstrably capable and far from the bar,
-and small both for tasks already near the bar (little to gain) and for tasks with
-no evidence of capability (the indicator removes them). It inherits the posterior's
-uncertainty by construction.
+and per task:
 
-**Evidence-weighted gap** — the posterior gap discounted by $n/(n + n_0)$, for
-when you want ranking to be more conservative about low-$n$ tasks than the
-posterior already is.
+$$
+C_t = \frac{1}{J}\sum_j c_{t,j}
+\qquad
+R_t = \frac{1}{J}\sum_j r_{t,j}
+\qquad
+G_t = C_t - R_t
+$$
 
-Trajectory-derived signals — embedding neighbourhood, failure-mode concentration,
-counterfactual intervention distance — are combined with these in
-`disteval.reliability.recoverability`. The combination is **not assumed to be
-better**: `compare_signals` rank-correlates every signal against observed benefit
-and reports which one actually predicts it. On synthetic data where the extra
-signals are noise, the combined score correctly scores *worse* than expected
-headroom alone.
+$G_t \in [0,1]$ is the fraction of the rubric the agent can demonstrably satisfy
+but does not satisfy dependably. No observed maximum appears anywhere in it, so
+it does not grow with the number of runs, and one lucky success on one criterion
+moves it only as far as one run of evidence warrants.
+
+**This is not claimed to be a novel metric.** It is a posterior restatement, at
+criterion granularity, of a comparison the field already makes.
+
+### Three properties that are easy to get wrong
+
+**$G_t$ is not monotone in performance.** It is an inverted U: a criterion never
+satisfied has $c \approx 0, r \approx 0$ and hence near-zero gap; one always
+satisfied has $c \approx 1, r \approx 1$ and also near-zero gap; the gap peaks in
+between. Consequently ranking by $G_t$ is *not* ranking by difficulty in either
+direction, and — less obviously — **shrinkage can reorder a gap ranking rather
+than merely compress it**, since compressing $p$ does not compress a non-monotone
+function of $p$ proportionally. Measured on a 20-task synthetic corpus, the
+unpooled and empirical-Bayes rankings correlate at $\rho = 0.73$ while the full
+hierarchical fit can reorder them substantially. Neither is wrong. The estimator
+choice is a substantive modelling decision and must be reported with the ranking.
+
+**Criterion-level and task-level capability differ.** A task can score high on
+$C_t$ — every criterion individually within reach — while the agent has never once
+satisfied all of them together. On the demo data, `precedent_search` has the
+*highest* criterion gap (0.75) and a joint capability of 0.10. That is a real and
+useful finding, not an artefact; a task-level score reports it only as "always
+fails". `joint_reliability` and `joint_capability` are reported alongside, from
+the observed all-satisfied count rather than by multiplying per-criterion
+posteriors, since criteria are not independent and the product is badly biased.
+
+**A high $G_t$ says nothing on its own about training value.** That is the
+hypothesis, not a property of the metric.
+
+### The hypothesis
+
+> **Does within-task failure structure add predictive value for training-data
+> selection beyond difficulty and learning progress?**
+
+Note what is deliberately *not* claimed.
+
+It is **not** claimed that tasks with intermediate success rates are inherently
+more trainable. That is a plausible intuition with obvious failure modes: such a
+task may be nearly solved with little headroom left; its failures may be
+irreducibly stochastic (sampling temperature, environment flakiness) and carry no
+learnable signal; and any gain may not transfer beyond the tasks trained on.
+Treating the intuition as established would be precisely the error this framework
+exists to avoid.
+
+The claim under test is narrower and falsifiable: that knowing *how* a task fails
+— which criterion, how consistently, how far the failed runs sit from the
+successful ones, how small an intervention separates them — predicts training
+value **over and above** knowing how hard the task is and how fast it is
+currently improving.
+
+### How the hypothesis is tested
+
+Two ways, because they answer it differently.
+
+**Incremental validity.** Regress observed training benefit on the base features
+(difficulty, learning progress) and on base + structure, comparing **out-of-fold**
+$R^2$ with a paired bootstrap interval on the difference. Cross-validated, not
+in-sample, for a load-bearing reason: adding features can only increase in-sample
+$R^2$, so an in-sample comparison would be guaranteed to "support" the hypothesis
+and would mean nothing. Repeated k-fold, because a single split over a few
+hundred tasks is noisy enough to flip the sign. The verdict is positive only when
+the interval excludes zero. Verified to detect genuine signal ($+0.336$,
+CI $[+0.302, +0.369]$) and to reject pure noise ($-0.004$, verdict "no evidence").
+
+**A curriculum comparison at equal budget.** Six strategies, evaluated on
+held-out domains, at a fixed number of training pairs — and reported **per unit of
+training data**, since the claim is about sample efficiency rather than final
+score. A strategy that merely yielded more pairs would otherwise look better for
+the wrong reason.
 
 ### A structural limitation
 
 With independent per-task estimation and $n$ binary runs, every posterior quantity
-is a function of the success count alone, so recoverability takes **at most $n+1$
-distinct values**. At $n = 8$, a 200-task suite yields 9 tiers with 38 tasks in
-the largest, and a "top 40" list draws 13 of its members arbitrarily from a
+is a function of the success count alone, so a task-level gap takes **at most
+$n+1$ distinct values**. At $n = 8$, a 200-task suite yields 9 tiers with 38 tasks
+in the largest, and a "top 40" list draws 13 of its members arbitrarily from a
 33-way tie. `tie_diagnostics()` reports this and the generated report prints it.
-
-Hierarchical estimation breaks ties with information rather than noise: on the
-same data it raises distinct scores from 9 to 34 and cuts the tie at the cutoff
-from 33 tasks to 9.
+Criterion-level estimation and hierarchical pooling both break ties with
+information rather than noise: on the same data, pooling raises distinct scores
+from 9 to 34 and cuts the tie at the cutoff from 33 tasks to 9.
 
 ---
 
@@ -404,30 +473,62 @@ Jeffreys prior, and $P(p > 0.90) \ge 0.95$ takes about 20 consecutive successes.
 
 ---
 
-## 9. Training-data selection
+## 9. Curriculum selection, and the optimiser
 
 Preference learning from paired successful and failed trajectories is prior work
 (ETO, Song et al., 2024, and the broader trajectory-preference literature). This
-repository does not claim it.
+repository does not claim it, and **DPO is one optional backend rather than the
+framework's objective.**
 
-What is under test is **which tasks to build pairs from**. Pairs are constructed
-*within* a task and, where the data supports it, within the same environment
-variant, so instruction, environment and rubric are held fixed and the contrast is
-behavioural. A "chosen" from an easy task against a "rejected" from a hard one
-teaches task difficulty, not task competence.
+### Six strategies
 
-The baselines are deliberately not strawmen:
+| strategy | ranks by |
+|---|---|
+| `uniform` | nothing — the control |
+| `difficulty` | lowest estimated performance |
+| `uncertainty` | largest posterior sd |
+| `learning_progress` | observed progress where a training history exists, else the learnability proxy $\mathbb{E}[p(1-p)]$ |
+| `capability_reliability_gap` | criterion-level $G_t$ |
+| `gap_plus_structure` | $G_t$ weighted by within-task failure structure |
 
-* **random** — hardest to beat by accident.
-* **hardest** — what most curricula actually do. Its weakness is the one the
-  hypothesis targets: the hardest tasks are disproportionately ones never solved,
-  so there is no successful trajectory to contrast against.
-* **highest variance** — captures "inconsistent" directly from observed scores
-  with no Bayesian apparatus at all. **If recoverability selection cannot beat
-  this, the posterior machinery is not earning its place.**
-* **generic success/failure** — the closest baseline to existing work, so it
-  isolates exactly the contribution claimed: that ranking *within* that pool by
-  estimated recoverability beats sampling from it uniformly.
+`learning_progress` is PAC-flavoured in the standard automatic-curriculum sense:
+with a history it is absolute learning progress, the change between an earlier and
+a recent window. Without one — the usual case for a one-shot evaluation — progress
+cannot be *observed*, so it falls back to $\mathbb{E}[p(1-p)]$, the
+posterior-expected outcome variance, which is the Bernoulli Fisher information up
+to a constant and the standard zone-of-proximal-development quantity. **The
+fallback measures potential, not progress**, and every result records which was
+computed.
+
+The comparison that settles the hypothesis is `gap_plus_structure` against
+`difficulty` and `learning_progress` — **not** against `uniform`, which is too
+weak a baseline to support the claim.
+
+### Structure
+
+"Within-task failure structure" is operationalised as three signals, each computed
+only where the data supports it and left absent rather than imputed otherwise:
+failure-mode concentration (does it fail the same way every time?), embedding
+neighbourhood (how close failed runs sit to successful ones, normalised by the
+spread of the successes), and counterfactual intervention cost (how small an edit
+turns a failed run into an observed successful one).
+
+### Pairs, and objectives
+
+Pairs are constructed *within* a task and, where the data supports it, within the
+same environment variant, so instruction, environment and rubric are held fixed
+and the contrast is behavioural. A "chosen" from an easy task against a
+"rejected" from a hard one teaches task difficulty, not task competence.
+
+The selected data is then exported through **views** — `pairwise` (DPO, IPO,
+SLiC), `listwise`, `weighted_sft`, `scalar_reward` (PPO/GRPO, reward models) — all
+rendered from the same selection, so a comparison across objectives is not
+confounded by a different data pipeline. `weighted_sft` is included as a control:
+if plain supervised fine-tuning on the same selection matches a preference loss,
+the preference machinery is not what is doing the work, and that is worth knowing.
+
+Every export carries the dataset's training cost, so held-out gain is reported per
+100 examples and per 1000 tokens as well as absolutely.
 
 ---
 
@@ -436,6 +537,15 @@ The baselines are deliberately not strawmen:
 The estimators can be validated exactly, because in simulation the truth is known.
 The selection *hypothesis* can only be probed, because the response to training is
 modelled rather than measured.
+
+The simulation results below predate the current selector set: they were produced
+with the legacy task-level `recoverability` selector, which the
+`capability_reliability_gap` selector supersedes. They are retained because the
+*methodological* points they establish are unchanged and load-bearing -- that the
+simulator must include worlds where the method fails, that single-seed runs of
+this study are not interpretable, and that the uncertainty correction is not free.
+The six-strategy comparison under the current selectors is the experiment
+`configs/curriculum_baselines.yaml` runs; it has not been run at scale here.
 
 The simulator generates tasks with known $q_t$ (capability), $r_t$ (execution
 reliability), $p_t = q_t r_t$, failure-mode distributions, and a true training
@@ -448,7 +558,7 @@ nothing.**
 Fraction of the oracle's achievable benefit captured, 300 tasks, $k=8$, top 40
 selected, mean ± se over 8 seeds:
 
-| strategy | strong | weak | none | adversarial |
+| strategy (legacy selector set) | strong | weak | none | adversarial |
 |---|---|---|---|---|
 | recoverability | **+0.322 ± 0.028** | **+0.193 ± 0.039** | +0.019 ± 0.064 | -0.282 ± 0.036 |
 | uncertainty-aware | +0.239 ± 0.066 | +0.149 ± 0.055 | +0.035 ± 0.036 | -0.279 ± 0.033 |
@@ -521,21 +631,31 @@ fivefold, and the amplification factor is reported.
 
 On a benchmark with repeated runs and trajectory logs:
 
-1. **Evaluate.** Run each task $k$ times. Estimate $p_{m,t}$ with uncertainty.
-2. **Diagnose.** Classify, rank by recoverability, locate divergences.
-3. **Select.** Build equal-sized preference datasets under each strategy,
-   from a *training* split only.
-4. **Train.** Preference-tune an open model on each dataset, identically.
+1. **Evaluate.** Run each task $k$ times, allocating reruns adaptively toward the
+   tasks whose posteriors are least settled. Estimate $p_{t,j}$ per criterion with
+   uncertainty.
+2. **Diagnose.** Compute $C_t$, $R_t$, $G_t$ and the gap's concentration; align
+   successful against failed trajectories; locate the earliest consequential
+   divergence; attribute failure modes and measure their entropy and the
+   trajectory distance between success and failure.
+3. **Select.** Build equal-sized datasets under all six strategies, from a
+   *training* split only.
+4. **Train.** Fine-tune an open model on each dataset, identically, through one
+   fixed objective — and ideally repeat with a second objective from a different
+   view, since the selection claim should not depend on the optimiser.
 5. **Re-evaluate.** On **held-out** tasks — ideally held-out *domains* — measuring
-   mean, pass^k, lower-tail CVaR, and reliability. Repeat across dataset sizes to
-   get a learning curve, since the claim is about *sample efficiency*, not final
-   score.
+   mean, pass^k, lower-tail CVaR and criterion-level reliability, reported **per
+   unit of training data**. Repeat across dataset sizes for a learning curve,
+   since the claim is about sample efficiency, not final score.
+6. **Test incremental validity.** Regress observed benefit on difficulty and
+   learning progress, then on those plus the structure features, and compare
+   out-of-fold $R^2$.
 
-The result that would support the hypothesis: at a fixed pair budget, the
-recoverability-selected dataset produces a larger held-out reliability gain than
-random, hardest, variance, and generic success/failure selection — with the
-difference exceeding seed-to-seed variation, and surviving the `none`-coupling
-sanity check.
+The result that would support the hypothesis: at a fixed pair budget and
+normalised per unit of training data, `gap_plus_structure` produces a larger
+held-out reliability gain than `difficulty` and `learning_progress` — with the
+difference exceeding seed-to-seed variation, corroborated by a positive
+incremental-validity interval, and surviving the `none`-coupling sanity check.
 
 **This experiment has not been run on real agent data in this repository.** The
 machinery to run it is here and tested; the result is not claimed.
