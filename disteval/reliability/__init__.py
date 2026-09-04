@@ -30,6 +30,15 @@ from .classify import (
     posterior_gap,
     rank_by_recoverability,
 )
+from .recoverability import (
+    SIGNAL_NAMES,
+    LearnedRecoverability,
+    RecoverabilitySignals,
+    RecoverabilityWeights,
+    combine_weighted,
+    compare_signals,
+    score_tasks,
+)
 from .hierarchical import (
     HierarchicalFit,
     HierarchicalSpec,
@@ -38,6 +47,13 @@ from .hierarchical import (
 )
 
 __all__ = [
+    "RecoverabilitySignals",
+    "RecoverabilityWeights",
+    "SIGNAL_NAMES",
+    "combine_weighted",
+    "score_tasks",
+    "LearnedRecoverability",
+    "compare_signals",
     "ReliabilityThresholds",
     "TaskDiagnosis",
     "diagnose",
