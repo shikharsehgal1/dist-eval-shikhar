@@ -305,6 +305,17 @@ def run_experiment(
     domains = dict(domains or {})
     output_dir = output_dir or tempfile.mkdtemp(prefix="disteval_")
 
+    # Check preconditions before doing any work. In particular this must precede
+    # building the split, so that a missing ground-truth benefit is reported as
+    # itself rather than surfacing later as a confusing "needs a grouping map".
+    if true_benefit is None and config.training.backend == "simulated":
+        raise ValueError(
+            "the simulated training backend needs `true_benefit` (ground-truth "
+            "per-task benefit). Without it there is nothing to measure a selection "
+            "strategy against, and a response model driven by the selector's own "
+            "score would make the experiment circular."
+        )
+
     # -- fixed held-out split, decided BEFORE any selection ------------------
     if split is None:
         split = make_split(
@@ -324,14 +335,6 @@ def run_experiment(
     )
     diag_by_task = phase_a.by_task()
     train_diags = [d for d in phase_a.diagnoses if d.task in set(split.train)]
-
-    if true_benefit is None and config.training.backend == "simulated":
-        raise ValueError(
-            "the simulated training backend needs `true_benefit` (ground-truth "
-            "per-task benefit). Without it there is nothing to measure a selection "
-            "strategy against, and a response model driven by the selector's own "
-            "score would make the experiment circular."
-        )
 
     outcomes: list[StrategyOutcome] = []
     test_tasks = list(split.test)
