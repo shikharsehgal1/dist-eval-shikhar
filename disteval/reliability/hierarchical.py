@@ -839,6 +839,16 @@ def pooling_diagnostic(
 
     Returns both scores, their difference, and a recommendation. A positive
     ``delta`` favours pooling.
+
+    **What this does and does not optimise.** The target is predictive accuracy
+    on the agent's *next run*, because that is the only thing measurable without
+    ground truth. It is not the same as accuracy against the latent parameter
+    ``p_t``: measured across seeds and heterogeneity levels on simulated data
+    where the truth is known, the two criteria agree on which estimator is better
+    about two thirds of the time. When your goal is specifically to estimate
+    ``p_t`` rather than to predict the next run -- for instance when the estimates
+    feed a ranking -- prefer the simulation study in :mod:`disteval.sim.studies`,
+    which measures the quantity you actually care about directly.
     """
     spec = spec or HierarchicalSpec()
     s = np.asarray(successes, dtype=float)
