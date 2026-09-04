@@ -29,6 +29,7 @@ from .classify import (
     expected_headroom,
     posterior_gap,
     rank_by_recoverability,
+    tie_diagnostics,
 )
 from .comparison import (
     PairedComparison,
@@ -137,6 +138,7 @@ __all__ = [
     "diagnose",
     "diagnose_many",
     "rank_by_recoverability",
+    "tie_diagnostics",
     "posterior_gap",
     "expected_headroom",
     "evidence_weighted_gap",

@@ -66,7 +66,22 @@ All three are functions of the posterior alone. Signals derived from
 trajectories (failure entropy, intervention distance, neighbourhood distance)
 are combined with these in :mod:`disteval.reliability.recoverability`.
 
-A limitation worth stating plainly: when scores are continuous, the latent
+**Ties are structural, and this matters for ranking.** With independent per-task
+estimation and ``n`` binary runs, every posterior quantity -- and therefore every
+recoverability estimator -- is a function of the success count alone, so it takes
+at most ``n + 1`` distinct values. At n=8, a suite of 500 tasks produces 9 tiers,
+and every task at 3/8 is *exactly* tied. Ranking within a tier is arbitrary, and
+a "top 40 by recoverability" list is really "an arbitrary 40 from the top tiers".
+
+Two things break the ties with real information rather than with noise:
+hierarchical estimation (:mod:`disteval.reliability.hierarchical`), where the
+task's domain and the population shift its posterior; and the trajectory-derived
+signals in :mod:`disteval.reliability.recoverability`. :func:`tie_diagnostics`
+reports how much of a ranking is tied so this is visible rather than implicit,
+and the selectors break ties deterministically by task id so results stay
+reproducible.
+
+A further limitation worth stating plainly: when scores are continuous, the latent
 parameter is the *mean score*, so a task that scores exactly 0.5 on every run is
 labelled RECOVERABLE even though nothing about it is stochastic. That is a real
 consequence of collapsing a rubric to one number, not a bug in the classifier.
@@ -97,6 +112,7 @@ __all__ = [
     "expected_headroom",
     "evidence_weighted_gap",
     "rank_by_recoverability",
+    "tie_diagnostics",
 ]
 
 SOLID = "SOLID"
@@ -397,4 +413,50 @@ def rank_by_recoverability(
         "primary": "recoverability",
     }[estimator]
     items = [d for d in diagnoses if labels is None or d.label in labels]
-    return sorted(items, key=lambda d: -getattr(d, field_name))
+    # Deterministic tie-break by task id: with independent estimation ties are
+    # structural (see the module docstring), and a stable order keeps results
+    # reproducible instead of depending on input ordering.
+    return sorted(items, key=lambda d: (-getattr(d, field_name), d.task))
+
+
+def tie_diagnostics(
+    diagnoses: Iterable[TaskDiagnosis], estimator: str = "headroom", top_n: int = 40
+) -> dict:
+    """How much of a recoverability ranking is actually resolved?
+
+    With ``n`` binary runs and independent estimation there are at most ``n + 1``
+    distinct scores, so a top-``k`` list is largely an arbitrary selection from
+    within a tier. This reports the tie structure so a reader can see that,
+    rather than reading an ordering that the data does not support.
+    """
+    field_name = {
+        "gap": "recoverability_gap",
+        "headroom": "recoverability_headroom",
+        "evidence": "recoverability_evidence",
+        "primary": "recoverability",
+    }[estimator]
+    items = sorted(diagnoses, key=lambda d: (-getattr(d, field_name), d.task))
+    if not items:
+        return {"n_tasks": 0}
+    vals = np.array([getattr(d, field_name) for d in items], dtype=float)
+    rounded = np.round(vals, 9)
+    n_distinct = int(len(np.unique(rounded)))
+    k = min(top_n, len(items))
+    boundary = rounded[k - 1] if k else float("nan")
+    n_at_boundary = int(np.sum(rounded == boundary))
+    n_above = int(np.sum(rounded > boundary))
+    return {
+        "n_tasks": len(items),
+        "n_distinct_scores": n_distinct,
+        "largest_tier_size": int(np.max(np.unique(rounded, return_counts=True)[1])),
+        "top_n": k,
+        "n_strictly_above_cutoff": n_above,
+        "n_tied_at_cutoff": n_at_boundary,
+        "cutoff_is_arbitrary": bool(n_above < k),
+        "note": (
+            f"{k - n_above} of the top {k} are drawn from a tie of "
+            f"{n_at_boundary} tasks at the cutoff score; that part of the "
+            "selection is arbitrary. Use hierarchical estimation or trajectory "
+            "signals to break ties with information rather than ordering."
+        ) if n_above < k else "",
+    }
