@@ -162,9 +162,14 @@ def failure_distribution(
     denom = n + alpha * len(support)
     probs = (
         {m: (counts.get(m, 0) + alpha) / denom for m in support}
-        if denom > 0
+        if denom > 0 and n > 0
         else {}
     )
+    # With no observed failures the entropy is *undefined*, not maximal. Without
+    # this guard the smoothing prior alone produces a uniform distribution over
+    # the support, giving entropy = log(K) and concentration = 0 -- which would
+    # label a task that never failed as maximally diffuse, the exact opposite of
+    # the truth, and would rank it as unrecoverable for the wrong reason.
     ent = plugin_entropy(list(probs.values())) if probs else float("nan")
     if miller_madow and n > 0:
         k_obs = len([m for m in support if counts.get(m, 0) > 0])
