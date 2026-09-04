@@ -61,6 +61,15 @@ from .scaling import (
     fit_reliability_curve,
     horizon_features,
 )
+from .criterion import (
+    CriterionEstimate,
+    GapProfile,
+    capability_reliability_gap,
+    empirical_bayes_criteria,
+    fit_criterion_model,
+    gap_profile,
+    gap_profiles,
+)
 from .decomposition import (
     Decomposition,
     decompose,
@@ -94,6 +103,13 @@ from .hierarchical import (
 )
 
 __all__ = [
+    "CriterionEstimate",
+    "GapProfile",
+    "gap_profile",
+    "gap_profiles",
+    "capability_reliability_gap",
+    "fit_criterion_model",
+    "empirical_bayes_criteria",
     "PairedComparison",
     "paired_comparison",
     "posterior_dominance",
