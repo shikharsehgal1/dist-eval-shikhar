@@ -1,4 +1,11 @@
 """Training-data selection: which tasks, and which trajectory pairs from them."""
+from .export import (
+    VIEWS,
+    DatasetCost,
+    dataset_cost,
+    export_view,
+    export_views,
+)
 from .pairs import (
     PairConfig,
     PreferenceDataset,
@@ -38,6 +45,7 @@ __all__ = [
     "UniformSelector", "DifficultySelector", "UncertaintySelector",
     "LearningProgressSelector", "CapabilityReliabilityGapSelector",
     "GapStructureSelector",
+    "VIEWS", "DatasetCost", "dataset_cost", "export_view", "export_views",
     "PairConfig", "PreferencePair", "PreferenceDataset",
     "build_pairs_for_task", "build_dataset", "to_dpo_jsonl", "to_ranking_jsonl",
 ]

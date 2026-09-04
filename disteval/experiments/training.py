@@ -4,6 +4,21 @@ This repository is an evaluation and diagnosis framework; it does not implement
 gradient steps. What it must do is make the training step *pluggable* and make
 the simulated one honest enough to be worth running.
 
+**The interface is optimiser-agnostic and DPO is one optional backend among
+several.** The selection question -- which tasks and which trajectories -- is
+separate from the optimisation question, and tying the research claim to one
+algorithm would be a mistake. Each backend declares the *views* it consumes
+(``pairwise``, ``listwise``, ``weighted_sft``, ``scalar_reward``; see
+:mod:`disteval.selection.export`) and receives exactly those, all rendered from
+the same selection so a comparison across objectives is not confounded by a
+different data pipeline.
+
+Every result also carries the dataset's training cost -- examples, trajectories,
+events, approximate tokens -- so held-out gain can be normalised per unit of
+training data. The claim under test is about sample efficiency, and without that
+normalisation a strategy that merely produced more pairs would look better for
+the wrong reason.
+
 Backends
 --------
 ``ExportOnlyBackend``
@@ -42,6 +57,7 @@ from typing import Mapping, Optional, Sequence
 
 import numpy as np
 
+from ..selection.export import VIEWS, dataset_cost, export_views
 from ..selection.pairs import PreferenceDataset, to_dpo_jsonl, to_ranking_jsonl
 
 __all__ = [
@@ -51,6 +67,8 @@ __all__ = [
     "SimulatedBackend",
     "TRLBackend",
     "AxolotlBackend",
+    "WeightedSFTBackend",
+    "ScalarRewardBackend",
     "BACKENDS",
     "make_backend",
 ]
@@ -70,6 +88,10 @@ class TrainingResult:
     is_real_training: bool = False
     #: True when the numbers come from an analytic model rather than measurement.
     is_simulated: bool = False
+    #: Training cost of the dataset, for per-unit normalisation of held-out gain.
+    cost: dict = field(default_factory=dict)
+    #: Which views this backend consumed.
+    views: tuple[str, ...] = ()
     note: str = ""
     meta: dict = field(default_factory=dict)
 
@@ -80,28 +102,40 @@ class TrainingResult:
             "n_tasks_affected": len(self.task_effects),
             "is_real_training": self.is_real_training,
             "is_simulated": self.is_simulated,
+            "views": list(self.views),
             "note": self.note,
             "artifacts": dict(self.artifacts),
+            **{f"cost_{k}": v for k, v in self.cost.items()},
         }
 
 
 class TrainerBackend(ABC):
-    """Plugin interface for Phase C."""
+    """Plugin interface for Phase C. Declare ``views`` to say what you consume."""
 
     name = "backend"
+    #: Which renderings of the selection this backend needs. Optimiser-specific;
+    #: the selection itself is not.
+    views: tuple[str, ...] = VIEWS
 
     @abstractmethod
     def train(self, dataset: PreferenceDataset, output_dir: str, **kwargs) -> TrainingResult:
         ...
 
     def _export(self, dataset: PreferenceDataset, output_dir: str) -> dict[str, str]:
+        """Write the views this backend declares, plus a manifest with the cost."""
+        paths = export_views(dataset, output_dir, views=self.views)
+        # Legacy filenames, kept so existing consumers of the old export layout
+        # keep working.
         out = Path(output_dir)
-        out.mkdir(parents=True, exist_ok=True)
-        dpo = out / "preference_pairs.jsonl"
-        rank = out / "trajectory_ranking.jsonl"
-        to_dpo_jsonl(dataset, str(dpo))
-        to_ranking_jsonl(dataset, str(rank))
-        return {"dpo_dataset": str(dpo), "ranking_dataset": str(rank)}
+        if "pairwise" in self.views:
+            legacy = out / "preference_pairs.jsonl"
+            to_dpo_jsonl(dataset, str(legacy))
+            paths["dpo_dataset"] = str(legacy)
+        if "listwise" in self.views:
+            legacy = out / "trajectory_ranking.jsonl"
+            to_ranking_jsonl(dataset, str(legacy))
+            paths["ranking_dataset"] = str(legacy)
+        return paths
 
 
 class ExportOnlyBackend(TrainerBackend):
@@ -115,7 +149,9 @@ class ExportOnlyBackend(TrainerBackend):
             n_pairs=len(dataset),
             artifacts=self._export(dataset, output_dir),
             is_real_training=False,
-            note="datasets exported; no training was performed",
+            cost=dataset_cost(dataset).to_dict(),
+            views=self.views,
+            note="datasets exported in every view; no training was performed",
         )
 
 
@@ -210,6 +246,8 @@ class SimulatedBackend(TrainerBackend):
             artifacts=self._export(dataset, output_dir),
             is_real_training=False,
             is_simulated=True,
+            cost=dataset_cost(dataset).to_dict(),
+            views=self.views,
             note=(
                 "effects come from an analytic response model driven by the "
                 "simulator's TRUE per-task benefit, not by the selector's score; "
@@ -264,6 +302,8 @@ class _ReferenceBackend(TrainerBackend):
             task_effects={},
             artifacts=artifacts,
             is_real_training=False,
+            cost=dataset_cost(dataset).to_dict(),
+            views=self.views,
             note=(
                 f"{self.trainer_cls_name} is a reference skeleton: it wrote a "
                 "dataset and a trainer config but ran no optimisation. The scores "
@@ -274,12 +314,18 @@ class _ReferenceBackend(TrainerBackend):
 
 
 class TRLBackend(_ReferenceBackend):
+    """DPO via TRL. One optional backend, not the framework's objective."""
+
     name = "trl"
+    views = ("pairwise",)
     trainer_cls_name = "TRLReferenceTrainer"
 
 
 class AxolotlBackend(_ReferenceBackend):
+    """DPO via Axolotl. One optional backend, not the framework's objective."""
+
     name = "axolotl"
+    views = ("pairwise",)
     trainer_cls_name = "AxolotlReferenceTrainer"
 
 
@@ -295,3 +341,58 @@ def make_backend(name: str, **kwargs) -> TrainerBackend:
     if name not in BACKENDS:
         raise ValueError(f"unknown training backend {name!r}; have {sorted(BACKENDS)}")
     return BACKENDS[name](**kwargs)
+
+
+class WeightedSFTBackend(TrainerBackend):
+    """Supervised fine-tuning on the successful trajectories of the selection.
+
+    The simplest objective that uses this selection at all, and an important
+    control: if weighted SFT on the same tasks matches a preference loss, then the
+    preference machinery is not what is doing the work. Exports only the view it
+    needs; it does not run training.
+    """
+
+    name = "weighted_sft"
+    views = ("weighted_sft",)
+
+    def train(self, dataset, output_dir, **kwargs) -> TrainingResult:
+        return TrainingResult(
+            backend=self.name,
+            n_pairs=len(dataset),
+            artifacts=self._export(dataset, output_dir),
+            is_real_training=False,
+            cost=dataset_cost(dataset).to_dict(),
+            views=self.views,
+            note=("weighted-SFT dataset exported; no training was performed. "
+                  "Included as the control for whether the preference objective "
+                  "is doing the work."),
+        )
+
+
+class ScalarRewardBackend(TrainerBackend):
+    """Exports the scalar-reward view for PPO/GRPO-style RL or reward-model fitting.
+
+    Present so that "which tasks" can be varied independently of "which
+    optimiser": an RL objective consumes exactly the same selection as a pairwise
+    one, and any difference in outcome is attributable to the objective.
+    """
+
+    name = "scalar_reward"
+    views = ("scalar_reward",)
+
+    def train(self, dataset, output_dir, **kwargs) -> TrainingResult:
+        return TrainingResult(
+            backend=self.name,
+            n_pairs=len(dataset),
+            artifacts=self._export(dataset, output_dir),
+            is_real_training=False,
+            cost=dataset_cost(dataset).to_dict(),
+            views=self.views,
+            note="scalar-reward dataset exported; no training was performed",
+        )
+
+
+BACKENDS.update({
+    "weighted_sft": WeightedSFTBackend,
+    "scalar_reward": ScalarRewardBackend,
+})
