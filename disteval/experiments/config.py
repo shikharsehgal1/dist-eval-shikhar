@@ -135,8 +135,9 @@ class ReliabilityConfig:
 class SelectionConfig:
     """Phase B: which tasks and how many pairs."""
 
-    #: A single strategy name, or ``"all"`` to compare every strategy (the usual
-    #: research run), or ``"baselines"`` for the baseline set only.
+    #: A single strategy name; "all" for the six curriculum strategies (the
+    #: usual research run); "baselines" for uniform/difficulty/uncertainty/
+    #: learning_progress only; "extended" to add the legacy ablation arms.
     method: str = "all"
     n_tasks: int = 40
     n_pairs: int = 100
@@ -144,6 +145,12 @@ class SelectionConfig:
     min_margin: float = 0.5
     match_environment: bool = True
     restrict_to_recoverable: bool = False
+    #: For the gap selectors: require posterior evidence that the task is ever
+    #: fully solved. None disables the gate. See criterion.GapProfile.
+    require_joint_capability: Optional[float] = None
+    #: Weights for gap_plus_structure: score = G_t * (gap_weight + structure_weight * S_t).
+    gap_weight: float = 0.5
+    structure_weight: float = 0.5
     #: Dataset sizes for the sample-efficiency learning curve.
     dataset_sizes: list[int] = field(default_factory=lambda: [25, 50, 100, 250])
 

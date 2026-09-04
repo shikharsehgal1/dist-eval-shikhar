@@ -6,17 +6,20 @@ This is the experiment the repository exists to run:
 under a budget). Estimate ``p_{m,t}`` with uncertainty, hierarchically pooled if
 configured. Compute pass@k, pass^k, mean, lower-tail CVaR.
 
-**Phase B -- Diagnosis and selection.** Classify tasks, score recoverability
-(optionally with trajectory-derived signals), and select an equal-size training
-set under each strategy being compared.
+**Phase B -- Diagnosis and selection.** Estimate criterion-level reliability and
+the capability--reliability gap, summarise within-task failure structure, and
+select an equal-size training set under each of the six curriculum strategies.
 
-**Phase C -- Training.** Build matched preference pairs and hand them to a
-backend. In simulation the backend applies a response model driven by ground
-truth; in practice it exports a dataset.
+**Phase C -- Training.** Build matched trajectory pairs and hand them to a
+backend through an optimiser-agnostic view (pairwise, listwise, weighted SFT or
+scalar reward). In simulation the backend applies a response model driven by
+ground truth; in practice it exports a dataset.
 
 **Phase D -- Re-evaluation.** Evaluate the resulting policy on **held-out**
-tasks, and report mean, pass^k, lower-tail performance and reliability. Never on
-the tasks the pairs came from.
+tasks, and report mean, pass^k, lower-tail performance and reliability -- both
+absolutely and **per unit of training data**, since the claim under test is about
+sample efficiency rather than final score. Never on the tasks the pairs came
+from.
 
 What makes the comparison fair
 ------------------------------
@@ -69,6 +72,10 @@ class PhaseAResult:
     n_executions: int
     domains: dict[str, str] = field(default_factory=dict)
     hierarchical_summary: Optional[dict] = None
+    #: Criterion-level capability--reliability gap profiles, when rubric scores
+    #: were supplied. Empty otherwise; the pipeline then falls back to the
+    #: task-level posterior gap and records that it did.
+    gaps: dict = field(default_factory=dict)
 
     def by_task(self) -> dict[str, TaskDiagnosis]:
         return {d.task: d for d in self.diagnoses}
@@ -98,6 +105,13 @@ class StrategyOutcome:
     train_delta: float
     benefit_captured: float
     is_simulated: bool
+    #: Training cost of the selected dataset, for per-unit normalisation.
+    n_examples: int = 0
+    n_tokens: int = 0
+    #: Held-out gain per unit of training data. These, not heldout_delta, are the
+    #: quantities the sample-efficiency claim is about.
+    gain_per_100_examples: float = float("nan")
+    gain_per_1k_tokens: float = float("nan")
     note: str = ""
 
     def to_dict(self) -> dict:
@@ -133,6 +147,8 @@ class ExperimentResult:
                 n_seeds=("seed", "count"),
                 heldout_delta=("heldout_delta", "mean"),
                 heldout_delta_sd=("heldout_delta", "std"),
+                gain_per_100_examples=("gain_per_100_examples", "mean"),
+                gain_per_1k_tokens=("gain_per_1k_tokens", "mean"),
                 heldout_pass_hat_k_after=("heldout_pass_hat_k_after", "mean"),
                 heldout_cvar_after=("heldout_cvar_after", "mean"),
                 benefit_captured=("benefit_captured", "mean"),
@@ -263,6 +279,9 @@ def run_experiment(
     trajectories: Optional[Mapping[str, Sequence[Trajectory]]] = None,
     domains: Optional[Mapping[str, str]] = None,
     true_benefit: Optional[Mapping[str, float]] = None,
+    rubric_runs: Optional[Mapping[str, Sequence[Mapping[str, float]]]] = None,
+    structure: Optional[Mapping[str, Mapping[str, float]]] = None,
+    history: Optional[Mapping[str, Sequence[float]]] = None,
     strategies: Optional[Sequence[str]] = None,
     backend: Optional[TrainerBackend] = None,
     output_dir: str = "",
@@ -282,23 +301,29 @@ def run_experiment(
     """
     import tempfile
 
-    ALL = (
+    from ..selection.selectors import CURRICULUM_STRATEGIES
+
+    ALL = CURRICULUM_STRATEGIES
+    #: Everything the ablations can also switch on, including the legacy arms.
+    EXTENDED = CURRICULUM_STRATEGIES + (
         "random", "hardest", "lowest_mean", "highest_variance",
         "success_failure", "recoverability", "uncertainty_aware",
     )
-    BASELINES = ("random", "hardest", "lowest_mean", "highest_variance", "success_failure")
+    BASELINES = ("uniform", "difficulty", "uncertainty", "learning_progress")
     if strategies is None:
         method = config.selection.method
         if method == "all":
             strategies = ALL
         elif method == "baselines":
             strategies = BASELINES
-        elif method in ALL:
+        elif method == "extended":
+            strategies = EXTENDED
+        elif method in EXTENDED:
             strategies = (method,)
         else:
             raise ValueError(
                 f"selection.method={method!r} is not a known strategy; use one of "
-                f"{sorted(ALL)}, or 'all' / 'baselines'"
+                f"{sorted(EXTENDED)}, or 'all' / 'baselines' / 'extended'"
             )
 
     warnings = list(config.validate())
@@ -335,6 +360,31 @@ def run_experiment(
     )
     diag_by_task = phase_a.by_task()
     train_diags = [d for d in phase_a.diagnoses if d.task in set(split.train)]
+
+    # -- criterion-level gap, when rubric scores are available ---------------
+    gap_by_task: dict[str, object] = {}
+    if rubric_runs:
+        from ..reliability.criterion import gap_profiles
+
+        profiles = gap_profiles(
+            {t: list(v) for t, v in rubric_runs.items() if v},
+            model="policy", thresholds=config.thresholds(), domains=domains,
+            estimator=("hierarchical" if config.reliability.model == "hierarchical"
+                       else "independent"),
+        )
+        gap_by_task = {p.task: p for p in profiles}
+        phase_a.gaps = gap_by_task
+    else:
+        warnings.append(
+            "no per-criterion rubric scores were supplied, so the "
+            "capability-reliability gap falls back to its task-level posterior "
+            "form. The criterion-level gap is the primary definition and carries "
+            "strictly more information; supply rubric_scores to use it."
+        )
+
+    structure = dict(structure or {})
+    if trajectories and not structure:
+        structure = _structure_signals(trajectories)
 
     outcomes: list[StrategyOutcome] = []
     test_tasks = list(split.test)
@@ -380,6 +430,18 @@ def run_experiment(
             if name in ("recoverability", "uncertainty_aware"):
                 kwargs["estimator"] = config.reliability.recoverability_estimator
                 kwargs["restrict_to_recoverable"] = config.selection.restrict_to_recoverable
+            if name in ("capability_reliability_gap", "gap_plus_structure"):
+                kwargs["gap"] = gap_by_task
+                if config.selection.require_joint_capability is not None:
+                    kwargs["require_joint_capability"] = (
+                        config.selection.require_joint_capability
+                    )
+            if name == "gap_plus_structure":
+                kwargs["structure"] = structure
+                kwargs["gap_weight"] = config.selection.gap_weight
+                kwargs["structure_weight"] = config.selection.structure_weight
+            if name == "learning_progress":
+                kwargs["history"] = dict(history or {})
             sel = make_selector(name, **kwargs).select(train_diags, config.selection.n_tasks)
 
             pair_cfg = PairConfig(
@@ -463,6 +525,11 @@ def run_experiment(
                 if sel.tasks else float("nan")
             )
 
+            cost = dict(getattr(result, "cost", {}) or {})
+            n_ex = int(cost.get("n_examples", n_pairs) or n_pairs)
+            n_tok = int(cost.get("approx_tokens", 0) or 0)
+            delta = after_test["mean"] - base_test["mean"]
+
             outcomes.append(
                 StrategyOutcome(
                     strategy=name,
@@ -472,7 +539,11 @@ def run_experiment(
                     pair_shortfall=max(config.selection.n_pairs - n_pairs, 0),
                     heldout_mean_before=base_test["mean"],
                     heldout_mean_after=after_test["mean"],
-                    heldout_delta=after_test["mean"] - base_test["mean"],
+                    heldout_delta=delta,
+                    n_examples=n_ex,
+                    n_tokens=n_tok,
+                    gain_per_100_examples=(100.0 * delta / n_ex) if n_ex else float("nan"),
+                    gain_per_1k_tokens=(1000.0 * delta / n_tok) if n_tok else float("nan"),
                     heldout_pass_hat_k_before=base_test["pass_hat_k"],
                     heldout_pass_hat_k_after=after_test["pass_hat_k"],
                     heldout_cvar_before=base_test["cvar"],
@@ -519,3 +590,63 @@ def run_experiment(
             "training_pool_tasks": len(split.train),
         },
     )
+
+
+def _structure_signals(
+    trajectories: Mapping[str, Sequence[Trajectory]],
+) -> dict[str, dict[str, float]]:
+    """Summarise within-task failure structure for the gap+structure selector.
+
+    Three signals, each computed only where the data supports it and left absent
+    (rather than imputed) otherwise:
+
+    * ``failure_concentration`` -- 1 minus the normalised entropy of the task's
+      attributed failure modes: does it fail the same way every time?
+    * ``neighbourhood`` -- how close the failed runs sit to the successful ones in
+      trajectory-embedding space, normalised by the spread of the successes.
+    * ``intervention`` -- the mean normalised cost of the cheapest edit script
+      turning a failed run into an observed successful one.
+
+    These are the operationalisation of "within-task failure structure" in the
+    hypothesis. Whether they carry predictive value beyond difficulty and
+    learning progress is what the ablation measures.
+    """
+    from ..diagnosis.entropy import failure_distribution
+    from ..diagnosis.taxonomy import classify_failure
+    from ..trajectory.counterfactual import intervention_distance
+    from ..trajectory.embed import embed_trajectories, neighbourhood_distance
+
+    out: dict[str, dict[str, float]] = {}
+    for task, runs in trajectories.items():
+        runs = list(runs)
+        succ = [t for t in runs if t.success]
+        fail = [t for t in runs if not t.success]
+        sig: dict[str, float] = {}
+
+        if fail:
+            modes = [classify_failure(t)[0] for t in fail]
+            modes = [m for m in modes if m and m != "unknown"]
+            if modes:
+                conc = failure_distribution(modes, task=task).concentration
+                if np.isfinite(conc):
+                    sig["failure_concentration"] = float(conc)
+
+        if succ and fail and len(runs) >= 4:
+            try:
+                nd = neighbourhood_distance(embed_trajectories(runs))
+                d = nd.get("normalized_distance", float("nan"))
+                if np.isfinite(d):
+                    # Closer failures -> higher score, bounded in (0, 1].
+                    sig["neighbourhood"] = float(1.0 / (1.0 + d))
+            except Exception:
+                pass
+
+        if succ and fail:
+            iv = intervention_distance(fail[:4], succ[:4])
+            c = iv.get("mean_normalized_cost", float("nan"))
+            if np.isfinite(c):
+                sig["intervention"] = float(c)
+
+        if sig:
+            out[task] = sig
+    return out

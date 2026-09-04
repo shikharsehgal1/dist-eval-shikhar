@@ -92,6 +92,7 @@ from .recoverability import (
     RecoverabilityWeights,
     combine_weighted,
     compare_signals,
+    incremental_validity,
     score_tasks,
 )
 from .hierarchical import (
@@ -150,6 +151,7 @@ __all__ = [
     "score_tasks",
     "LearnedRecoverability",
     "compare_signals",
+    "incremental_validity",
     "ReliabilityThresholds",
     "TaskDiagnosis",
     "diagnose",

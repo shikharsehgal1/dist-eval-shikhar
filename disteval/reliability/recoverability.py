@@ -78,6 +78,7 @@ __all__ = [
     "score_tasks",
     "LearnedRecoverability",
     "compare_signals",
+    "incremental_validity",
 ]
 
 SIGNAL_NAMES = (
@@ -356,3 +357,120 @@ def compare_signals(
         rows.append({"signal": "combined", "n": int(ok.sum()),
                      "spearman": float(rho), "p_value": float(p)})
     return pd.DataFrame(rows).sort_values("spearman", ascending=False).reset_index(drop=True)
+
+
+# --------------------------------------------------------------------------- #
+# Incremental validity                                                        #
+# --------------------------------------------------------------------------- #
+def incremental_validity(
+    features: Mapping[str, Mapping[str, float]],
+    benefit: Mapping[str, float],
+    *,
+    base: Sequence[str] = ("difficulty", "learning_progress"),
+    added: Sequence[str] = ("gap", "failure_concentration", "neighbourhood",
+                            "intervention"),
+    n_splits: int = 5,
+    n_repeats: int = 5,
+    seed: int = 0,
+) -> dict:
+    """Does ``added`` predict training benefit *beyond* ``base``?
+
+    This is the test the central hypothesis actually asks. "Structure correlates
+    with benefit" is not the claim -- difficulty correlates with benefit too, and
+    structure correlates with difficulty. The claim is **incremental validity**:
+    that knowing how a task fails improves prediction over and above knowing how
+    hard it is and how fast it is currently improving.
+
+    Method: repeated k-fold cross-validated ridge regression of ``benefit`` on the
+    base features alone and on base + added, compared by out-of-fold :math:`R^2`.
+    Cross-validated rather than in-sample because adding features can only ever
+    increase in-sample :math:`R^2`, so an in-sample comparison would be
+    guaranteed to "support" the hypothesis and would mean nothing. Repeated
+    because a single k-fold split of a few hundred tasks is noisy enough to flip
+    the sign.
+
+    Returns the two scores, the difference, a paired bootstrap interval on the
+    difference across repeats, and a verdict that is only positive when the
+    interval excludes zero.
+
+    A negative or zero result is a real finding and is reported as such.
+    """
+    from sklearn.linear_model import RidgeCV
+    from sklearn.model_selection import RepeatedKFold, cross_val_score
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    tasks = sorted(set(features) & set(benefit))
+    if len(tasks) < 3 * n_splits:
+        return {
+            "n_tasks": len(tasks), "verdict": "insufficient data",
+            "note": f"{len(tasks)} tasks is too few for {n_splits}-fold "
+                    "cross-validation to say anything",
+        }
+
+    def _design(names: Sequence[str]) -> tuple[np.ndarray, list[str]]:
+        cols, used = [], []
+        for n in names:
+            v = np.array([float(features[t].get(n, np.nan)) for t in tasks])
+            if np.all(~np.isfinite(v)):
+                continue
+            med = np.nanmedian(v[np.isfinite(v)]) if np.any(np.isfinite(v)) else 0.0
+            v = np.where(np.isfinite(v), v, med)
+            if np.std(v) < 1e-12:
+                continue
+            cols.append(v)
+            used.append(n)
+        if not cols:
+            return np.zeros((len(tasks), 0)), []
+        return np.column_stack(cols), used
+
+    y = np.array([float(benefit[t]) for t in tasks])
+    X_base, base_used = _design(base)
+    X_add, add_used = _design(list(base) + list(added))
+
+    if X_base.shape[1] == 0 or X_add.shape[1] <= X_base.shape[1]:
+        return {
+            "n_tasks": len(tasks), "verdict": "not testable",
+            "base_features": base_used, "added_features": [],
+            "note": "the added features were constant or absent, so there is "
+                    "nothing to test for incremental validity",
+        }
+
+    cv = RepeatedKFold(n_splits=n_splits, n_repeats=n_repeats, random_state=seed)
+    model = lambda: make_pipeline(StandardScaler(), RidgeCV(alphas=np.logspace(-3, 3, 13)))  # noqa: E731
+    s_base = cross_val_score(model(), X_base, y, cv=cv, scoring="r2")
+    s_add = cross_val_score(model(), X_add, y, cv=cv, scoring="r2")
+
+    diff = s_add - s_base
+    rng = np.random.default_rng(seed)
+    boots = np.array([
+        diff[rng.integers(0, diff.size, diff.size)].mean() for _ in range(4000)
+    ])
+    lo, hi = float(np.quantile(boots, 0.025)), float(np.quantile(boots, 0.975))
+    supported = lo > 0.0
+
+    return {
+        "n_tasks": len(tasks),
+        "base_features": base_used,
+        "added_features": [f for f in add_used if f not in base_used],
+        "r2_base": float(s_base.mean()),
+        "r2_base_sd": float(s_base.std()),
+        "r2_with_added": float(s_add.mean()),
+        "r2_with_added_sd": float(s_add.std()),
+        "delta_r2": float(diff.mean()),
+        "delta_ci_lo": lo,
+        "delta_ci_hi": hi,
+        "n_folds": int(s_base.size),
+        "supported": bool(supported),
+        "verdict": (
+            "within-task failure structure adds predictive value beyond the base "
+            "features on this data"
+            if supported else
+            "no evidence that within-task failure structure adds predictive value "
+            "beyond the base features on this data"
+        ),
+        "note": (
+            "out-of-fold R^2; an in-sample comparison would rise mechanically with "
+            "any added feature and could not test this"
+        ),
+    }

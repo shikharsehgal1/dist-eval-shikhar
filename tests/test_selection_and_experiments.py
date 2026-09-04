@@ -337,7 +337,10 @@ class TestPipeline:
                              domains={k: v.domain for k, v in world.truth.items()},
                              true_benefit=world.true_benefit())
         assert res.phase_a.n_executions == 60 * 8
-        assert len(res.outcomes) == 2 * 7
+        from disteval.selection.selectors import CURRICULUM_STRATEGIES
+
+        assert len(res.outcomes) == 2 * len(CURRICULUM_STRATEGIES)
+        assert {o.strategy for o in res.outcomes} == set(CURRICULUM_STRATEGIES)
         s = res.summary()
         assert {"strategy", "heldout_delta", "heldout_delta_se"} <= set(s.columns)
 
@@ -360,6 +363,41 @@ class TestPipeline:
                              domains={k: v.domain for k, v in world.truth.items()},
                              true_benefit=world.true_benefit())
         assert {o.strategy for o in res.outcomes} == {"recoverability"}
+
+    def test_gap_selectors_use_criterion_profiles_when_given(self):
+        cfg, world, run_fn = self._setup(
+            selection={"n_tasks": 10, "n_pairs": 20, "method": "gap_plus_structure"}
+        )
+        rng = np.random.default_rng(1)
+        rubric = {
+            t: [{"r1": float(rng.random() < 0.7), "r2": float(rng.random() < 0.4)}
+                for _ in range(8)]
+            for t in world.tasks()
+        }
+        res = run_experiment(
+            world.tasks(), run_fn, cfg,
+            domains={k: v.domain for k, v in world.truth.items()},
+            true_benefit=world.true_benefit(), rubric_runs=rubric,
+        )
+        assert res.phase_a.gaps, "criterion-level gap profiles should be computed"
+        assert not any("falls back to its task-level" in w for w in res.warnings)
+
+    def test_warns_when_no_rubric_scores_are_supplied(self):
+        cfg, world, run_fn = self._setup()
+        res = run_experiment(world.tasks(), run_fn, cfg,
+                             domains={k: v.domain for k, v in world.truth.items()},
+                             true_benefit=world.true_benefit())
+        assert any("task-level posterior" in w for w in res.warnings)
+        assert res.phase_a.gaps == {}
+
+    def test_reports_gain_per_unit_of_training_data(self):
+        cfg, world, run_fn = self._setup()
+        res = run_experiment(world.tasks(), run_fn, cfg,
+                             domains={k: v.domain for k, v in world.truth.items()},
+                             true_benefit=world.true_benefit())
+        s = res.summary()
+        assert {"gain_per_100_examples", "gain_per_1k_tokens"} <= set(s.columns)
+        assert all(o.n_examples >= 0 for o in res.outcomes)
 
     def test_unknown_method_raises(self):
         cfg, world, run_fn = self._setup(selection={"method": "telepathy"})
