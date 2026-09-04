@@ -30,11 +30,11 @@ def main() -> None:
     """Main CLI dispatcher that routes to appropriate subcommand handlers."""
     if len(sys.argv) == 1:
         print_help_and_exit()
-    
+
     # Handle help for subcommands
     if len(sys.argv) >= 2 and sys.argv[1] in ['-h', '--help']:
         print_help_and_exit()
-    
+
     # Handle help for specific subcommand
     if len(sys.argv) >= 3 and sys.argv[2] in ['-h', '--help']:
         subcommand = sys.argv[1]
@@ -53,14 +53,14 @@ def main() -> None:
             print_train_help_and_exit()
         else:
             print_help_and_exit()
-    
+
     # Parse subcommand and route
     subcommand = sys.argv[1] if len(sys.argv) > 1 else None
     remaining_args = sys.argv[2:] if len(sys.argv) > 2 else []
-    
+
     if not subcommand:
         print_help_and_exit()
-    
+
     # Route to appropriate subcommand handler
     if subcommand in _NEW_HANDLERS:
         _NEW_HANDLERS[subcommand](remaining_args)
@@ -294,37 +294,37 @@ def handle_engine(remaining_args: list[str]) -> None:
         prog="disteval engine",
         description="Run SelfEngine on Harbor job directories to generate improvement plans"
     )
-    
+
     parser.add_argument(
         "job_dirs",
         nargs="+",
         help="One or more Harbor job directories containing evaluation results"
     )
-    
+
     parser.add_argument(
         "--agent",
         default="agent",
         help="Agent name (default: agent)"
     )
-    
+
     parser.add_argument(
         "--model",
-        default="unknown", 
+        default="unknown",
         help="Model name (default: unknown)"
     )
-    
+
     parser.add_argument(
         "--tasks-dir",
         default="tasks",
         help="Directory containing task definitions (default: tasks)"
     )
-    
+
     parser.add_argument(
         "--output", "-o",
         default="improvement_plan.json",
         help="Output path for the improvement plan JSON (default: improvement_plan.json)"
     )
-    
+
     parser.add_argument(
         "--cycle",
         type=int,
@@ -363,10 +363,10 @@ def handle_engine(remaining_args: list[str]) -> None:
             enable_recursion=args.enable_recursion,
             recursion_config={"max_depth": args.max_depth},
         )
-        
+
         # Run the specified cycle
         plan = engine.run_cycle(args.cycle)
-        
+
         # Print plan summary
         print("\nImprovement Plan Summary:")
         print(f"  Cycle: {args.cycle}")
@@ -375,14 +375,14 @@ def handle_engine(remaining_args: list[str]) -> None:
         print(f"  Job directories: {len(args.job_dirs)}")
         if hasattr(plan, 'summary'):
             print(f"  Summary:\n{plan.summary()}")
-        
+
         # Save plan to JSON
         plan_dict = plan.to_dict() if hasattr(plan, 'to_dict') else vars(plan)
         with open(args.output, 'w') as f:
             json.dump(plan_dict, f, indent=2, default=str)
-        
+
         print(f"\nSaved improvement plan → {args.output}")
-        
+
     except ImportError as e:
         print(f"Error importing SelfEngine: {e}", file=sys.stderr)
         print("Make sure disteval is installed correctly (pip install disteval).", file=sys.stderr)
@@ -626,7 +626,7 @@ def handle_experiment(argv):
             if r.get("domain"):
                 dom[r["task"]] = r["domain"]
         pool = {t: list(v) for t, v in by.items()}
-        counters = {t: 0 for t in pool}
+        counters = dict.fromkeys(pool, 0)
 
         def run_fn(task, i):
             v = pool[task]
@@ -637,6 +637,10 @@ def handle_experiment(argv):
         tasks = list(pool)
         trajs = load_trajectories(args.trajectories) if args.trajectories else None
         traj_map = ({t: v for (_m, t), v in trajs.group().items()} if trajs else None)
+        rubric = {}
+        for x in runs:
+            if x.get("rubric_scores"):
+                rubric.setdefault(x["task"], []).append(x["rubric_scores"])
         benefit = None
         if config.training.backend == "simulated":
             print("error: replaying recorded runs cannot supply ground-truth "
@@ -655,18 +659,29 @@ def handle_experiment(argv):
         tasks = world.tasks()
         dom = {k: v.domain for k, v in world.truth.items()}
         benefit = world.true_benefit()
-        traj_map = None
 
         def run_fn(task, i):
             return float(world.run(task, rng)["score"])
 
+        # Generate trajectories and per-criterion scores as well as outcomes.
+        # Without them the criterion-level gap falls back to its task-level form
+        # and the structure signals are empty, which would make
+        # `gap_plus_structure` numerically identical to
+        # `capability_reliability_gap` -- i.e. the flagship comparison would be
+        # vacuous by construction.
+        n_traj = config.evaluation.runs_per_task
+        traj_map = {t: [world.trajectory(t, i, rng) for i in range(n_traj)]
+                    for t in tasks}
+        rubric = {t: [x.rubric_scores for x in v] for t, v in traj_map.items()}
         print(f"Using the built-in simulator: {args.n_tasks} tasks, "
-              f"benefit coupling '{args.coupling}'.")
+              f"benefit coupling '{args.coupling}', {n_traj} trajectories per task "
+              f"(so criterion-level gap and structure signals are populated).")
 
     with ExperimentRun.create(config, args.output_dir, overwrite=args.overwrite) as run:
         result = run_experiment(
             tasks, run_fn, config, trajectories=traj_map, domains=dom,
-            true_benefit=benefit, output_dir=str(run.path("data")),
+            true_benefit=benefit, rubric_runs=rubric,
+            output_dir=str(run.path("data")),
         )
         summary = result.summary()
         run.write_table("task_metrics", result.phase_a.to_frame())

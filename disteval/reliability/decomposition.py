@@ -65,10 +65,9 @@ Milestone definitions
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Mapping, Optional, Sequence
+from dataclasses import dataclass
+from typing import Callable, Optional, Sequence
 
-import numpy as np
 
 from ..trajectory.events import Trajectory
 from .posterior import JEFFREYS_PRIOR, BetaPrior, TaskPosterior, binary_posterior

@@ -49,13 +49,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Callable, Mapping, Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 import numpy as np
 
 from ..reliability.classify import ReliabilityThresholds
-from ..reliability.posterior import JEFFREYS_PRIOR, BetaPrior, TaskPosterior, binary_posterior
-from .value import bald, expected_entropy_reduction, flip_probability, label_of
+from ..reliability.posterior import JEFFREYS_PRIOR, BetaPrior, TaskPosterior
+from .value import bald, expected_entropy_reduction, flip_probability
 
 __all__ = [
     "TaskState",
@@ -201,7 +201,6 @@ class GreedyValuePolicy(AllocationPolicy):
             s.task: TaskState(s.task, s.n_runs, s.n_success, s.domain, s.prior)
             for s in states
         }
-        th = self.thresholds
         primary = VALUE_CRITERIA[self.criterion]
         secondary = VALUE_CRITERIA.get(self.tie_break, VALUE_CRITERIA["entropy"])
         order: list[str] = []
@@ -251,7 +250,7 @@ class ThompsonAllocation(AllocationPolicy):
         ids = [s.task for s in states]
         posts = [s.posterior for s in states]
         order = []
-        counts = {t: 0 for t in ids}
+        counts = dict.fromkeys(ids, 0)
         for _ in range(budget):
             draws = [self.target(float(rng.beta(p.alpha, p.beta))) for p in posts]
             i = int(np.argmax(draws))

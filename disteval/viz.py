@@ -193,7 +193,7 @@ def plot_mean_vs_cvar(
             ax.annotate("Mean lies here\n↕ gap = hidden tail risk",
                         xy=(x[idx] + width / 2, c + 0.02),
                         xytext=(x[idx] + width / 2 + 0.6, c + 0.25),
-                        arrowprops=dict(arrowstyle="->", color="red", lw=1.5),
+                        arrowprops={"arrowstyle": "->", "color": "red", "lw": 1.5},
                         fontsize=8.5, color="red")
 
     fig.tight_layout()
@@ -247,7 +247,7 @@ def plot_pass_reliability(
         if p - h > 0.1:
             ax.annotate("", xy=(x[i] + width / 2, h + 0.005),
                         xytext=(x[i] - width / 2, p - 0.005),
-                        arrowprops=dict(arrowstyle="<->", color="red", lw=1.3))
+                        arrowprops={"arrowstyle": "<->", "color": "red", "lw": 1.3})
 
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=11)
@@ -293,7 +293,7 @@ def plot_eval_reliability(
     ax.text(0.5, 0.88, f"True spread is {ratio:.1f}× wider than published CI\n"
             f"→ Published error bars are overconfident by {ratio:.1f}×",
             transform=ax.transAxes, ha="center", fontsize=10,
-            color="red", bbox=dict(boxstyle="round,pad=0.3", fc="mistyrose", ec="red", alpha=0.8))
+            color="red", bbox={"boxstyle": "round,pad=0.3", "fc": "mistyrose", "ec": "red", "alpha": 0.8})
 
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)

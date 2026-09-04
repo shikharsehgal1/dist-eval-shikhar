@@ -23,8 +23,8 @@ result can state exactly what was held out rather than "a held-out set".
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Mapping, Optional, Sequence
+from dataclasses import dataclass
+from typing import Mapping, Optional, Sequence
 
 import numpy as np
 

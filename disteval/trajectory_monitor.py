@@ -197,15 +197,12 @@ class TrajectoryFeaturizer:
         n_search = 0
 
         for idx, tool in enumerate(sequence):
-            if tool in self.WRITE_TOOLS:
-                if first_write_pos == prefix_len:
-                    first_write_pos = idx
-            if tool in self.EXEC_TOOLS:
-                if first_exec_pos == prefix_len:
-                    first_exec_pos = idx
-            if tool in self.READ_TOOLS:
-                if first_read_pos == prefix_len:
-                    first_read_pos = idx
+            if tool in self.WRITE_TOOLS and first_write_pos == prefix_len:
+                first_write_pos = idx
+            if tool in self.EXEC_TOOLS and first_exec_pos == prefix_len:
+                first_exec_pos = idx
+            if tool in self.READ_TOOLS and first_read_pos == prefix_len:
+                first_read_pos = idx
 
             if tool in self.READ_TOOLS:
                 n_reads += 1

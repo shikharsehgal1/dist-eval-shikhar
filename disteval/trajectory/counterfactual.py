@@ -62,7 +62,7 @@ from typing import Optional, Sequence
 import numpy as np
 
 from .align import Alignment, align
-from .events import EventType, Trajectory, TrajectoryEvent
+from .events import EventType, Trajectory
 
 __all__ = [
     "EditCosts",

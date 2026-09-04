@@ -110,7 +110,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Iterable, Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 import numpy as np
 
@@ -328,8 +328,13 @@ def empirical_bayes_criteria(
         return {}
     groups: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for (task, crit) in cells:
-        key = crit if pool_by == "criterion" else ("task" if pool_by == "task" else "_all")
-        groups[crit if pool_by == "criterion" else (task if pool_by == "task" else "_all")].append((task, crit))
+        if pool_by == "criterion":
+            key = crit
+        elif pool_by == "task":
+            key = task
+        else:
+            key = "_all"
+        groups[key].append((task, crit))
 
     out: dict[tuple[str, str], TaskPosterior] = {}
     for _key, members in groups.items():

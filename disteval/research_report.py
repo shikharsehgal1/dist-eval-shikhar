@@ -42,7 +42,7 @@ from .reliability.hierarchical import fit_hierarchical, pooling_diagnostic
 from .reliability.posterior import JEFFREYS_PRIOR, posterior_from_scores
 from .trajectory.counterfactual import intervention_distance
 from .trajectory.embed import embed_trajectories, neighbourhood_distance
-from .trajectory.events import Trajectory, TrajectorySet
+from .trajectory.events import TrajectorySet
 
 __all__ = ["ReportData", "build_report_data", "render_markdown", "render_html", "generate_report"]
 
@@ -109,7 +109,6 @@ def build_report_data(
          for r in runs]
     )
     flat = df["score"].to_numpy(float)
-    min_runs = min((len(v) for v in scores_by_task.values()), default=1)
     ks = [k for k in (1, 2, 4, 8) if k <= max(len(v) for v in scores_by_task.values())]
     aggregate = {
         "n_runs": len(runs),

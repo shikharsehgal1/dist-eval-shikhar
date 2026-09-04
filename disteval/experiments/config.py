@@ -45,9 +45,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import asdict, dataclass, field, fields, is_dataclass
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Optional
 
 __all__ = [
     "ExperimentMeta",

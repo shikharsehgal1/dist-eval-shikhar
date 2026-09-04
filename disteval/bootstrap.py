@@ -206,7 +206,7 @@ def betting_cs(x: np.ndarray, ci: float = 0.95, lo: float = 0.0, hi: float = 1.0
         run_hi.append(hi_t)
         sum_z += z[t]
         sum_z2 += z[t] ** 2
-        count += 1
+        count += 1  # noqa: SIM113 -- kept explicit; the loop index is used for other purposes
     return {
         "point": run_mean[-1],
         "lo": run_lo[-1],

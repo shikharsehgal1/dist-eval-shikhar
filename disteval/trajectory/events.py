@@ -160,7 +160,7 @@ class TrajectoryEvent:
 
     @classmethod
     def from_dict(cls, d: dict) -> "TrajectoryEvent":
-        known = {f for f in cls.__dataclass_fields__}
+        known = set(cls.__dataclass_fields__)
         return cls(**{k: v for k, v in d.items() if k in known})
 
 
@@ -252,7 +252,7 @@ class Trajectory:
     @classmethod
     def from_dict(cls, d: dict) -> "Trajectory":
         events = [TrajectoryEvent.from_dict(e) for e in d.get("events", [])]
-        known = {f for f in cls.__dataclass_fields__} - {"events"}
+        known = set(cls.__dataclass_fields__) - {"events"}
         kwargs = {}
         for k, v in d.items():
             key = k if k in known else cls._ALIASES.get(k)

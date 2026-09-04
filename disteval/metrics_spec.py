@@ -11,8 +11,8 @@ assert that every metric named in a generated report has a registry entry.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Optional
+from dataclasses import dataclass
+from typing import Optional
 
 __all__ = ["MetricSpec", "REGISTRY", "get", "as_frame", "to_markdown", "register"]
 

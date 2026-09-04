@@ -509,7 +509,7 @@ class RecursionEngine:
                     exit_step=bd["step_index"],
                     label=f"phase-{idx}",
                     confidence=bd["confidence"],
-                    tool_signature=tuple([bd["tool_name"]]),
+                    tool_signature=(bd["tool_name"],),
                     phase_tag=bd["phase_tag"],
                 )
             )

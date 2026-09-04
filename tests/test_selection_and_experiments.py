@@ -405,6 +405,16 @@ class TestPipeline:
             run_experiment(world.tasks(), run_fn, cfg,
                            true_benefit=world.true_benefit())
 
+    def test_warns_when_the_selection_budget_swallows_the_pool(self):
+        """Every strategy picking the whole pool makes the comparison vacuous."""
+        cfg, world, run_fn = self._setup(
+            selection={"n_tasks": 10_000, "n_pairs": 30, "method": "all"}
+        )
+        res = run_experiment(world.tasks(), run_fn, cfg,
+                             domains={k: v.domain for k, v in world.truth.items()},
+                             true_benefit=world.true_benefit())
+        assert any("cannot differ" in w for w in res.warnings)
+
     def test_unequal_pair_counts_produce_a_warning(self):
         cfg, world, run_fn = self._setup()
         res = run_experiment(world.tasks(), run_fn, cfg,
@@ -436,9 +446,8 @@ class TestTrackingAndSweep:
 
     def test_errors_are_recorded_not_swallowed(self, tmp_path):
         cfg = ExperimentConfig.from_dict({"experiment": {"name": "err"}})
-        with pytest.raises(RuntimeError):
-            with ExperimentRun.create(cfg, tmp_path):
-                raise RuntimeError("boom")
+        with pytest.raises(RuntimeError), ExperimentRun.create(cfg, tmp_path):
+            raise RuntimeError("boom")
         meta = json.loads((tmp_path / cfg.experiment_id / "metadata.json").read_text())
         assert meta["status"] == "error" and "boom" in meta["error"]
 

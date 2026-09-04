@@ -34,9 +34,8 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Iterable, Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
-import numpy as np
 
 from ..diagnosis.causality import CriterionGraph
 from .classify import ReliabilityThresholds

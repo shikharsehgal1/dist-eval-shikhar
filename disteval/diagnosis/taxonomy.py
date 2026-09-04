@@ -29,8 +29,8 @@ tracking, memory, verification, recovery, and final synthesis.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Iterable, Optional, Sequence
+from dataclasses import dataclass
+from typing import Callable, Optional
 
 from ..trajectory.events import EventType, Trajectory, TrajectoryEvent
 

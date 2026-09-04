@@ -21,7 +21,7 @@ headless.
 """
 from __future__ import annotations
 
-from typing import Mapping, Optional, Sequence
+from typing import Mapping, Sequence
 
 import numpy as np
 
@@ -161,7 +161,7 @@ def pass_at_k_vs_pass_hat_k(df, ks: Sequence[int] = (1, 2, 4, 8), ax=None):
     from .metrics import pass_at_k, pass_hat_k
 
     fig, ax = _new(ax, (5.5, 4))
-    ks = [k for k in ks]
+    ks = list(ks)
     at = [pass_at_k(df, k) for k in ks]
     hat = [pass_hat_k(df, k) for k in ks]
     ax.plot(ks, at, "o-", color="#0072B2", label=r"pass@$k$  (at least one succeeds)")

@@ -70,6 +70,44 @@ omit = ["*/tests/*", "*/test_*.py"]
 line-length = 100
 target-version = "py310"
 
+# Correctness-focused rule set, pinned so `ruff check` is a gate rather than a
+# wall of style opinions. Newer ruff defaults enable a much broader set (pep604
+# annotation rewrites, dunder-all sorting and so on) which would churn the whole
+# legacy tree without catching a single bug.
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "F",     # pyflakes: undefined names, unused imports and variables
+    "W",     # pycodestyle warnings
+    "B",     # bugbear: mutable defaults, loop-variable binding, ...
+    "SIM",   # obvious simplifications
+    "C4",    # comprehension misuse
+    "PIE",   # misc lints
+    "RET",   # unreachable / redundant returns
+]
+ignore = [
+    "E501",    # line length is handled by the formatter
+    "E741",    # single-letter names are fine in numerical code (l, I, O)
+    "B008",    # function call in default arg: used deliberately for priors
+    "SIM108",  # ternary-vs-if is a readability judgement, not a rule
+    "SIM105",  # contextlib.suppress is not always clearer than try/except/pass
+    "RET504",  # naming a value before returning it often aids readability
+    "RET505",  # else-after-return reads fine in short branching logic
+    # zip(strict=) does catch length mismatches, but every zip in this tree is
+    # over provably equal-length sequences (parallel arrays validated at their
+    # entry points), and retrofitting 46 call sites across the legacy modules
+    # would be churn without fixing a bug. Revisit if a mismatch ever bites.
+    "B905",
+    "B007",    # unused loop variables are often the clearest way to write a count
+    "B028",    # warnings without stacklevel: these are user-facing, not library-internal
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Re-exports are the point of a package __init__.
+"**/__init__.py" = ["F401"]
+# Tests deliberately import for side effects and use bare asserts.
+"tests/**" = ["B011"]
+
 [tool.black]
 line-length = 100
 target-version = ["py310", "py311", "py312"]

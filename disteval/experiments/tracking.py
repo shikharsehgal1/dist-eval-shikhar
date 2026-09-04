@@ -31,7 +31,6 @@ never required and are not imported unless used.
 from __future__ import annotations
 
 import json
-import os
 import platform
 import subprocess
 import sys

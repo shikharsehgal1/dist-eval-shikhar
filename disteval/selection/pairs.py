@@ -38,8 +38,8 @@ what each strategy actually delivered.
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
-from typing import Iterable, Mapping, Optional, Sequence
+from dataclasses import dataclass, field
+from typing import Mapping, Optional, Sequence
 
 import numpy as np
 

@@ -316,7 +316,7 @@ def cluster_failures(
     if n_distinct < 2:
         # Every failed run embeds to the same point: maximal concentration, and
         # k-means on it is meaningless (and noisy).
-        return {"n_failures": n, "k": 1, "assignments": {i: 0 for i in ids},
+        return {"n_failures": n, "k": 1, "assignments": dict.fromkeys(ids, 0),
                 "cluster_sizes": [n], "dominant_cluster_share": 1.0,
                 "silhouette": float("nan"), "inertia": 0.0,
                 "note": "all failed runs embed identically; one cluster by construction"}

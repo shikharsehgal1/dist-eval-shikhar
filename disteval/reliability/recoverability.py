@@ -64,7 +64,7 @@ imputing zero would systematically demote exactly the tasks with sparse data.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Iterable, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 import numpy as np
 

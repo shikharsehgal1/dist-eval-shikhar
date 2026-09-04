@@ -39,7 +39,7 @@ seeds, re-snapshot the environment) than adjusted for.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, Optional, Sequence
+from typing import Sequence
 
 import numpy as np
 

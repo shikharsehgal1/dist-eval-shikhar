@@ -37,9 +37,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Optional, Sequence
+from typing import Optional
 
-from ..reliability.classify import RECOVERABLE, SOLID, STUCK, UNCERTAIN, ReliabilityThresholds
+from ..reliability.classify import RECOVERABLE, ReliabilityThresholds
 from .allocation import TaskState
 from .value import flip_probability, label_of
 

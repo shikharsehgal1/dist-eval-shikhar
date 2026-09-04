@@ -352,7 +352,7 @@ class TestOptimiserAgnosticExport:
     def test_export_writes_every_view_and_a_manifest(self, tmp_path):
         import json
 
-        paths = export_views(self._dataset(), tmp_path)
+        export_views(self._dataset(), tmp_path)
         for v in VIEWS:
             assert (tmp_path / f"{v}.jsonl").exists()
         m = json.loads((tmp_path / "manifest.json").read_text())
@@ -396,7 +396,7 @@ class TestIncrementalValidity:
     def test_reports_insufficient_data_rather_than_guessing(self):
         f = {f"t{i}": {"difficulty": 0.1 * i, "learning_progress": 0.2,
                        "gap": 0.3} for i in range(6)}
-        out = incremental_validity(f, {t: 0.5 for t in f})
+        out = incremental_validity(f, dict.fromkeys(f, 0.5))
         assert out["verdict"] == "insufficient data"
 
     def test_constant_added_feature_is_not_testable(self):
@@ -417,3 +417,45 @@ class TestIncrementalValidity:
                                    added=("gap",))
         assert out["r2_base"] < 0.5, "out-of-fold R^2 on noise must be near zero"
         assert "out-of-fold" in out["note"]
+
+
+class TestCLIExperimentWiring:
+    """The flagship config must not compare two identical selectors.
+
+    Without trajectories and per-criterion scores, the criterion-level gap falls
+    back to its task-level form and the structure signals are empty, which makes
+    `gap_plus_structure` numerically identical to `capability_reliability_gap`.
+    The comparison the config exists to run would then be vacuous by
+    construction, so the simulator path must supply both.
+    """
+
+    def test_simulator_path_populates_gap_and_structure(self):
+        import subprocess
+        import sys
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parent.parent
+        out = subprocess.run(
+            [sys.executable, "-m", "disteval", "experiment",
+             "configs/curriculum_baselines.yaml", "-o", "/tmp/_disteval_wiring_test",
+             "--n-tasks", "120", "--coupling", "weak", "--overwrite"],
+            capture_output=True, text=True, cwd=str(root), timeout=600,
+        )
+        assert out.returncode == 0, out.stderr[-2000:]
+        assert "trajectories per task" in out.stdout, (
+            "the simulator path must generate trajectories, or the gap and "
+            "structure selectors collapse to the same thing"
+        )
+
+        rows = {}
+        for line in out.stdout.splitlines():
+            parts = line.split()
+            if len(parts) > 4 and parts[0] in (
+                "gap_plus_structure", "capability_reliability_gap"
+            ):
+                rows[parts[0]] = parts[2]
+        assert len(rows) == 2, f"expected both gap selectors in the summary, got {rows}"
+        assert rows["gap_plus_structure"] != rows["capability_reliability_gap"], (
+            "gap_plus_structure and capability_reliability_gap produced identical "
+            "results, which means the structure signals were not populated"
+        )

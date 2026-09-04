@@ -51,7 +51,7 @@ from typing import Optional, Sequence
 import numpy as np
 
 from ..reliability.classify import ReliabilityThresholds, _label
-from ..reliability.posterior import BetaPrior, TaskPosterior, binary_posterior
+from ..reliability.posterior import TaskPosterior
 
 __all__ = [
     "expected_entropy_reduction",

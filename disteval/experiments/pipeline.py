@@ -115,7 +115,7 @@ class StrategyOutcome:
     note: str = ""
 
     def to_dict(self) -> dict:
-        return {k: v for k, v in self.__dict__.items()}
+        return dict(self.__dict__.items())
 
 
 @dataclass
@@ -136,7 +136,6 @@ class ExperimentResult:
 
     def summary(self):
         """Mean +/- standard error across seeds, per strategy. The headline table."""
-        import pandas as pd
 
         df = self.to_frame()
         if df.empty:
@@ -386,13 +385,25 @@ def run_experiment(
     if trajectories and not structure:
         structure = _structure_signals(trajectories)
 
+    # If the selection budget is at least the size of the training pool, every
+    # strategy selects the whole pool and the comparison is vacuous -- every row
+    # of the summary will be identical. This is easy to do by accident when
+    # shrinking a config for a quick run, and it silently produces a table that
+    # looks like "no strategy matters".
+    if len(strategies) > 1 and config.selection.n_tasks >= len(split.train):
+        warnings.append(
+            f"selection.n_tasks={config.selection.n_tasks} is at least the size of "
+            f"the training pool ({len(split.train)} tasks after the "
+            f"{split.strategy!r} split), so every strategy selects the whole pool "
+            "and they cannot differ. Reduce selection.n_tasks below the pool size, "
+            "or increase the number of tasks."
+        )
+
     outcomes: list[StrategyOutcome] = []
     test_tasks = list(split.test)
-    before_scores = {t: phase_a.scores.get(t, []) for t in test_tasks}
 
     def _stats(effects: Optional[dict], subset: Sequence[str]) -> dict:
         """Held-out statistics under a per-task logit shift."""
-        import pandas as pd
         from scipy.special import expit, logit
 
         rows, means = [], []

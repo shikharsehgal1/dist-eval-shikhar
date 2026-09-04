@@ -62,7 +62,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Callable, Mapping, Optional, Sequence
+from typing import Mapping, Optional, Sequence
 
 import numpy as np
 

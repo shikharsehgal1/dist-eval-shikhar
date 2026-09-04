@@ -26,14 +26,13 @@ failures produces a biased aggregate table.
 from __future__ import annotations
 
 import itertools
-import json
 import traceback
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Mapping, Optional, Sequence
+from typing import Any, Callable
 
-from .config import ExperimentConfig, load_config
+from .config import ExperimentConfig
 
 __all__ = ["SweepSpec", "load_sweep", "expand_sweep", "run_sweep", "aggregate_sweep"]
 

@@ -716,9 +716,8 @@ class SelfEngine:
 
         for rec in self._traj_records:
             rec_basename = os.path.basename(rec.task_path)  # e.g. "easy-2"
-            if rec_basename == task_dir_name:
-                if os.path.exists(rec.traj_path):
-                    result.append((rec.score, rec.traj_path))
+            if rec_basename == task_dir_name and os.path.exists(rec.traj_path):
+                result.append((rec.score, rec.traj_path))
 
         # Sort by score descending
         result.sort(key=lambda x: x[0], reverse=True)

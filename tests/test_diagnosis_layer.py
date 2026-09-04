@@ -33,7 +33,7 @@ from disteval.diagnosis.taxonomy import (
     register_mode,
     stage_of,
 )
-from disteval.trajectory.events import EventType, Trajectory, from_generic_steps
+from disteval.trajectory.events import from_generic_steps
 
 
 def _traj(steps, tid="t", success=False, task="task"):

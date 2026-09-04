@@ -36,7 +36,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Optional, Sequence
+from typing import Any, Callable, Mapping, Optional, Sequence
 
 from .records import EpisodeRecord, RecordStore
 from .trajectory.events import Trajectory, TrajectorySet, from_generic_steps

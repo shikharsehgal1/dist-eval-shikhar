@@ -44,7 +44,6 @@ Studies
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Optional, Sequence
 
 import numpy as np
@@ -53,7 +52,7 @@ from ..active.allocation import GreedyValuePolicy, UniformAllocation
 from ..active.evaluator import compare_allocation
 from ..reliability.classify import ReliabilityThresholds, diagnose
 from ..reliability.hierarchical import fit_hierarchical
-from ..reliability.posterior import JEFFREYS_PRIOR, binary_posterior
+from ..reliability.posterior import binary_posterior
 from ..selection.selectors import make_selector
 from .world import BENEFIT_COUPLINGS, SimulatedWorld, WorldConfig
 

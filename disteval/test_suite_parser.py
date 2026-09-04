@@ -109,7 +109,7 @@ def _extract_condition_source(lines_before: list[str]) -> str:
             break
         if _SCORE_INCREMENT_RE.search(stripped):
             break
-        if stripped.startswith("if [ ! -f") or stripped.startswith("if [ ! -d"):
+        if stripped.startswith(("if [ ! -f", "if [ ! -d")):
             break
         source_lines.insert(0, line)
     return "\n".join(source_lines).strip()

@@ -208,7 +208,7 @@ def posterior_dominance(
     }
     if threshold is not None:
         out["prob_a_meets_bar_more_often"] = float(
-            np.mean((A > threshold).sum(axis=0) > (B > threshold).sum(axis=0))
+            np.mean((threshold < A).sum(axis=0) > (threshold < B).sum(axis=0))
         )
         out["threshold"] = threshold
     return out

@@ -53,8 +53,8 @@ there is broken, not brilliant.
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
-from typing import Literal, Optional, Sequence
+from dataclasses import asdict, dataclass
+from typing import Literal, Optional
 
 import numpy as np
 

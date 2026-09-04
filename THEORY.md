@@ -214,8 +214,8 @@ for agents by tau-bench, Yao et al., 2024).
 
 Pass@k is non-decreasing in $k$; pass^k is non-increasing. Both are property-tested.
 Their difference, the **reliability gap**, is the fraction of apparent capability
-that does not reproduce, and on the demo dataset it is 0.87 at $k=8$ — pass@8 of
-0.96 against pass^8 of 0.08.
+that does not reproduce, and on the demo dataset it is 0.75 at $k=8$ — pass@8 of
+0.92 against pass^8 of 0.17.
 
 Neither metric is novel and neither is claimed here.
 

@@ -4,7 +4,6 @@ import pytest
 from scipy.special import expit
 
 from disteval.reliability.hierarchical import (
-    HierarchicalSpec,
     LogitNormalPosterior,
     fit_hierarchical,
     pooling_diagnostic,
