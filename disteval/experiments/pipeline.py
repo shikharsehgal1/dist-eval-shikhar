@@ -263,16 +263,43 @@ def run_experiment(
     trajectories: Optional[Mapping[str, Sequence[Trajectory]]] = None,
     domains: Optional[Mapping[str, str]] = None,
     true_benefit: Optional[Mapping[str, float]] = None,
-    strategies: Sequence[str] = (
-        "random", "hardest", "highest_variance", "success_failure",
-        "recoverability", "uncertainty_aware",
-    ),
+    strategies: Optional[Sequence[str]] = None,
     backend: Optional[TrainerBackend] = None,
     output_dir: str = "",
     split: Optional[Split] = None,
 ) -> ExperimentResult:
-    """Run Phases A-D for every strategy, across ``config.experiment.n_seeds`` seeds."""
+    """Run Phases A-D for each strategy, across ``config.experiment.n_seeds`` seeds.
+
+    ``strategies`` defaults to whatever ``config.selection.method`` names:
+
+    * a single strategy name -> only that strategy is run;
+    * ``"all"`` -> every strategy is compared, which is the usual research run;
+    * ``"baselines"`` -> the baseline set without recoverability.
+
+    Honouring the config here is what makes ``selection.method`` a usable sweep
+    axis. When it was ignored, every cell of a sweep over that axis produced
+    identical results with different ids -- a silently useless ablation.
+    """
     import tempfile
+
+    ALL = (
+        "random", "hardest", "lowest_mean", "highest_variance",
+        "success_failure", "recoverability", "uncertainty_aware",
+    )
+    BASELINES = ("random", "hardest", "lowest_mean", "highest_variance", "success_failure")
+    if strategies is None:
+        method = config.selection.method
+        if method == "all":
+            strategies = ALL
+        elif method == "baselines":
+            strategies = BASELINES
+        elif method in ALL:
+            strategies = (method,)
+        else:
+            raise ValueError(
+                f"selection.method={method!r} is not a known strategy; use one of "
+                f"{sorted(ALL)}, or 'all' / 'baselines'"
+            )
 
     warnings = list(config.validate())
     domains = dict(domains or {})

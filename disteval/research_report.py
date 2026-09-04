@@ -738,12 +738,14 @@ def generate_report(
     title: str = "Agent reliability report",
     figure_format: str = "png",
     html_output: bool = True,
+    hierarchical: str | bool = "auto",
 ) -> dict[str, str]:
     """Compute, render and write the full report. Returns the paths written."""
     out = Path(output_dir)
     out.mkdir(parents=True, exist_ok=True)
     data = build_report_data(
-        runs, tasks=tasks, trajectories=trajectories, thresholds=thresholds, title=title
+        runs, tasks=tasks, trajectories=trajectories, thresholds=thresholds,
+        title=title, hierarchical=hierarchical,
     )
     build_figures(data, runs, str(out / "figures"), figure_format, trajectories)
 

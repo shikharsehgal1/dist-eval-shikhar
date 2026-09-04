@@ -1,0 +1,38 @@
+# The central ablation: does recoverability-aware selection beat the baselines,
+# and does the conclusion survive changing the prior, the estimator and the
+# evaluation budget?
+#
+#   python -m disteval sweep configs/recoverability_ablation.yaml --coupling weak
+#
+# Read the results together with `--coupling none` and `--coupling adversarial`:
+# a method that also "wins" there is broken, not good.
+name: recoverability_ablation
+
+base:
+  experiment:
+    name: recoverability_ablation
+    seed: 42
+    n_seeds: 5
+  evaluation:
+    runs_per_task: 8
+    min_runs_per_task: 3
+  reliability:
+    model: hierarchical
+    prior: jeffreys
+    recoverability_estimator: headroom
+  selection:
+    n_tasks: 30
+    n_pairs: 80
+  training:
+    backend: simulated
+  split:
+    strategy: domain_holdout
+    test_fraction: 0.3
+
+sweep:
+  # with vs without Bayesian shrinkage
+  reliability.model: [independent, hierarchical]
+  # different numbers of repeated runs
+  evaluation.runs_per_task: [2, 4, 8]
+  # recoverability with vs without the uncertainty correction, plus baselines
+  selection.method: [random, hardest, highest_variance, recoverability]

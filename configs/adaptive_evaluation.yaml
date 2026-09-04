@@ -1,0 +1,31 @@
+# Does adaptive allocation reach the same classification quality for fewer agent
+# executions than uniform sampling?
+#   python -m disteval experiment configs/adaptive_evaluation.yaml
+experiment:
+  name: adaptive_evaluation
+  seed: 7
+  n_seeds: 5
+
+evaluation:
+  adaptive_sampling: true
+  allocation_policy: greedy_voi
+  budget_per_task: 8
+  warmup_runs: 2
+  stopping: true
+  min_runs_per_task: 3
+  max_runs_per_task: 24
+
+reliability:
+  model: hierarchical
+  confidence: 0.80
+
+selection:
+  method: all
+  n_tasks: 30
+  n_pairs: 80
+
+training:
+  backend: simulated
+
+split:
+  strategy: domain_holdout

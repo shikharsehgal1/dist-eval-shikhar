@@ -135,7 +135,9 @@ class ReliabilityConfig:
 class SelectionConfig:
     """Phase B: which tasks and how many pairs."""
 
-    method: str = "recoverability"
+    #: A single strategy name, or ``"all"`` to compare every strategy (the usual
+    #: research run), or ``"baselines"`` for the baseline set only.
+    method: str = "all"
     n_tasks: int = 40
     n_pairs: int = 100
     max_pairs_per_task: int = 4
