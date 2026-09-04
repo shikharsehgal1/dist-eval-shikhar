@@ -30,6 +30,36 @@ from .classify import (
     posterior_gap,
     rank_by_recoverability,
 )
+from .comparison import (
+    PairedComparison,
+    paired_comparison,
+    posterior_dominance,
+    reliability_profile_comparison,
+    stochastic_dominance,
+)
+from .correlated import (
+    ClusterDiagnostic,
+    adjusted_posterior,
+    design_effect,
+    iid_diagnostics,
+    intraclass_correlation,
+)
+from .cost import (
+    CostProfile,
+    cost_profile,
+    pareto_frontier,
+    pareto_table,
+    reliable_success_per_cost,
+    risk_adjusted_utility,
+)
+from .scaling import (
+    HORIZON_MEASURES,
+    ScalingFit,
+    compare_scaling,
+    fit_common_form,
+    fit_reliability_curve,
+    horizon_features,
+)
 from .decomposition import (
     Decomposition,
     decompose,
@@ -62,6 +92,28 @@ from .hierarchical import (
 )
 
 __all__ = [
+    "PairedComparison",
+    "paired_comparison",
+    "posterior_dominance",
+    "stochastic_dominance",
+    "reliability_profile_comparison",
+    "ClusterDiagnostic",
+    "iid_diagnostics",
+    "intraclass_correlation",
+    "design_effect",
+    "adjusted_posterior",
+    "CostProfile",
+    "cost_profile",
+    "reliable_success_per_cost",
+    "risk_adjusted_utility",
+    "pareto_frontier",
+    "pareto_table",
+    "ScalingFit",
+    "HORIZON_MEASURES",
+    "horizon_features",
+    "fit_reliability_curve",
+    "fit_common_form",
+    "compare_scaling",
     "Decomposition",
     "decompose",
     "milestone_from_rubric",
