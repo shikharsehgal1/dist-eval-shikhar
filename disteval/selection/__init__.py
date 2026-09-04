@@ -9,7 +9,14 @@ from .pairs import (
     to_ranking_jsonl,
 )
 from .selectors import (
+    CURRICULUM_STRATEGIES,
     SELECTORS,
+    CapabilityReliabilityGapSelector,
+    DifficultySelector,
+    GapStructureSelector,
+    LearningProgressSelector,
+    UncertaintySelector,
+    UniformSelector,
     DataSelector,
     HardestSelector,
     HighestVarianceSelector,
@@ -27,7 +34,10 @@ __all__ = [
     "SelectionResult", "DataSelector", "RandomSelector", "HardestSelector",
     "LowestMeanSelector", "HighestVarianceSelector", "SuccessFailureSelector",
     "RecoverabilitySelector", "UncertaintyAwareSelector", "OracleSelector",
-    "SELECTORS", "make_selector",
+    "SELECTORS", "make_selector", "CURRICULUM_STRATEGIES",
+    "UniformSelector", "DifficultySelector", "UncertaintySelector",
+    "LearningProgressSelector", "CapabilityReliabilityGapSelector",
+    "GapStructureSelector",
     "PairConfig", "PreferencePair", "PreferenceDataset",
     "build_pairs_for_task", "build_dataset", "to_dpo_jsonl", "to_ranking_jsonl",
 ]
