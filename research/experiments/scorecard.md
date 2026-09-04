@@ -4,6 +4,7 @@ This scorecard is populated by running `python3 research/experiments/run_all.py`
 
 | Experiment | Innovation | Validation threshold | Result | p-value | Effect size | Notes |
 |------------|------------|---------------------|--------|---------|-------------|-------|
+| 0 | Estimator correctness | all closed-form checks pass; CI coverage in [0.90, 0.99] | 20/20 passed; coverage 0.955 | - | - | pass@k/pass^k unbiased, CVaR/IQM/KL match closed form |
 | 1 | Distribution-first metrics | mean range < 0.01; κ range > 0.3 | mean range 0.00007; κ range 0.48 | - | - | means equal, κ distinguishes tails |
 | 2 | RECOVERABLE training | beats ≥3/4 baselines on gain/example; d > 0.3 | beats 4/4 baselines | p ≥ 0.99 for top-K/all/SOLID | d > 6 | gain/example = 0.0059 vs 0.0036–0.0000 |
 | 3 | SelfEngine curriculum | τ vs oracle > 0.80; ρ > 0.90 | τ = 1.00; ρ = 1.00 | - | Δκ = 0.15 | oracle uses constant α; exact match |

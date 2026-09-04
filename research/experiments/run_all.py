@@ -17,6 +17,7 @@ OUTPUT_DIR = ROOT / "_all_results"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 EXPERIMENTS = [
+    "experiment_00_estimator_ground_truth",
     "experiment_01_distribution_metrics",
     "experiment_02_recoverable_training",
     "experiment_03_self_engine_oracle",

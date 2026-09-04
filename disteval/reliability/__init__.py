@@ -90,6 +90,7 @@ from .hierarchical import (
     HierarchicalSpec,
     LogitNormalPosterior,
     fit_hierarchical,
+    pooling_diagnostic,
 )
 
 __all__ = [
@@ -151,6 +152,7 @@ __all__ = [
     "HierarchicalFit",
     "LogitNormalPosterior",
     "fit_hierarchical",
+    "pooling_diagnostic",
     "BetaPrior",
     "TaskPosterior",
     "JEFFREYS_PRIOR",

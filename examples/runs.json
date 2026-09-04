@@ -439,22 +439,22 @@
       "task_id": "audit_sample",
       "model": "demo-agent-v1",
       "episode": 0,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "finance",
       "environment": "finance_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 0.0,
+        "r_verify": 1.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4401,
-        "tool_calls": 14
+        "usd": 0.397,
+        "tool_calls": 25
       },
-      "n_steps": 14,
-      "failure_mode": "verification",
+      "n_steps": 25,
+      "failure_mode": null,
       "trajectory_ref": "audit_sample#0",
       "milestone": true
     },
@@ -474,10 +474,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2965,
-        "tool_calls": 13
+        "usd": 0.0685,
+        "tool_calls": 10
       },
-      "n_steps": 13,
+      "n_steps": 10,
       "failure_mode": null,
       "trajectory_ref": "audit_sample#1",
       "milestone": true
@@ -487,22 +487,22 @@
       "task_id": "audit_sample",
       "model": "demo-agent-v1",
       "episode": 2,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "finance",
       "environment": "finance_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2642,
-        "tool_calls": 13
+        "usd": 0.4673,
+        "tool_calls": 21
       },
-      "n_steps": 13,
-      "failure_mode": "tool_execution",
+      "n_steps": 21,
+      "failure_mode": null,
       "trajectory_ref": "audit_sample#2",
       "milestone": true
     },
@@ -511,22 +511,22 @@
       "task_id": "audit_sample",
       "model": "demo-agent-v1",
       "episode": 3,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "finance",
       "environment": "finance_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1664,
-        "tool_calls": 17
+        "usd": 0.2587,
+        "tool_calls": 14
       },
-      "n_steps": 17,
-      "failure_mode": "tool_execution",
+      "n_steps": 14,
+      "failure_mode": null,
       "trajectory_ref": "audit_sample#3",
       "milestone": true
     },
@@ -546,7 +546,7 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1148,
+        "usd": 0.2499,
         "tool_calls": 14
       },
       "n_steps": 14,
@@ -559,24 +559,24 @@
       "task_id": "audit_sample",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "finance",
       "environment": "finance_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4098,
-        "tool_calls": 25
+        "usd": 0.2804,
+        "tool_calls": 20
       },
-      "n_steps": 25,
-      "failure_mode": "tool_execution",
+      "n_steps": 20,
+      "failure_mode": null,
       "trajectory_ref": "audit_sample#5",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
@@ -594,10 +594,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2424,
-        "tool_calls": 14
+        "usd": 0.2423,
+        "tool_calls": 22
       },
-      "n_steps": 14,
+      "n_steps": 22,
       "failure_mode": null,
       "trajectory_ref": "audit_sample#6",
       "milestone": true
@@ -618,10 +618,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4308,
-        "tool_calls": 19
+        "usd": 0.2815,
+        "tool_calls": 14
       },
-      "n_steps": 19,
+      "n_steps": 14,
       "failure_mode": null,
       "trajectory_ref": "audit_sample#7",
       "milestone": true
@@ -631,22 +631,22 @@
       "task_id": "invoice_match",
       "model": "demo-agent-v1",
       "episode": 0,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "finance",
       "environment": "finance_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2701,
-        "tool_calls": 21
+        "usd": 0.0985,
+        "tool_calls": 15
       },
-      "n_steps": 21,
-      "failure_mode": "tool_execution",
+      "n_steps": 15,
+      "failure_mode": null,
       "trajectory_ref": "invoice_match#0",
       "milestone": true
     },
@@ -655,22 +655,22 @@
       "task_id": "invoice_match",
       "model": "demo-agent-v1",
       "episode": 1,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "finance",
       "environment": "finance_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2427,
-        "tool_calls": 18
+        "usd": 0.1483,
+        "tool_calls": 11
       },
-      "n_steps": 18,
-      "failure_mode": "tool_execution",
+      "n_steps": 11,
+      "failure_mode": null,
       "trajectory_ref": "invoice_match#1",
       "milestone": true
     },
@@ -690,10 +690,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.7109,
-        "tool_calls": 33
+        "usd": 0.4322,
+        "tool_calls": 13
       },
-      "n_steps": 33,
+      "n_steps": 13,
       "failure_mode": null,
       "trajectory_ref": "invoice_match#2",
       "milestone": true
@@ -714,10 +714,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.5159,
-        "tool_calls": 33
+        "usd": 0.2021,
+        "tool_calls": 15
       },
-      "n_steps": 33,
+      "n_steps": 15,
       "failure_mode": null,
       "trajectory_ref": "invoice_match#3",
       "milestone": true
@@ -738,10 +738,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2874,
-        "tool_calls": 26
+        "usd": 0.3042,
+        "tool_calls": 12
       },
-      "n_steps": 26,
+      "n_steps": 12,
       "failure_mode": null,
       "trajectory_ref": "invoice_match#4",
       "milestone": true
@@ -762,10 +762,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.5177,
-        "tool_calls": 28
+        "usd": 0.3513,
+        "tool_calls": 19
       },
-      "n_steps": 28,
+      "n_steps": 19,
       "failure_mode": null,
       "trajectory_ref": "invoice_match#5",
       "milestone": true
@@ -786,10 +786,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4181,
-        "tool_calls": 19
+        "usd": 0.2641,
+        "tool_calls": 12
       },
-      "n_steps": 19,
+      "n_steps": 12,
       "failure_mode": null,
       "trajectory_ref": "invoice_match#6",
       "milestone": true
@@ -810,10 +810,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.317,
-        "tool_calls": 15
+        "usd": 0.1902,
+        "tool_calls": 9
       },
-      "n_steps": 15,
+      "n_steps": 9,
       "failure_mode": null,
       "trajectory_ref": "invoice_match#7",
       "milestone": true
@@ -834,10 +834,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.052,
-        "tool_calls": 4
+        "usd": 0.1053,
+        "tool_calls": 6
       },
-      "n_steps": 4,
+      "n_steps": 6,
       "failure_mode": null,
       "trajectory_ref": "cashflow_forecast#0",
       "milestone": true
@@ -858,7 +858,7 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1112,
+        "usd": 0.1376,
         "tool_calls": 11
       },
       "n_steps": 11,
@@ -882,35 +882,35 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.3036,
-        "tool_calls": 12
+        "usd": 0.1416,
+        "tool_calls": 14
       },
-      "n_steps": 12,
+      "n_steps": 14,
       "failure_mode": "tool_execution",
       "trajectory_ref": "cashflow_forecast#2",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
       "task_id": "cashflow_forecast",
       "model": "demo-agent-v1",
       "episode": 3,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "finance",
       "environment": "finance_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0534,
-        "tool_calls": 4
+        "usd": 0.1762,
+        "tool_calls": 15
       },
-      "n_steps": 4,
-      "failure_mode": "tool_execution",
+      "n_steps": 15,
+      "failure_mode": null,
       "trajectory_ref": "cashflow_forecast#3",
       "milestone": true
     },
@@ -930,11 +930,11 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0732,
-        "tool_calls": 5
+        "usd": 0.1445,
+        "tool_calls": 13
       },
-      "n_steps": 5,
-      "failure_mode": "tool_execution",
+      "n_steps": 13,
+      "failure_mode": "reasoning",
       "trajectory_ref": "cashflow_forecast#4",
       "milestone": true
     },
@@ -954,7 +954,7 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2688,
+        "usd": 0.2783,
         "tool_calls": 11
       },
       "n_steps": 11,
@@ -967,22 +967,22 @@
       "task_id": "cashflow_forecast",
       "model": "demo-agent-v1",
       "episode": 6,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "finance",
       "environment": "finance_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 1.0,
+        "r_compute": 0.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0976,
-        "tool_calls": 4
+        "usd": 0.2282,
+        "tool_calls": 17
       },
-      "n_steps": 4,
-      "failure_mode": null,
+      "n_steps": 17,
+      "failure_mode": "tool_execution",
       "trajectory_ref": "cashflow_forecast#6",
       "milestone": true
     },
@@ -1002,11 +1002,11 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1159,
-        "tool_calls": 6
+        "usd": 0.1743,
+        "tool_calls": 13
       },
-      "n_steps": 6,
-      "failure_mode": "tool_execution",
+      "n_steps": 13,
+      "failure_mode": "reasoning",
       "trajectory_ref": "cashflow_forecast#7",
       "milestone": true
     },
@@ -1026,10 +1026,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.107,
-        "tool_calls": 23
+        "usd": 0.0482,
+        "tool_calls": 4
       },
-      "n_steps": 23,
+      "n_steps": 4,
       "failure_mode": null,
       "trajectory_ref": "contract_diff#0",
       "milestone": true
@@ -1039,54 +1039,6 @@
       "task_id": "contract_diff",
       "model": "demo-agent-v1",
       "episode": 1,
-      "score": 0.0,
-      "success": false,
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 0.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.3152,
-        "tool_calls": 26
-      },
-      "n_steps": 26,
-      "failure_mode": "verification",
-      "trajectory_ref": "contract_diff#1",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "contract_diff",
-      "model": "demo-agent-v1",
-      "episode": 2,
-      "score": 0.0,
-      "success": false,
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 0.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.2058,
-        "tool_calls": 17
-      },
-      "n_steps": 17,
-      "failure_mode": "verification",
-      "trajectory_ref": "contract_diff#2",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "contract_diff",
-      "model": "demo-agent-v1",
-      "episode": 3,
       "score": 1.0,
       "success": true,
       "domain": "legal",
@@ -1098,11 +1050,59 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3358,
-        "tool_calls": 18
+        "usd": 0.1955,
+        "tool_calls": 8
       },
-      "n_steps": 18,
+      "n_steps": 8,
       "failure_mode": null,
+      "trajectory_ref": "contract_diff#1",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "contract_diff",
+      "model": "demo-agent-v1",
+      "episode": 2,
+      "score": 1.0,
+      "success": true,
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.1044,
+        "tool_calls": 4
+      },
+      "n_steps": 4,
+      "failure_mode": null,
+      "trajectory_ref": "contract_diff#2",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "contract_diff",
+      "model": "demo-agent-v1",
+      "episode": 3,
+      "score": 0.0,
+      "success": false,
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.1352,
+        "tool_calls": 7
+      },
+      "n_steps": 7,
+      "failure_mode": "state_tracking",
       "trajectory_ref": "contract_diff#3",
       "milestone": true
     },
@@ -1122,10 +1122,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1449,
-        "tool_calls": 25
+        "usd": 0.1091,
+        "tool_calls": 9
       },
-      "n_steps": 25,
+      "n_steps": 9,
       "failure_mode": null,
       "trajectory_ref": "contract_diff#4",
       "milestone": true
@@ -1135,22 +1135,22 @@
       "task_id": "contract_diff",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
+        "r_verify": 0.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3399,
-        "tool_calls": 19
+        "usd": 0.0874,
+        "tool_calls": 5
       },
-      "n_steps": 19,
-      "failure_mode": null,
+      "n_steps": 5,
+      "failure_mode": "verification",
       "trajectory_ref": "contract_diff#5",
       "milestone": true
     },
@@ -1159,22 +1159,22 @@
       "task_id": "contract_diff",
       "model": "demo-agent-v1",
       "episode": 6,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
+        "r_verify": 0.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.5308,
-        "tool_calls": 31
+        "usd": 0.0428,
+        "tool_calls": 6
       },
-      "n_steps": 31,
-      "failure_mode": null,
+      "n_steps": 6,
+      "failure_mode": "verification",
       "trajectory_ref": "contract_diff#6",
       "milestone": true
     },
@@ -1190,47 +1190,23 @@
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
+        "r_verify": 0.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0586,
-        "tool_calls": 17
+        "usd": 0.1104,
+        "tool_calls": 5
       },
-      "n_steps": 17,
-      "failure_mode": "state_tracking",
+      "n_steps": 5,
+      "failure_mode": "verification",
       "trajectory_ref": "contract_diff#7",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
       "task_id": "clause_extraction",
       "model": "demo-agent-v1",
       "episode": 0,
-      "score": 0.0,
-      "success": false,
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
-      },
-      "cost": {
-        "usd": 0.5634,
-        "tool_calls": 21
-      },
-      "n_steps": 21,
-      "failure_mode": "tool_execution",
-      "trajectory_ref": "clause_extraction#0",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "clause_extraction",
-      "model": "demo-agent-v1",
-      "episode": 1,
       "score": 1.0,
       "success": true,
       "domain": "legal",
@@ -1242,13 +1218,37 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4386,
+        "usd": 0.1661,
+        "tool_calls": 18
+      },
+      "n_steps": 18,
+      "failure_mode": null,
+      "trajectory_ref": "clause_extraction#0",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "clause_extraction",
+      "model": "demo-agent-v1",
+      "episode": 1,
+      "score": 0.0,
+      "success": false,
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.069,
         "tool_calls": 20
       },
       "n_steps": 20,
-      "failure_mode": null,
+      "failure_mode": "state_tracking",
       "trajectory_ref": "clause_extraction#1",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
@@ -1266,10 +1266,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2626,
-        "tool_calls": 17
+        "usd": 0.1612,
+        "tool_calls": 35
       },
-      "n_steps": 17,
+      "n_steps": 35,
       "failure_mode": null,
       "trajectory_ref": "clause_extraction#2",
       "milestone": true
@@ -1279,8 +1279,8 @@
       "task_id": "clause_extraction",
       "model": "demo-agent-v1",
       "episode": 3,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
@@ -1290,13 +1290,13 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1259,
-        "tool_calls": 23
+        "usd": 0.4465,
+        "tool_calls": 31
       },
-      "n_steps": 23,
-      "failure_mode": null,
+      "n_steps": 31,
+      "failure_mode": "state_tracking",
       "trajectory_ref": "clause_extraction#3",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
@@ -1314,10 +1314,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4246,
-        "tool_calls": 12
+        "usd": 0.4113,
+        "tool_calls": 22
       },
-      "n_steps": 12,
+      "n_steps": 22,
       "failure_mode": null,
       "trajectory_ref": "clause_extraction#4",
       "milestone": true
@@ -1327,22 +1327,22 @@
       "task_id": "clause_extraction",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 0.0,
+        "r_verify": 1.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1281,
-        "tool_calls": 16
+        "usd": 0.4863,
+        "tool_calls": 25
       },
-      "n_steps": 16,
-      "failure_mode": "verification",
+      "n_steps": 25,
+      "failure_mode": null,
       "trajectory_ref": "clause_extraction#5",
       "milestone": true
     },
@@ -1362,10 +1362,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4185,
-        "tool_calls": 18
+        "usd": 0.5001,
+        "tool_calls": 28
       },
-      "n_steps": 18,
+      "n_steps": 28,
       "failure_mode": null,
       "trajectory_ref": "clause_extraction#6",
       "milestone": true
@@ -1386,10 +1386,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2305,
-        "tool_calls": 12
+        "usd": 0.4737,
+        "tool_calls": 31
       },
-      "n_steps": 12,
+      "n_steps": 31,
       "failure_mode": null,
       "trajectory_ref": "clause_extraction#7",
       "milestone": true
@@ -1404,17 +1404,17 @@
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
-        "r_retrieve": 0.0,
+        "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
+        "r_verify": 0.0,
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1446,
-        "tool_calls": 8
+        "usd": 0.1682,
+        "tool_calls": 21
       },
-      "n_steps": 8,
-      "failure_mode": "retrieval",
+      "n_steps": 21,
+      "failure_mode": "verification",
       "trajectory_ref": "precedent_search#0",
       "milestone": false
     },
@@ -1434,10 +1434,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0576,
-        "tool_calls": 9
+        "usd": 0.5347,
+        "tool_calls": 23
       },
-      "n_steps": 9,
+      "n_steps": 23,
       "failure_mode": "retrieval",
       "trajectory_ref": "precedent_search#1",
       "milestone": false
@@ -1458,10 +1458,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.193,
-        "tool_calls": 10
+        "usd": 0.3073,
+        "tool_calls": 16
       },
-      "n_steps": 10,
+      "n_steps": 16,
       "failure_mode": "retrieval",
       "trajectory_ref": "precedent_search#2",
       "milestone": false
@@ -1476,17 +1476,17 @@
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
-        "r_retrieve": 0.0,
+        "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
+        "r_verify": 0.0,
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0558,
-        "tool_calls": 10
+        "usd": 0.3068,
+        "tool_calls": 27
       },
-      "n_steps": 10,
-      "failure_mode": "retrieval",
+      "n_steps": 27,
+      "failure_mode": "verification",
       "trajectory_ref": "precedent_search#3",
       "milestone": false
     },
@@ -1506,10 +1506,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1447,
-        "tool_calls": 9
+        "usd": 0.3734,
+        "tool_calls": 28
       },
-      "n_steps": 9,
+      "n_steps": 28,
       "failure_mode": "retrieval",
       "trajectory_ref": "precedent_search#4",
       "milestone": false
@@ -1530,10 +1530,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1652,
-        "tool_calls": 10
+        "usd": 0.6555,
+        "tool_calls": 25
       },
-      "n_steps": 10,
+      "n_steps": 25,
       "failure_mode": "retrieval",
       "trajectory_ref": "precedent_search#5",
       "milestone": false
@@ -1554,10 +1554,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1349,
-        "tool_calls": 8
+        "usd": 0.2112,
+        "tool_calls": 15
       },
-      "n_steps": 8,
+      "n_steps": 15,
       "failure_mode": "retrieval",
       "trajectory_ref": "precedent_search#6",
       "milestone": false
@@ -1578,10 +1578,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1152,
-        "tool_calls": 11
+        "usd": 0.3297,
+        "tool_calls": 28
       },
-      "n_steps": 11,
+      "n_steps": 28,
       "failure_mode": "retrieval",
       "trajectory_ref": "precedent_search#7",
       "milestone": false
@@ -1602,10 +1602,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.438,
-        "tool_calls": 18
+        "usd": 0.0526,
+        "tool_calls": 4
       },
-      "n_steps": 18,
+      "n_steps": 4,
       "failure_mode": null,
       "trajectory_ref": "redline_review#0",
       "milestone": true
@@ -1626,10 +1626,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3271,
-        "tool_calls": 18
+        "usd": 0.0502,
+        "tool_calls": 9
       },
-      "n_steps": 18,
+      "n_steps": 9,
       "failure_mode": null,
       "trajectory_ref": "redline_review#1",
       "milestone": true
@@ -1639,22 +1639,22 @@
       "task_id": "obligation_matrix",
       "model": "demo-agent-v1",
       "episode": 0,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
-        "r_retrieve": 1.0,
+        "r_retrieve": 0.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1718,
-        "tool_calls": 6
+        "usd": 0.204,
+        "tool_calls": 17
       },
-      "n_steps": 6,
-      "failure_mode": null,
+      "n_steps": 17,
+      "failure_mode": "retrieval",
       "trajectory_ref": "obligation_matrix#0",
       "milestone": true
     },
@@ -1674,10 +1674,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2581,
-        "tool_calls": 10
+        "usd": 0.5085,
+        "tool_calls": 30
       },
-      "n_steps": 10,
+      "n_steps": 30,
       "failure_mode": null,
       "trajectory_ref": "obligation_matrix#1",
       "milestone": true
@@ -1687,30 +1687,6 @@
       "task_id": "obligation_matrix",
       "model": "demo-agent-v1",
       "episode": 2,
-      "score": 0.0,
-      "success": false,
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
-      },
-      "cost": {
-        "usd": 0.1877,
-        "tool_calls": 9
-      },
-      "n_steps": 9,
-      "failure_mode": "tool_execution",
-      "trajectory_ref": "obligation_matrix#2",
-      "milestone": false
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "obligation_matrix",
-      "model": "demo-agent-v1",
-      "episode": 3,
       "score": 1.0,
       "success": true,
       "domain": "legal",
@@ -1722,11 +1698,35 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1923,
-        "tool_calls": 8
+        "usd": 0.5545,
+        "tool_calls": 21
       },
-      "n_steps": 8,
+      "n_steps": 21,
       "failure_mode": null,
+      "trajectory_ref": "obligation_matrix#2",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "obligation_matrix",
+      "model": "demo-agent-v1",
+      "episode": 3,
+      "score": 0.0,
+      "success": false,
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 0.0,
+        "r_verify": 1.0,
+        "r_report": 0.0
+      },
+      "cost": {
+        "usd": 0.3635,
+        "tool_calls": 22
+      },
+      "n_steps": 22,
+      "failure_mode": "tool_execution",
       "trajectory_ref": "obligation_matrix#3",
       "milestone": true
     },
@@ -1746,10 +1746,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0731,
-        "tool_calls": 4
+        "usd": 0.8641,
+        "tool_calls": 25
       },
-      "n_steps": 4,
+      "n_steps": 25,
       "failure_mode": null,
       "trajectory_ref": "obligation_matrix#4",
       "milestone": true
@@ -1759,22 +1759,22 @@
       "task_id": "obligation_matrix",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1463,
-        "tool_calls": 7
+        "usd": 0.194,
+        "tool_calls": 28
       },
-      "n_steps": 7,
-      "failure_mode": "tool_execution",
+      "n_steps": 28,
+      "failure_mode": null,
       "trajectory_ref": "obligation_matrix#5",
       "milestone": true
     },
@@ -1788,17 +1788,17 @@
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_retrieve": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0954,
-        "tool_calls": 9
+        "usd": 0.7384,
+        "tool_calls": 25
       },
-      "n_steps": 9,
-      "failure_mode": "tool_execution",
+      "n_steps": 25,
+      "failure_mode": "retrieval",
       "trajectory_ref": "obligation_matrix#6",
       "milestone": true
     },
@@ -1807,22 +1807,22 @@
       "task_id": "obligation_matrix",
       "model": "demo-agent-v1",
       "episode": 7,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
+        "r_verify": 0.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0626,
-        "tool_calls": 4
+        "usd": 0.2094,
+        "tool_calls": 20
       },
-      "n_steps": 4,
-      "failure_mode": null,
+      "n_steps": 20,
+      "failure_mode": "verification",
       "trajectory_ref": "obligation_matrix#7",
       "milestone": true
     },
@@ -1842,10 +1842,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1728,
-        "tool_calls": 6
+        "usd": 0.3894,
+        "tool_calls": 16
       },
-      "n_steps": 6,
+      "n_steps": 16,
       "failure_mode": null,
       "trajectory_ref": "nda_compare#0",
       "milestone": true
@@ -1855,22 +1855,22 @@
       "task_id": "nda_compare",
       "model": "demo-agent-v1",
       "episode": 1,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1291,
-        "tool_calls": 13
+        "usd": 0.2908,
+        "tool_calls": 16
       },
-      "n_steps": 13,
-      "failure_mode": "tool_execution",
+      "n_steps": 16,
+      "failure_mode": null,
       "trajectory_ref": "nda_compare#1",
       "milestone": true
     },
@@ -1879,8 +1879,8 @@
       "task_id": "nda_compare",
       "model": "demo-agent-v1",
       "episode": 2,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
@@ -1890,11 +1890,11 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3173,
-        "tool_calls": 9
+        "usd": 0.2559,
+        "tool_calls": 19
       },
-      "n_steps": 9,
-      "failure_mode": null,
+      "n_steps": 19,
+      "failure_mode": "tool_selection",
       "trajectory_ref": "nda_compare#2",
       "milestone": true
     },
@@ -1903,8 +1903,8 @@
       "task_id": "nda_compare",
       "model": "demo-agent-v1",
       "episode": 3,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
@@ -1914,11 +1914,11 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.027,
-        "tool_calls": 5
+        "usd": 0.3509,
+        "tool_calls": 11
       },
-      "n_steps": 5,
-      "failure_mode": null,
+      "n_steps": 11,
+      "failure_mode": "tool_selection",
       "trajectory_ref": "nda_compare#3",
       "milestone": true
     },
@@ -1927,30 +1927,6 @@
       "task_id": "nda_compare",
       "model": "demo-agent-v1",
       "episode": 4,
-      "score": 1.0,
-      "success": true,
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.1277,
-        "tool_calls": 5
-      },
-      "n_steps": 5,
-      "failure_mode": null,
-      "trajectory_ref": "nda_compare#4",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "nda_compare",
-      "model": "demo-agent-v1",
-      "episode": 5,
       "score": 0.0,
       "success": false,
       "domain": "legal",
@@ -1962,11 +1938,35 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1862,
-        "tool_calls": 9
+        "usd": 0.1857,
+        "tool_calls": 10
       },
-      "n_steps": 9,
+      "n_steps": 10,
       "failure_mode": "verification",
+      "trajectory_ref": "nda_compare#4",
+      "milestone": false
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "nda_compare",
+      "model": "demo-agent-v1",
+      "episode": 5,
+      "score": 1.0,
+      "success": true,
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.1815,
+        "tool_calls": 21
+      },
+      "n_steps": 21,
+      "failure_mode": null,
       "trajectory_ref": "nda_compare#5",
       "milestone": true
     },
@@ -1975,22 +1975,22 @@
       "task_id": "nda_compare",
       "model": "demo-agent-v1",
       "episode": 6,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1452,
-        "tool_calls": 9
+        "usd": 0.5093,
+        "tool_calls": 18
       },
-      "n_steps": 9,
-      "failure_mode": "tool_execution",
+      "n_steps": 18,
+      "failure_mode": null,
       "trajectory_ref": "nda_compare#6",
       "milestone": true
     },
@@ -1999,8 +1999,8 @@
       "task_id": "nda_compare",
       "model": "demo-agent-v1",
       "episode": 7,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "legal",
       "environment": "legal_env_v1",
       "rubric_scores": {
@@ -2010,11 +2010,11 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.235,
-        "tool_calls": 7
+        "usd": 0.2806,
+        "tool_calls": 16
       },
-      "n_steps": 7,
-      "failure_mode": null,
+      "n_steps": 16,
+      "failure_mode": "tool_selection",
       "trajectory_ref": "nda_compare#7",
       "milestone": true
     },
@@ -2023,22 +2023,22 @@
       "task_id": "literature_sweep",
       "model": "demo-agent-v1",
       "episode": 0,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
-        "r_retrieve": 1.0,
+        "r_retrieve": 0.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0987,
-        "tool_calls": 8
+        "usd": 0.2641,
+        "tool_calls": 16
       },
-      "n_steps": 8,
-      "failure_mode": null,
+      "n_steps": 16,
+      "failure_mode": "retrieval",
       "trajectory_ref": "literature_sweep#0",
       "milestone": true
     },
@@ -2047,22 +2047,22 @@
       "task_id": "literature_sweep",
       "model": "demo-agent-v1",
       "episode": 1,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
-        "r_retrieve": 0.0,
+        "r_retrieve": 1.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0469,
-        "tool_calls": 7
+        "usd": 0.2174,
+        "tool_calls": 14
       },
-      "n_steps": 7,
-      "failure_mode": "retrieval",
+      "n_steps": 14,
+      "failure_mode": null,
       "trajectory_ref": "literature_sweep#1",
       "milestone": true
     },
@@ -2071,54 +2071,6 @@
       "task_id": "literature_sweep",
       "model": "demo-agent-v1",
       "episode": 2,
-      "score": 1.0,
-      "success": true,
-      "domain": "research",
-      "environment": "research_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.0891,
-        "tool_calls": 7
-      },
-      "n_steps": 7,
-      "failure_mode": null,
-      "trajectory_ref": "literature_sweep#2",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "literature_sweep",
-      "model": "demo-agent-v1",
-      "episode": 3,
-      "score": 1.0,
-      "success": true,
-      "domain": "research",
-      "environment": "research_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.095,
-        "tool_calls": 7
-      },
-      "n_steps": 7,
-      "failure_mode": null,
-      "trajectory_ref": "literature_sweep#3",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "literature_sweep",
-      "model": "demo-agent-v1",
-      "episode": 4,
       "score": 0.0,
       "success": false,
       "domain": "research",
@@ -2130,11 +2082,59 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.2009,
-        "tool_calls": 7
+        "usd": 0.2922,
+        "tool_calls": 16
       },
-      "n_steps": 7,
+      "n_steps": 16,
       "failure_mode": "retrieval",
+      "trajectory_ref": "literature_sweep#2",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "literature_sweep",
+      "model": "demo-agent-v1",
+      "episode": 3,
+      "score": 0.0,
+      "success": false,
+      "domain": "research",
+      "environment": "research_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 0.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 0.0
+      },
+      "cost": {
+        "usd": 0.1865,
+        "tool_calls": 13
+      },
+      "n_steps": 13,
+      "failure_mode": "retrieval",
+      "trajectory_ref": "literature_sweep#3",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "literature_sweep",
+      "model": "demo-agent-v1",
+      "episode": 4,
+      "score": 1.0,
+      "success": true,
+      "domain": "research",
+      "environment": "research_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.3553,
+        "tool_calls": 17
+      },
+      "n_steps": 17,
+      "failure_mode": null,
       "trajectory_ref": "literature_sweep#4",
       "milestone": true
     },
@@ -2154,10 +2154,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.2741,
-        "tool_calls": 11
+        "usd": 0.4967,
+        "tool_calls": 21
       },
-      "n_steps": 11,
+      "n_steps": 21,
       "failure_mode": "retrieval",
       "trajectory_ref": "literature_sweep#5",
       "milestone": true
@@ -2178,10 +2178,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1925,
-        "tool_calls": 10
+        "usd": 0.159,
+        "tool_calls": 15
       },
-      "n_steps": 10,
+      "n_steps": 15,
       "failure_mode": "tool_execution",
       "trajectory_ref": "literature_sweep#6",
       "milestone": true
@@ -2202,10 +2202,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1376,
-        "tool_calls": 8
+        "usd": 0.3325,
+        "tool_calls": 18
       },
-      "n_steps": 8,
+      "n_steps": 18,
       "failure_mode": null,
       "trajectory_ref": "literature_sweep#7",
       "milestone": true
@@ -2226,10 +2226,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3721,
-        "tool_calls": 10
+        "usd": 0.3718,
+        "tool_calls": 17
       },
-      "n_steps": 10,
+      "n_steps": 17,
       "failure_mode": null,
       "trajectory_ref": "data_extraction#0",
       "milestone": true
@@ -2245,16 +2245,16 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1779,
-        "tool_calls": 6
+        "usd": 0.209,
+        "tool_calls": 11
       },
-      "n_steps": 6,
-      "failure_mode": "tool_execution",
+      "n_steps": 11,
+      "failure_mode": "memory",
       "trajectory_ref": "data_extraction#1",
       "milestone": true
     },
@@ -2274,13 +2274,13 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.367,
-        "tool_calls": 9
+        "usd": 0.5712,
+        "tool_calls": 15
       },
-      "n_steps": 9,
+      "n_steps": 15,
       "failure_mode": "tool_execution",
       "trajectory_ref": "data_extraction#2",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
@@ -2293,18 +2293,18 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1166,
-        "tool_calls": 11
+        "usd": 0.391,
+        "tool_calls": 10
       },
-      "n_steps": 11,
-      "failure_mode": "tool_execution",
+      "n_steps": 10,
+      "failure_mode": "memory",
       "trajectory_ref": "data_extraction#3",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
@@ -2322,10 +2322,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0599,
-        "tool_calls": 7
+        "usd": 0.2264,
+        "tool_calls": 19
       },
-      "n_steps": 7,
+      "n_steps": 19,
       "failure_mode": null,
       "trajectory_ref": "data_extraction#4",
       "milestone": true
@@ -2346,10 +2346,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2241,
-        "tool_calls": 7
+        "usd": 0.0901,
+        "tool_calls": 11
       },
-      "n_steps": 7,
+      "n_steps": 11,
       "failure_mode": null,
       "trajectory_ref": "data_extraction#5",
       "milestone": true
@@ -2359,30 +2359,6 @@
       "task_id": "data_extraction",
       "model": "demo-agent-v1",
       "episode": 6,
-      "score": 0.0,
-      "success": false,
-      "domain": "research",
-      "environment": "research_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
-      },
-      "cost": {
-        "usd": 0.2925,
-        "tool_calls": 12
-      },
-      "n_steps": 12,
-      "failure_mode": "tool_execution",
-      "trajectory_ref": "data_extraction#6",
-      "milestone": false
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "data_extraction",
-      "model": "demo-agent-v1",
-      "episode": 7,
       "score": 1.0,
       "success": true,
       "domain": "research",
@@ -2394,11 +2370,35 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1328,
-        "tool_calls": 7
+        "usd": 0.137,
+        "tool_calls": 14
       },
-      "n_steps": 7,
+      "n_steps": 14,
       "failure_mode": null,
+      "trajectory_ref": "data_extraction#6",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "data_extraction",
+      "model": "demo-agent-v1",
+      "episode": 7,
+      "score": 0.0,
+      "success": false,
+      "domain": "research",
+      "environment": "research_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.7486,
+        "tool_calls": 22
+      },
+      "n_steps": 22,
+      "failure_mode": "memory",
       "trajectory_ref": "data_extraction#7",
       "milestone": true
     },
@@ -2407,8 +2407,8 @@
       "task_id": "figure_reproduce",
       "model": "demo-agent-v1",
       "episode": 0,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
@@ -2418,11 +2418,11 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2069,
-        "tool_calls": 19
+        "usd": 0.4303,
+        "tool_calls": 21
       },
-      "n_steps": 19,
-      "failure_mode": null,
+      "n_steps": 21,
+      "failure_mode": "planning",
       "trajectory_ref": "figure_reproduce#0",
       "milestone": true
     },
@@ -2437,16 +2437,16 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4776,
-        "tool_calls": 16
+        "usd": 0.0861,
+        "tool_calls": 14
       },
-      "n_steps": 16,
-      "failure_mode": "tool_execution",
+      "n_steps": 14,
+      "failure_mode": "planning",
       "trajectory_ref": "figure_reproduce#1",
       "milestone": true
     },
@@ -2455,22 +2455,22 @@
       "task_id": "figure_reproduce",
       "model": "demo-agent-v1",
       "episode": 2,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.4912,
-        "tool_calls": 26
+        "usd": 0.3042,
+        "tool_calls": 17
       },
-      "n_steps": 26,
-      "failure_mode": "tool_execution",
+      "n_steps": 17,
+      "failure_mode": null,
       "trajectory_ref": "figure_reproduce#2",
       "milestone": true
     },
@@ -2485,16 +2485,16 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2929,
-        "tool_calls": 21
+        "usd": 0.5072,
+        "tool_calls": 23
       },
-      "n_steps": 21,
-      "failure_mode": "tool_execution",
+      "n_steps": 23,
+      "failure_mode": "planning",
       "trajectory_ref": "figure_reproduce#3",
       "milestone": true
     },
@@ -2503,8 +2503,8 @@
       "task_id": "figure_reproduce",
       "model": "demo-agent-v1",
       "episode": 4,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
@@ -2514,21 +2514,21 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3944,
-        "tool_calls": 22
+        "usd": 0.7643,
+        "tool_calls": 20
       },
-      "n_steps": 22,
-      "failure_mode": null,
+      "n_steps": 20,
+      "failure_mode": "planning",
       "trajectory_ref": "figure_reproduce#4",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
       "task_id": "figure_reproduce",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
@@ -2538,11 +2538,11 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2199,
-        "tool_calls": 18
+        "usd": 0.1519,
+        "tool_calls": 13
       },
-      "n_steps": 18,
-      "failure_mode": null,
+      "n_steps": 13,
+      "failure_mode": "planning",
       "trajectory_ref": "figure_reproduce#5",
       "milestone": true
     },
@@ -2558,17 +2558,17 @@
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 0.0,
+        "r_verify": 1.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.7612,
-        "tool_calls": 18
+        "usd": 0.311,
+        "tool_calls": 15
       },
-      "n_steps": 18,
-      "failure_mode": "verification",
+      "n_steps": 15,
+      "failure_mode": "planning",
       "trajectory_ref": "figure_reproduce#6",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
@@ -2586,10 +2586,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.401,
-        "tool_calls": 20
+        "usd": 0.2977,
+        "tool_calls": 19
       },
-      "n_steps": 20,
+      "n_steps": 19,
       "failure_mode": null,
       "trajectory_ref": "figure_reproduce#7",
       "milestone": true
@@ -2610,10 +2610,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.23,
-        "tool_calls": 9
+        "usd": 0.0949,
+        "tool_calls": 5
       },
-      "n_steps": 9,
+      "n_steps": 5,
       "failure_mode": null,
       "trajectory_ref": "citation_audit#0",
       "milestone": true
@@ -2623,24 +2623,24 @@
       "task_id": "citation_audit",
       "model": "demo-agent-v1",
       "episode": 1,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3268,
-        "tool_calls": 15
+        "usd": 0.1048,
+        "tool_calls": 8
       },
-      "n_steps": 15,
-      "failure_mode": "tool_execution",
+      "n_steps": 8,
+      "failure_mode": null,
       "trajectory_ref": "citation_audit#1",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
@@ -2652,17 +2652,17 @@
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_retrieve": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1371,
-        "tool_calls": 14
+        "usd": 0.0543,
+        "tool_calls": 4
       },
-      "n_steps": 14,
-      "failure_mode": "tool_execution",
+      "n_steps": 4,
+      "failure_mode": "retrieval",
       "trajectory_ref": "citation_audit#2",
       "milestone": true
     },
@@ -2671,22 +2671,22 @@
       "task_id": "citation_audit",
       "model": "demo-agent-v1",
       "episode": 3,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
-        "r_retrieve": 1.0,
+        "r_retrieve": 0.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.2755,
-        "tool_calls": 10
+        "usd": 0.2009,
+        "tool_calls": 7
       },
-      "n_steps": 10,
-      "failure_mode": null,
+      "n_steps": 7,
+      "failure_mode": "retrieval",
       "trajectory_ref": "citation_audit#3",
       "milestone": true
     },
@@ -2695,22 +2695,22 @@
       "task_id": "citation_audit",
       "model": "demo-agent-v1",
       "episode": 4,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
-        "r_retrieve": 1.0,
+        "r_retrieve": 0.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0821,
-        "tool_calls": 6
+        "usd": 0.1253,
+        "tool_calls": 9
       },
-      "n_steps": 6,
-      "failure_mode": null,
+      "n_steps": 9,
+      "failure_mode": "retrieval",
       "trajectory_ref": "citation_audit#4",
       "milestone": true
     },
@@ -2719,22 +2719,22 @@
       "task_id": "citation_audit",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
-        "r_retrieve": 1.0,
+        "r_retrieve": 0.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.4291,
-        "tool_calls": 20
+        "usd": 0.3098,
+        "tool_calls": 9
       },
-      "n_steps": 20,
-      "failure_mode": null,
+      "n_steps": 9,
+      "failure_mode": "retrieval",
       "trajectory_ref": "citation_audit#5",
       "milestone": true
     },
@@ -2743,30 +2743,6 @@
       "task_id": "citation_audit",
       "model": "demo-agent-v1",
       "episode": 6,
-      "score": 0.0,
-      "success": false,
-      "domain": "research",
-      "environment": "research_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
-      },
-      "cost": {
-        "usd": 0.044,
-        "tool_calls": 11
-      },
-      "n_steps": 11,
-      "failure_mode": "tool_execution",
-      "trajectory_ref": "citation_audit#6",
-      "milestone": false
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "citation_audit",
-      "model": "demo-agent-v1",
-      "episode": 7,
       "score": 1.0,
       "success": true,
       "domain": "research",
@@ -2778,11 +2754,35 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2388,
-        "tool_calls": 12
+        "usd": 0.0516,
+        "tool_calls": 7
       },
-      "n_steps": 12,
+      "n_steps": 7,
       "failure_mode": null,
+      "trajectory_ref": "citation_audit#6",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "citation_audit",
+      "model": "demo-agent-v1",
+      "episode": 7,
+      "score": 0.0,
+      "success": false,
+      "domain": "research",
+      "environment": "research_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 0.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 0.0
+      },
+      "cost": {
+        "usd": 0.1024,
+        "tool_calls": 4
+      },
+      "n_steps": 4,
+      "failure_mode": "retrieval",
       "trajectory_ref": "citation_audit#7",
       "milestone": true
     },
@@ -2802,10 +2802,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0293,
-        "tool_calls": 9
+        "usd": 0.2491,
+        "tool_calls": 18
       },
-      "n_steps": 9,
+      "n_steps": 18,
       "failure_mode": null,
       "trajectory_ref": "method_summary#0",
       "milestone": true
@@ -2826,13 +2826,13 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0608,
-        "tool_calls": 6
+        "usd": 0.2189,
+        "tool_calls": 12
       },
-      "n_steps": 6,
+      "n_steps": 12,
       "failure_mode": "tool_execution",
       "trajectory_ref": "method_summary#1",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
@@ -2845,64 +2845,64 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1965,
-        "tool_calls": 6
+        "usd": 0.7068,
+        "tool_calls": 24
       },
-      "n_steps": 6,
-      "failure_mode": "tool_execution",
+      "n_steps": 24,
+      "failure_mode": "synthesis",
       "trajectory_ref": "method_summary#2",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
       "task_id": "method_summary",
       "model": "demo-agent-v1",
       "episode": 3,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1278,
-        "tool_calls": 8
+        "usd": 0.1188,
+        "tool_calls": 16
       },
-      "n_steps": 8,
-      "failure_mode": null,
+      "n_steps": 16,
+      "failure_mode": "synthesis",
       "trajectory_ref": "method_summary#3",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
       "task_id": "method_summary",
       "model": "demo-agent-v1",
       "episode": 4,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0398,
-        "tool_calls": 4
+        "usd": 0.2008,
+        "tool_calls": 19
       },
-      "n_steps": 4,
-      "failure_mode": null,
+      "n_steps": 19,
+      "failure_mode": "synthesis",
       "trajectory_ref": "method_summary#4",
       "milestone": true
     },
@@ -2911,22 +2911,22 @@
       "task_id": "method_summary",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
+        "r_verify": 0.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0422,
-        "tool_calls": 5
+        "usd": 0.1815,
+        "tool_calls": 13
       },
-      "n_steps": 5,
-      "failure_mode": null,
+      "n_steps": 13,
+      "failure_mode": "verification",
       "trajectory_ref": "method_summary#5",
       "milestone": true
     },
@@ -2946,10 +2946,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.066,
-        "tool_calls": 4
+        "usd": 0.1745,
+        "tool_calls": 12
       },
-      "n_steps": 4,
+      "n_steps": 12,
       "failure_mode": "tool_execution",
       "trajectory_ref": "method_summary#6",
       "milestone": true
@@ -2959,22 +2959,22 @@
       "task_id": "method_summary",
       "model": "demo-agent-v1",
       "episode": 7,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
+        "r_verify": 0.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0988,
-        "tool_calls": 4
+        "usd": 0.1379,
+        "tool_calls": 13
       },
-      "n_steps": 4,
-      "failure_mode": null,
+      "n_steps": 13,
+      "failure_mode": "verification",
       "trajectory_ref": "method_summary#7",
       "milestone": true
     },
@@ -2989,16 +2989,16 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1152,
-        "tool_calls": 13
+        "usd": 0.3761,
+        "tool_calls": 17
       },
-      "n_steps": 13,
-      "failure_mode": "tool_execution",
+      "n_steps": 17,
+      "failure_mode": "planning",
       "trajectory_ref": "benchmark_table#0",
       "milestone": false
     },
@@ -3007,8 +3007,8 @@
       "task_id": "benchmark_table",
       "model": "demo-agent-v1",
       "episode": 1,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
@@ -3018,11 +3018,11 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2613,
-        "tool_calls": 14
+        "usd": 0.4957,
+        "tool_calls": 16
       },
-      "n_steps": 14,
-      "failure_mode": null,
+      "n_steps": 16,
+      "failure_mode": "planning",
       "trajectory_ref": "benchmark_table#1",
       "milestone": true
     },
@@ -3031,22 +3031,22 @@
       "task_id": "benchmark_table",
       "model": "demo-agent-v1",
       "episode": 2,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
+        "r_verify": 0.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3256,
-        "tool_calls": 14
+        "usd": 0.2176,
+        "tool_calls": 17
       },
-      "n_steps": 14,
-      "failure_mode": null,
+      "n_steps": 17,
+      "failure_mode": "verification",
       "trajectory_ref": "benchmark_table#2",
       "milestone": true
     },
@@ -3066,10 +3066,10 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1223,
-        "tool_calls": 12
+        "usd": 0.2473,
+        "tool_calls": 20
       },
-      "n_steps": 12,
+      "n_steps": 20,
       "failure_mode": "tool_execution",
       "trajectory_ref": "benchmark_table#3",
       "milestone": true
@@ -3085,16 +3085,16 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3978,
-        "tool_calls": 13
+        "usd": 0.9454,
+        "tool_calls": 21
       },
-      "n_steps": 13,
-      "failure_mode": "tool_execution",
+      "n_steps": 21,
+      "failure_mode": "planning",
       "trajectory_ref": "benchmark_table#4",
       "milestone": false
     },
@@ -3103,8 +3103,8 @@
       "task_id": "benchmark_table",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "research",
       "environment": "research_env_v1",
       "rubric_scores": {
@@ -3114,13 +3114,13 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.5836,
-        "tool_calls": 15
+        "usd": 0.3991,
+        "tool_calls": 19
       },
-      "n_steps": 15,
-      "failure_mode": null,
+      "n_steps": 19,
+      "failure_mode": "planning",
       "trajectory_ref": "benchmark_table#5",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
@@ -3133,18 +3133,18 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
+        "r_compute": 1.0,
+        "r_verify": 0.0,
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0384,
-        "tool_calls": 19
+        "usd": 0.1517,
+        "tool_calls": 20
       },
-      "n_steps": 19,
-      "failure_mode": "tool_execution",
+      "n_steps": 20,
+      "failure_mode": "verification",
       "trajectory_ref": "benchmark_table#6",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
@@ -3157,18 +3157,18 @@
       "environment": "research_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1796,
-        "tool_calls": 8
+        "usd": 0.3386,
+        "tool_calls": 19
       },
-      "n_steps": 8,
-      "failure_mode": "tool_execution",
+      "n_steps": 19,
+      "failure_mode": "planning",
       "trajectory_ref": "benchmark_table#7",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
@@ -3186,10 +3186,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1207,
-        "tool_calls": 13
+        "usd": 0.1261,
+        "tool_calls": 9
       },
-      "n_steps": 13,
+      "n_steps": 9,
       "failure_mode": null,
       "trajectory_ref": "incident_triage#0",
       "milestone": true
@@ -3199,30 +3199,6 @@
       "task_id": "incident_triage",
       "model": "demo-agent-v1",
       "episode": 1,
-      "score": 1.0,
-      "success": true,
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.2338,
-        "tool_calls": 11
-      },
-      "n_steps": 11,
-      "failure_mode": null,
-      "trajectory_ref": "incident_triage#1",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "incident_triage",
-      "model": "demo-agent-v1",
-      "episode": 2,
       "score": 0.0,
       "success": false,
       "domain": "ops",
@@ -3234,11 +3210,35 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.279,
-        "tool_calls": 15
+        "usd": 0.1712,
+        "tool_calls": 10
       },
-      "n_steps": 15,
-      "failure_mode": "planning",
+      "n_steps": 10,
+      "failure_mode": "memory",
+      "trajectory_ref": "incident_triage#1",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "incident_triage",
+      "model": "demo-agent-v1",
+      "episode": 2,
+      "score": 1.0,
+      "success": true,
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.0556,
+        "tool_calls": 4
+      },
+      "n_steps": 4,
+      "failure_mode": null,
       "trajectory_ref": "incident_triage#2",
       "milestone": true
     },
@@ -3253,16 +3253,16 @@
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1435,
-        "tool_calls": 7
+        "usd": 0.1804,
+        "tool_calls": 9
       },
-      "n_steps": 7,
-      "failure_mode": "reasoning",
+      "n_steps": 9,
+      "failure_mode": "planning",
       "trajectory_ref": "incident_triage#3",
       "milestone": true
     },
@@ -3279,14 +3279,14 @@
         "r_retrieve": 1.0,
         "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.114,
-        "tool_calls": 11
+        "usd": 0.1581,
+        "tool_calls": 10
       },
-      "n_steps": 11,
-      "failure_mode": "memory",
+      "n_steps": 10,
+      "failure_mode": "synthesis",
       "trajectory_ref": "incident_triage#4",
       "milestone": true
     },
@@ -3295,78 +3295,6 @@
       "task_id": "incident_triage",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 1.0,
-      "success": true,
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.2098,
-        "tool_calls": 11
-      },
-      "n_steps": 11,
-      "failure_mode": null,
-      "trajectory_ref": "incident_triage#5",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "incident_triage",
-      "model": "demo-agent-v1",
-      "episode": 6,
-      "score": 0.0,
-      "success": false,
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
-      },
-      "cost": {
-        "usd": 0.0784,
-        "tool_calls": 8
-      },
-      "n_steps": 8,
-      "failure_mode": "synthesis",
-      "trajectory_ref": "incident_triage#6",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "incident_triage",
-      "model": "demo-agent-v1",
-      "episode": 7,
-      "score": 1.0,
-      "success": true,
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.0504,
-        "tool_calls": 8
-      },
-      "n_steps": 8,
-      "failure_mode": null,
-      "trajectory_ref": "incident_triage#7",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "runbook_execute",
-      "model": "demo-agent-v1",
-      "episode": 0,
       "score": 0.0,
       "success": false,
       "domain": "ops",
@@ -3378,11 +3306,83 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.6488,
-        "tool_calls": 16
+        "usd": 0.1791,
+        "tool_calls": 9
       },
-      "n_steps": 16,
-      "failure_mode": "verification",
+      "n_steps": 9,
+      "failure_mode": "recovery",
+      "trajectory_ref": "incident_triage#5",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "incident_triage",
+      "model": "demo-agent-v1",
+      "episode": 6,
+      "score": 1.0,
+      "success": true,
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.3306,
+        "tool_calls": 10
+      },
+      "n_steps": 10,
+      "failure_mode": null,
+      "trajectory_ref": "incident_triage#6",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "incident_triage",
+      "model": "demo-agent-v1",
+      "episode": 7,
+      "score": 0.0,
+      "success": false,
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 0.0
+      },
+      "cost": {
+        "usd": 0.1393,
+        "tool_calls": 7
+      },
+      "n_steps": 7,
+      "failure_mode": "synthesis",
+      "trajectory_ref": "incident_triage#7",
+      "milestone": false
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "runbook_execute",
+      "model": "demo-agent-v1",
+      "episode": 0,
+      "score": 1.0,
+      "success": true,
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.3772,
+        "tool_calls": 21
+      },
+      "n_steps": 21,
+      "failure_mode": null,
       "trajectory_ref": "runbook_execute#0",
       "milestone": true
     },
@@ -3397,16 +3397,16 @@
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
+        "r_compute": 1.0,
+        "r_verify": 0.0,
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3438,
-        "tool_calls": 10
+        "usd": 0.0683,
+        "tool_calls": 21
       },
-      "n_steps": 10,
-      "failure_mode": "tool_execution",
+      "n_steps": 21,
+      "failure_mode": "verification",
       "trajectory_ref": "runbook_execute#1",
       "milestone": true
     },
@@ -3415,46 +3415,46 @@
       "task_id": "runbook_execute",
       "model": "demo-agent-v1",
       "episode": 2,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.6433,
-        "tool_calls": 23
+        "usd": 0.1768,
+        "tool_calls": 18
       },
-      "n_steps": 23,
-      "failure_mode": "tool_execution",
+      "n_steps": 18,
+      "failure_mode": null,
       "trajectory_ref": "runbook_execute#2",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
       "task_id": "runbook_execute",
       "model": "demo-agent-v1",
       "episode": 3,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2185,
-        "tool_calls": 15
+        "usd": 0.5714,
+        "tool_calls": 26
       },
-      "n_steps": 15,
-      "failure_mode": "tool_execution",
+      "n_steps": 26,
+      "failure_mode": null,
       "trajectory_ref": "runbook_execute#3",
       "milestone": true
     },
@@ -3474,10 +3474,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2152,
-        "tool_calls": 13
+        "usd": 0.069,
+        "tool_calls": 15
       },
-      "n_steps": 13,
+      "n_steps": 15,
       "failure_mode": null,
       "trajectory_ref": "runbook_execute#4",
       "milestone": true
@@ -3487,6 +3487,30 @@
       "task_id": "runbook_execute",
       "model": "demo-agent-v1",
       "episode": 5,
+      "score": 0.0,
+      "success": false,
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 0.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.2647,
+        "tool_calls": 18
+      },
+      "n_steps": 18,
+      "failure_mode": "verification",
+      "trajectory_ref": "runbook_execute#5",
+      "milestone": false
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "runbook_execute",
+      "model": "demo-agent-v1",
+      "episode": 6,
       "score": 1.0,
       "success": true,
       "domain": "ops",
@@ -3498,35 +3522,11 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1094,
-        "tool_calls": 12
+        "usd": 0.4949,
+        "tool_calls": 14
       },
-      "n_steps": 12,
+      "n_steps": 14,
       "failure_mode": null,
-      "trajectory_ref": "runbook_execute#5",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "runbook_execute",
-      "model": "demo-agent-v1",
-      "episode": 6,
-      "score": 0.0,
-      "success": false,
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
-      },
-      "cost": {
-        "usd": 0.1998,
-        "tool_calls": 15
-      },
-      "n_steps": 15,
-      "failure_mode": "tool_execution",
       "trajectory_ref": "runbook_execute#6",
       "milestone": true
     },
@@ -3535,22 +3535,22 @@
       "task_id": "runbook_execute",
       "model": "demo-agent-v1",
       "episode": 7,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.3174,
-        "tool_calls": 15
+        "usd": 0.1792,
+        "tool_calls": 18
       },
-      "n_steps": 15,
-      "failure_mode": "tool_execution",
+      "n_steps": 18,
+      "failure_mode": null,
       "trajectory_ref": "runbook_execute#7",
       "milestone": true
     },
@@ -3570,10 +3570,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1623,
-        "tool_calls": 7
+        "usd": 0.3077,
+        "tool_calls": 10
       },
-      "n_steps": 7,
+      "n_steps": 10,
       "failure_mode": null,
       "trajectory_ref": "capacity_plan#0",
       "milestone": true
@@ -3594,37 +3594,37 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0678,
-        "tool_calls": 7
+        "usd": 0.0392,
+        "tool_calls": 5
       },
-      "n_steps": 7,
+      "n_steps": 5,
       "failure_mode": "planning",
       "trajectory_ref": "capacity_plan#1",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
       "task_id": "log_rootcause",
       "model": "demo-agent-v1",
       "episode": 0,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1457,
-        "tool_calls": 9
+        "usd": 0.1372,
+        "tool_calls": 6
       },
-      "n_steps": 9,
-      "failure_mode": "tool_execution",
+      "n_steps": 6,
+      "failure_mode": null,
       "trajectory_ref": "log_rootcause#0",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
@@ -3642,10 +3642,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1537,
-        "tool_calls": 6
+        "usd": 0.0499,
+        "tool_calls": 5
       },
-      "n_steps": 6,
+      "n_steps": 5,
       "failure_mode": null,
       "trajectory_ref": "log_rootcause#1",
       "milestone": true
@@ -3655,6 +3655,30 @@
       "task_id": "log_rootcause",
       "model": "demo-agent-v1",
       "episode": 2,
+      "score": 1.0,
+      "success": true,
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.0956,
+        "tool_calls": 4
+      },
+      "n_steps": 4,
+      "failure_mode": null,
+      "trajectory_ref": "log_rootcause#2",
+      "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "log_rootcause",
+      "model": "demo-agent-v1",
+      "episode": 3,
       "score": 0.0,
       "success": false,
       "domain": "ops",
@@ -3666,35 +3690,11 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0967,
+        "usd": 0.1163,
         "tool_calls": 5
       },
       "n_steps": 5,
       "failure_mode": "tool_execution",
-      "trajectory_ref": "log_rootcause#2",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "log_rootcause",
-      "model": "demo-agent-v1",
-      "episode": 3,
-      "score": 1.0,
-      "success": true,
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 1.0,
-        "r_verify": 1.0,
-        "r_report": 1.0
-      },
-      "cost": {
-        "usd": 0.054,
-        "tool_calls": 4
-      },
-      "n_steps": 4,
-      "failure_mode": null,
       "trajectory_ref": "log_rootcause#3",
       "milestone": true
     },
@@ -3703,22 +3703,22 @@
       "task_id": "log_rootcause",
       "model": "demo-agent-v1",
       "episode": 4,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 1.0,
+        "r_compute": 0.0,
         "r_verify": 1.0,
-        "r_report": 1.0
+        "r_report": 0.0
       },
       "cost": {
-        "usd": 0.0251,
-        "tool_calls": 8
+        "usd": 0.0541,
+        "tool_calls": 5
       },
-      "n_steps": 8,
-      "failure_mode": null,
+      "n_steps": 5,
+      "failure_mode": "tool_execution",
       "trajectory_ref": "log_rootcause#4",
       "milestone": true
     },
@@ -3738,7 +3738,7 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2281,
+        "usd": 0.1469,
         "tool_calls": 8
       },
       "n_steps": 8,
@@ -3751,22 +3751,22 @@
       "task_id": "log_rootcause",
       "model": "demo-agent-v1",
       "episode": 6,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1227,
+        "usd": 0.0464,
         "tool_calls": 7
       },
       "n_steps": 7,
-      "failure_mode": "tool_execution",
+      "failure_mode": null,
       "trajectory_ref": "log_rootcause#6",
       "milestone": true
     },
@@ -3775,24 +3775,24 @@
       "task_id": "log_rootcause",
       "model": "demo-agent-v1",
       "episode": 7,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.054,
-        "tool_calls": 4
+        "usd": 0.1776,
+        "tool_calls": 12
       },
-      "n_steps": 4,
-      "failure_mode": "tool_execution",
+      "n_steps": 12,
+      "failure_mode": null,
       "trajectory_ref": "log_rootcause#7",
-      "milestone": false
+      "milestone": true
     },
     {
       "run_id": "demo_run",
@@ -3810,11 +3810,11 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1056,
-        "tool_calls": 7
+        "usd": 1.13,
+        "tool_calls": 27
       },
-      "n_steps": 7,
-      "failure_mode": "tool_execution",
+      "n_steps": 27,
+      "failure_mode": "reasoning",
       "trajectory_ref": "access_review#0",
       "milestone": true
     },
@@ -3823,30 +3823,6 @@
       "task_id": "access_review",
       "model": "demo-agent-v1",
       "episode": 1,
-      "score": 0.0,
-      "success": false,
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
-      },
-      "cost": {
-        "usd": 0.0578,
-        "tool_calls": 6
-      },
-      "n_steps": 6,
-      "failure_mode": "tool_execution",
-      "trajectory_ref": "access_review#1",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "access_review",
-      "model": "demo-agent-v1",
-      "episode": 2,
       "score": 1.0,
       "success": true,
       "domain": "ops",
@@ -3858,13 +3834,37 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0999,
-        "tool_calls": 10
+        "usd": 0.1768,
+        "tool_calls": 16
       },
-      "n_steps": 10,
+      "n_steps": 16,
       "failure_mode": null,
-      "trajectory_ref": "access_review#2",
+      "trajectory_ref": "access_review#1",
       "milestone": true
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "access_review",
+      "model": "demo-agent-v1",
+      "episode": 2,
+      "score": 0.0,
+      "success": false,
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 0.0,
+        "r_verify": 1.0,
+        "r_report": 0.0
+      },
+      "cost": {
+        "usd": 0.1409,
+        "tool_calls": 13
+      },
+      "n_steps": 13,
+      "failure_mode": "tool_execution",
+      "trajectory_ref": "access_review#2",
+      "milestone": false
     },
     {
       "run_id": "demo_run",
@@ -3882,11 +3882,11 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1908,
-        "tool_calls": 8
+        "usd": 0.1963,
+        "tool_calls": 13
       },
-      "n_steps": 8,
-      "failure_mode": "tool_execution",
+      "n_steps": 13,
+      "failure_mode": "reasoning",
       "trajectory_ref": "access_review#3",
       "milestone": true
     },
@@ -3906,10 +3906,10 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.102,
-        "tool_calls": 5
+        "usd": 0.4847,
+        "tool_calls": 21
       },
-      "n_steps": 5,
+      "n_steps": 21,
       "failure_mode": null,
       "trajectory_ref": "access_review#4",
       "milestone": true
@@ -3919,22 +3919,22 @@
       "task_id": "access_review",
       "model": "demo-agent-v1",
       "episode": 5,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.189,
-        "tool_calls": 9
+        "usd": 0.228,
+        "tool_calls": 21
       },
-      "n_steps": 9,
-      "failure_mode": "tool_execution",
+      "n_steps": 21,
+      "failure_mode": null,
       "trajectory_ref": "access_review#5",
       "milestone": true
     },
@@ -3954,11 +3954,11 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1462,
-        "tool_calls": 7
+        "usd": 0.1956,
+        "tool_calls": 19
       },
-      "n_steps": 7,
-      "failure_mode": "tool_execution",
+      "n_steps": 19,
+      "failure_mode": "reasoning",
       "trajectory_ref": "access_review#6",
       "milestone": true
     },
@@ -3978,11 +3978,11 @@
         "r_report": 0.0
       },
       "cost": {
-        "usd": 0.1077,
-        "tool_calls": 7
+        "usd": 0.9561,
+        "tool_calls": 24
       },
-      "n_steps": 7,
-      "failure_mode": "tool_execution",
+      "n_steps": 24,
+      "failure_mode": "reasoning",
       "trajectory_ref": "access_review#7",
       "milestone": true
     },
@@ -3991,6 +3991,30 @@
       "task_id": "sla_report",
       "model": "demo-agent-v1",
       "episode": 0,
+      "score": 0.0,
+      "success": false,
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "rubric_scores": {
+        "r_retrieve": 1.0,
+        "r_compute": 1.0,
+        "r_verify": 1.0,
+        "r_report": 1.0
+      },
+      "cost": {
+        "usd": 0.6386,
+        "tool_calls": 19
+      },
+      "n_steps": 19,
+      "failure_mode": "state_tracking",
+      "trajectory_ref": "sla_report#0",
+      "milestone": false
+    },
+    {
+      "run_id": "demo_run",
+      "task_id": "sla_report",
+      "model": "demo-agent-v1",
+      "episode": 1,
       "score": 1.0,
       "success": true,
       "domain": "ops",
@@ -4002,35 +4026,11 @@
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0261,
-        "tool_calls": 4
+        "usd": 0.5341,
+        "tool_calls": 28
       },
-      "n_steps": 4,
+      "n_steps": 28,
       "failure_mode": null,
-      "trajectory_ref": "sla_report#0",
-      "milestone": true
-    },
-    {
-      "run_id": "demo_run",
-      "task_id": "sla_report",
-      "model": "demo-agent-v1",
-      "episode": 1,
-      "score": 0.0,
-      "success": false,
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "rubric_scores": {
-        "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
-      },
-      "cost": {
-        "usd": 0.0655,
-        "tool_calls": 6
-      },
-      "n_steps": 6,
-      "failure_mode": "tool_execution",
       "trajectory_ref": "sla_report#1",
       "milestone": true
     },
@@ -4045,16 +4045,16 @@
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
+        "r_compute": 1.0,
+        "r_verify": 0.0,
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1585,
-        "tool_calls": 5
+        "usd": 0.3847,
+        "tool_calls": 22
       },
-      "n_steps": 5,
-      "failure_mode": "tool_execution",
+      "n_steps": 22,
+      "failure_mode": "verification",
       "trajectory_ref": "sla_report#2",
       "milestone": true
     },
@@ -4069,16 +4069,16 @@
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0634,
-        "tool_calls": 4
+        "usd": 0.6682,
+        "tool_calls": 22
       },
-      "n_steps": 4,
-      "failure_mode": "tool_execution",
+      "n_steps": 22,
+      "failure_mode": "state_tracking",
       "trajectory_ref": "sla_report#3",
       "milestone": false
     },
@@ -4087,22 +4087,22 @@
       "task_id": "sla_report",
       "model": "demo-agent-v1",
       "episode": 4,
-      "score": 0.0,
-      "success": false,
+      "score": 1.0,
+      "success": true,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 0.0,
+        "r_verify": 1.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0856,
-        "tool_calls": 9
+        "usd": 0.1998,
+        "tool_calls": 13
       },
-      "n_steps": 9,
-      "failure_mode": "verification",
+      "n_steps": 13,
+      "failure_mode": null,
       "trajectory_ref": "sla_report#4",
       "milestone": true
     },
@@ -4117,16 +4117,16 @@
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
+        "r_compute": 1.0,
         "r_verify": 1.0,
-        "r_report": 0.0
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.2462,
-        "tool_calls": 10
+        "usd": 0.1885,
+        "tool_calls": 17
       },
-      "n_steps": 10,
-      "failure_mode": "tool_execution",
+      "n_steps": 17,
+      "failure_mode": "state_tracking",
       "trajectory_ref": "sla_report#5",
       "milestone": true
     },
@@ -4135,24 +4135,24 @@
       "task_id": "sla_report",
       "model": "demo-agent-v1",
       "episode": 6,
-      "score": 1.0,
-      "success": true,
+      "score": 0.0,
+      "success": false,
       "domain": "ops",
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
         "r_compute": 1.0,
-        "r_verify": 1.0,
+        "r_verify": 0.0,
         "r_report": 1.0
       },
       "cost": {
-        "usd": 0.1124,
-        "tool_calls": 9
+        "usd": 0.3145,
+        "tool_calls": 30
       },
-      "n_steps": 9,
-      "failure_mode": null,
+      "n_steps": 30,
+      "failure_mode": "verification",
       "trajectory_ref": "sla_report#6",
-      "milestone": true
+      "milestone": false
     },
     {
       "run_id": "demo_run",
@@ -4165,18 +4165,18 @@
       "environment": "ops_env_v1",
       "rubric_scores": {
         "r_retrieve": 1.0,
-        "r_compute": 0.0,
-        "r_verify": 1.0,
-        "r_report": 0.0
+        "r_compute": 1.0,
+        "r_verify": 0.0,
+        "r_report": 1.0
       },
       "cost": {
-        "usd": 0.0495,
-        "tool_calls": 4
+        "usd": 0.2498,
+        "tool_calls": 23
       },
-      "n_steps": 4,
-      "failure_mode": "tool_execution",
+      "n_steps": 23,
+      "failure_mode": "verification",
       "trajectory_ref": "sla_report#7",
-      "milestone": false
+      "milestone": true
     }
   ]
 }

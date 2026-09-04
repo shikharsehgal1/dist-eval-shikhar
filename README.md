@@ -559,11 +559,248 @@ disteval/
   training_harness.py     — DPOTrainerBase, NoOpTrainer, SimulatedTrainer, TRL/Axolotl stubs
   agent_harness.py        — lifecycle wrapper for running agents and capturing trajectories
 
+docs/
+  generate_images.py      — regenerates every chart embedded in README.md
+  images/                 — real_*.png from experiment 11's 64 live episodes,
+                            repeat_eval_reliability.png from jobs/run_A|B|C
+
 TRAJECTORY_FORMAT.md      — spec: what disteval reads
 CURRICULUM_FORMAT.md      — spec: what disteval engine outputs
 THEORY.md                 — mathematical argument for right-tail training
 research/agent_harness.md — mapping the "agent harness" concept to disteval
 ```
+
+---
+
+## Worked example: 64 real episodes, five charts
+
+Every chart below is drawn from
+[experiment 11](research/experiments/experiment_11_real_model_distributed_eval/):
+**64 live episodes** from four real agents on four exactly-verifiable tasks.
+The four agents are the same two models in two different wrappers — `cli-opus`
+and `cli-haiku` running inside the Claude Code CLI scaffold (tools, thinking),
+against `api-opus` and `api-haiku` called as raw models through the SDK. Every
+task is checked by exact comparison, so there is no judge in the loop.
+
+Regenerate all six images with:
+
+```bash
+python3 docs/generate_images.py
+```
+
+### 1. Where the capability gap actually is
+
+![Capability score by agent and task](docs/images/real_01_score_matrix.png)
+
+All 64 episodes in one grid. Three of the four tasks are solved by everyone —
+and then there is `count-r`, counting the letter r across three words. Both raw
+API models score **0.00 across 8/8 episodes**, answering 5 or 6 against a true
+answer of 8. Both scaffolded agents mostly solve it, because they can count
+programmatically instead of by inspection.
+
+That column is the entire argument for evaluating the agent rather than the
+model. Averaged into a leaderboard number, a 1.00 → 0.00 cliff on one task
+becomes a shrug: 0.75 vs 1.00. Broken out per task, it is a specific, fixable
+capability gap.
+
+### 2. Mean vs robust center vs tail
+
+![Mean, IQM and CVaR by agent](docs/images/real_02_mean_iqm_cvar.png)
+
+Three ways to summarize the same 16 episodes, and they disagree:
+
+- **cli-opus** has a mean of 0.887 but an IQM of 1.000. The robust center says
+  this agent is solid; the mean is being dragged down by a few flaky fizzbuzz
+  episodes in the tail. Read the mean alone and you would rank it below where
+  it belongs.
+- **Both API agents** post a respectable mean of 0.750 on top of a CVaR@0.1 of
+  **0.000**. Their worst 10% of episodes are total failures, and the mean says
+  nothing about it.
+- **cli-haiku** is the only agent where all three agree at 1.000 — which is
+  what "actually reliable" looks like.
+
+### 3. Capability is not compliance
+
+![Strict vs lenient scoring](docs/images/real_03_strict_vs_lenient.png)
+
+Every episode is scored twice: **lenient** (is the answer right, after
+normalizing formatting) and **strict** (is it formatted exactly as asked). 7 of
+64 episodes had the right content in the wrong shape — markdown fences, a bold
+`**202**`, working shown before the answer.
+
+api-opus is the clearest case: 0.750 capability against 0.562 strict, a gap
+that is **100% formatting**. Score only strict and you will conclude the model
+cannot convert to base 7. It can; it just wrapped the answer in a code fence.
+These are opposite problems with opposite fixes, so disteval reports both
+channels and files the difference under its own failure mode,
+`format_noncompliance`.
+
+### 4. The training pairs, found automatically
+
+![Cross-agent DPO pairs](docs/images/real_04_cross_agent_pairs.png)
+
+Same task, two agents, different outcomes — that is a DPO pair, and no human
+labeled it. The run produced two, including the `count-r` gap from chart 1 with
+the full Δ 1.00 spread. This is the second half of the pitch made concrete: the
+eval that measured the weakness also produced the data to train it away.
+
+### 5. Robust aggregation under infrastructure failure
+
+![Aggregation under contamination](docs/images/real_05_contamination.png)
+
+Real eval runs lose episodes — Harbor's `missing_reward` lands as a zero.
+Zeroing 15% of these real scores and re-aggregating 200 times, Huber
+M-estimation tracks the clean per-task truth **59% closer** than the naive mean
+(MAE 0.049 vs 0.120).
+
+Inverse-variance weighting, the textbook answer, is no better than naive here
+(0.120) — and that is the interesting part. Contamination corrupts the very
+variance estimates IVW leans on, so it confidently upweights the corrupted
+agent. Being principled about the wrong quantity buys nothing.
+
+### What these 64 episodes cannot show
+
+![Bootstrap CI vs repeated-eval spread](docs/images/repeat_eval_reliability.png)
+
+This last chart comes from a different dataset — `jobs/run_A|B|C`, the same
+eval executed three separate times — because run-to-run spread cannot be
+recovered from a single run, however many episodes it has.
+
+The published error bar, a bootstrap CI over one run's episodes, is ±0.269. The
+actual spread across three full re-runs is ±0.402, **1.5× wider**. A bootstrap
+can only resample the episodes you already collected; it cannot resample fresh
+task draws, env seeds, or model nondeterminism. Any improvement smaller than
+that gap is indistinguishable from eval noise — and single-run error bars will
+tell you it is real.
+
+That caveat applies to charts 1–5 as well: 64 episodes is enough to exercise
+the pipeline on live output and to expose a real capability gap, not enough to
+make population claims about any model.
+
+## Validation — how we know this works
+
+Four layers of evidence, from "the code runs" to "the math is right", each one
+re-runnable from a clean checkout. The charts above are the output; this is the
+argument that the numbers behind them are trustworthy. Nothing below is a claim you have to take on
+trust: every number has a command next to it.
+
+### Layer 1 — the test suite
+
+```bash
+pytest tests/          # 503 passed
+```
+
+30 test modules covering every public entry point. This proves the code does
+what it was written to do. It does not prove what it was written to do is
+correct — that is what Layer 2 is for.
+
+### Layer 2 — estimators vs closed-form ground truth
+
+```bash
+python3 research/experiments/experiment_00_estimator_ground_truth/run.py
+```
+
+A unit test cannot catch an author who expected the wrong thing. So every
+statistical primitive is checked against a value known analytically, not
+against the library's own expectations:
+
+| Check | Truth | disteval |
+|---|---|---|
+| pass@3 unbiasedness, p = 0.2 / 0.5 / 0.8 (20,000 sims each) | 0.4880 / 0.8750 / 0.9920 | 0.4888 / 0.8765 / 0.9918 |
+| pass^3 unbiasedness, p = 0.2 / 0.5 / 0.8 | 0.0080 / 0.1250 / 0.5120 | 0.0077 / 0.1251 / 0.5091 |
+| VaR@a, CVaR@a on Uniform[0,1], a ∈ {.05, .1, .25} | a and a/2 | matched to ≤ 0.0003 |
+| IQM under 10% wild outliers | 0.5556 | 0.5561 (the mean blows up to 100,000) |
+| Stratified bootstrap 95% CI coverage (1,000 experiments) | 0.95 | 0.955 |
+| Clopper-Pearson coverage (2,000 experiments) | ≥ 0.95 | 0.958 |
+| GRPO advantages, per-group mean / std | 0 / 1 | 0 / 1 (< 1e-9, < 1e-3) |
+| KL(N(0,1) ‖ N(1,1)) | 0.5 | 0.507 |
+
+20/20. Two of these carry most of the weight:
+
+- **pass@k unbiasedness** with a 4-standard-error tolerance. The shortcut
+  estimator most eval code uses (`success if any trial passed`) is biased
+  upward and fails this check; the Chen et al. combinatorial estimator
+  disteval uses passes it.
+- **CI coverage**, which is the load-bearing claim of the entire framework. A
+  95% interval is only meaningful if it contains the true parameter 95% of the
+  time. Measured over 1,000 independent experiments against a known Bernoulli
+  mean, it does.
+
+### Layer 3 — the experiment programme
+
+```bash
+python3 research/experiments/run_all.py     # regenerates research/experiments/_all_results/
+```
+
+Eleven experiments, each with a pre-registered threshold in
+[`research/experiments/scorecard.md`](research/experiments/scorecard.md) and each
+compared against explicit baselines rather than against nothing. Headline
+results:
+
+- **Experiment 1** — six agents with mean range 0.00007 span a κ range of 0.48.
+  The mean cannot tell them apart; the distribution metrics can. This is the
+  premise of the project, demonstrated.
+- **Experiment 2** — training on RECOVERABLE tasks beats all four baselines
+  (random, top-K hardest, all tasks, SOLID-only) on gain per example, d > 6.
+- **Experiment 3** — the SelfEngine curriculum ranking matches an oracle that
+  can see true task difficulty: Kendall τ = 1.00, Spearman ρ = 1.00.
+- **Experiment 6** — recursive decomposition solves 0.568 of parent tasks vs
+  0.311 for flat retry and 0.072 for random decomposition.
+- **Experiment 9** — the training simulator's predicted per-example gain
+  tracks measured gain at ρ = 1.00, absolute MAE 0.0009.
+- **Experiment 10** — Bayesian optimization of DPO hyperparameters finds the
+  grid-best configuration in 40 UCB iterations, 5.03× the default's gain.
+
+The results directories are committed, so `git status` after a re-run is the
+reproducibility check: the regenerated outputs are byte-identical.
+
+### Layer 4 — real models, end to end
+
+Experiments 1–10 are simulation studies, which is the only place ground truth
+exists. [Experiment 11](research/experiments/experiment_11_real_model_distributed_eval/)
+is the live one: 64 real episodes from four agents (Opus and Haiku, each as a
+raw API model and as a CLI-scaffolded agent) on four exactly-verifiable tasks.
+
+```bash
+python3 research/experiments/experiment_11_real_model_distributed_eval/run.py --rescore
+```
+
+`--rescore` replays the saved records through the full pipeline with no API
+calls, so the analysis is reproducible without keys; `plots.py` redraws the
+charts in the worked example above from those records. What it showed:
+
+- **Robust aggregation earns its place.** With 15% of scores zeroed to simulate
+  Harbor `missing_reward` infra failures, Huber M-estimation tracks the clean
+  per-task truth 59% closer than the naive mean (MAE 0.049 vs 0.120 over 200
+  trials). IVW ≈ naive, because contamination corrupts the variance estimates
+  IVW relies on.
+- **The mean-collapse thesis, live.** cli-opus IQM is 1.000 against a mean of
+  0.887 — the robust center says the model is solid, the mean is dragged down
+  by flaky fizzbuzz tail episodes.
+- **Cross-agent pairs attribute a real capability gap.** Both raw-API models
+  fail letter-counting in 8/8 episodes (answering 5–6 against a true 8) while
+  the scaffolded agents mostly solve it, and the pair generator surfaces
+  exactly that: `count-r: cli-opus (1.00) > api-opus (0.00)`.
+- **Real data found two library bugs**, both since fixed with regression tests:
+  the Huber IRLS weight at zero residual was ~0 instead of 1, and cross-agent
+  pair generation missed pairs when two agents tied at the max score.
+
+### What is *not* proven
+
+Stating this plainly matters more than the table above.
+
+- **No fine-tuning run exists.** "The metrics are correct and the pipeline runs
+  end to end" is established. "Training on these DPO pairs improves a real
+  agent" is not. The gain numbers in experiments 2, 9 and 10 come from a
+  simulator, and `AxolotlReferenceTrainer` warns at runtime that its returned
+  scores are placeholders, not measured post-training results.
+- **Layer 4 is 64 episodes.** Enough to exercise the pipeline on live model
+  output and to surface two real bugs; not enough to make population claims
+  about any model.
+- **Simulation validates estimators, not the world.** Experiments 1–10 show the
+  algorithms behave correctly against synthetic ground truth, which is the only
+  setting where ground truth is available. They do not show that the synthetic
+  outcome distributions resemble the ones your agents produce.
 
 ---
 

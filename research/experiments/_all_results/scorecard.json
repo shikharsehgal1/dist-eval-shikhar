@@ -1,5 +1,15 @@
 [
   {
+    "n_checks": 20,
+    "n_passed": 20,
+    "all_passed": true,
+    "n_monte_carlo_replicates": 20000,
+    "n_coverage_experiments": 1000,
+    "key_finding": "Every estimator recovers its closed-form value; the 95% bootstrap CI attains nominal coverage, so the error bars mean what they claim.",
+    "experiment": "experiment_00_estimator_ground_truth",
+    "status": "ok"
+  },
+  {
     "mean_equality_check": {
       "consistent": 0.5,
       "inconsistent": 0.4999,

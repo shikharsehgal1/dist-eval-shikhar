@@ -19,6 +19,7 @@ Records flow through `metrics.summarize`, `right_tail_analysis`, and
 `DistributedEvalPool` (naive / IVW / Huber aggregation + cross-agent pairs).
 
 Re-run analysis offline without API calls: `python3 run.py --rescore`.
+Redraw the charts embedded in the top-level README: `python3 plots.py`.
 
 ## Findings
 

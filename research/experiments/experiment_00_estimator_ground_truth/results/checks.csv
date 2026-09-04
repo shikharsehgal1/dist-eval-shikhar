@@ -1,0 +1,21 @@
+check,truth,estimate,passed,tolerance
+pass@3 unbiased (p=0.2),0.4879999999999999,0.48881339285714276,True,4 SE = 0.0079
+pass^3 unbiased (p=0.2),0.008000000000000002,0.0077339285714285695,True,4 SE = 0.0007
+pass@3 unbiased (p=0.5),0.875,0.876549107142857,True,4 SE = 0.0042
+pass^3 unbiased (p=0.5),0.125,0.12506785714285715,True,4 SE = 0.0042
+pass@3 unbiased (p=0.8),0.992,0.9917901785714286,True,4 SE = 0.0008
+pass^3 unbiased (p=0.8),0.5120000000000001,0.509092857142857,True,4 SE = 0.0080
+"VaR@0.05 on Uniform[0,1]",0.05,0.049923796228384915,True,0.002
+"CVaR@0.05 on Uniform[0,1]",0.025,0.025005964746803198,True,0.002
+"VaR@0.1 on Uniform[0,1]",0.1,0.10013074252300637,True,0.002
+"CVaR@0.1 on Uniform[0,1]",0.05,0.05002315904833242,True,0.002
+"VaR@0.25 on Uniform[0,1]",0.25,0.24999862419742977,True,0.002
+"CVaR@0.25 on Uniform[0,1]",0.125,0.12512295383231742,True,0.002
+"IQM on Uniform[0,1]",0.5,0.5001518245116048,True,0.002
+IQM under 10% wild outliers,0.5555555555555556,0.5561420827757955,True,0.01
+mean under 10% wild outliers (contrast),0.5,100000.45049251625,True,must blow up
+stratified bootstrap 95% CI coverage,0.95,0.955,True,"[0.90, 0.99]"
+Clopper-Pearson coverage (conservative),0.95,0.9575,True,>= 0.95
+GRPO advantage per-group mean = 0,0.0,4.884981308350689e-16,True,1e-9 (worst group)
+GRPO advantage per-group std = 1,1.0,0.9999999930328795,True,1e-3 (worst group)
+"KL(N(0,1) || N(1,1))",0.5,0.5069288527478948,True,0.05

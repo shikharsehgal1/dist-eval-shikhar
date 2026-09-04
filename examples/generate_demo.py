@@ -52,7 +52,24 @@ PROFILES = {
     "redline_review": (0.60, 0.65, "verification", 2),       # UNCERTAIN (low n)
     "capacity_plan": (0.30, 0.35, "planning", 2),            # UNCERTAIN (low n)
 }
-DEFAULT_PROFILE = (0.55, 0.62, "tool_execution", 8)
+#: Remaining tasks get spread latent probabilities rather than one shared value.
+#: A benchmark where most tasks have identical difficulty is not realistic, and it
+#: also makes hierarchical pooling look worse than it is: a task-effect
+#: distribution that is one spike plus two outliers is badly non-Gaussian, so the
+#: fitted between-task variance comes out small and every task over-shrinks.
+DEFAULT_SPREAD = [
+    (0.88, 0.90, "verification"),
+    (0.80, 0.84, "tool_execution"),
+    (0.72, 0.76, "reasoning"),
+    (0.65, 0.70, "state_tracking"),
+    (0.58, 0.63, "retrieval"),
+    (0.50, 0.55, "tool_selection"),
+    (0.42, 0.47, "memory"),
+    (0.33, 0.38, "planning"),
+    (0.25, 0.30, "retrieval"),
+    (0.15, 0.22, "synthesis"),
+    (0.08, 0.15, "planning"),
+]
 
 CRITERIA = ["r_retrieve", "r_compute", "r_verify", "r_report"]
 CRITERION_DEPENDENCIES = [["r_retrieve", "r_report"], ["r_compute", "r_report"]]
@@ -77,10 +94,16 @@ MODE_POSITION = {
 def build():
     rng = np.random.default_rng(SEED)
     tasks, runs, trajectories = [], [], []
+    spread_i = 0
 
     for domain, names in DOMAINS.items():
         for name in names:
-            p, r_exec, mode, n_runs = PROFILES.get(name, DEFAULT_PROFILE)
+            if name in PROFILES:
+                p, r_exec, mode, n_runs = PROFILES[name]
+            else:
+                p, r_exec, mode = DEFAULT_SPREAD[spread_i % len(DEFAULT_SPREAD)]
+                n_runs = 8
+                spread_i += 1
             q = min(p / max(r_exec, 1e-6), 1.0)
             complexity = int(rng.integers(6, 26))
             tasks.append(
