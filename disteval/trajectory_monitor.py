@@ -1,9 +1,21 @@
 """disteval.trajectory_monitor — real-time trajectory pattern monitoring.
 
+.. note::
+   **Scope of the numbers in this module.** The leave-one-out accuracy reported
+   by :meth:`OutcomePredictor.loo_accuracy` and printed by the demo entry point
+   is computed on whatever records it is given. On the small job directories
+   originally used here that is a few dozen trials, which is a *demo-scale*
+   measurement, not a held-out experimental result: leave-one-out on tens of
+   correlated trials has very wide error bars and no separate test set. Any
+   figure produced by this module should be reported with its sample size and
+   should not be cited as evidence that mid-run outcome prediction works in
+   general. Nothing else in the package depends on it.
+
 CORE IDEA
 ──────────
 An agent's trajectory *structural signature* (the sequence of tool calls it
-makes) predicts the eventual outcome. Historical data shows:
+makes) may predict the eventual outcome. On the small sample originally
+inspected here:
 
     high-outcome runs (score ≥ 1.0): first write/exec around tool call 2.4,
                                    ~2.9 execution calls
@@ -338,7 +350,13 @@ class OutcomePredictor:
         return "high" if self.predict_proba(features) >= threshold else "low"
 
     def loo_accuracy(self, records: list[TrajectoryRecord]) -> float:
-        """Leave-one-out cross-validation accuracy."""
+        """Leave-one-out cross-validation accuracy.
+
+        Report this with ``len(records)``. At the sample sizes this module is
+        typically given (tens of correlated trials from a handful of tasks) the
+        estimate is very noisy and there is no held-out set, so it is a sanity
+        check rather than a result.
+        """
         if len(records) < 2:
             return 0.0
 
@@ -664,7 +682,8 @@ if __name__ == "__main__":
     print(f"Low outcomes (score < 0.5):  {low_count}")
 
     loo_acc = monitor.predictor.loo_accuracy(monitor.records)
-    print(f"\nLeave-one-out accuracy: {loo_acc:.2%}")
+    print(f"\nLeave-one-out accuracy: {loo_acc:.2%} "
+          f"(n={len(monitor.records)} trials; demo-scale, not a held-out result)")
 
     # Sample predictions at prefix_n=5.
     print("\nSample predictions at prefix_n=5:")

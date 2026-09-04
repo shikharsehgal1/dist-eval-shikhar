@@ -9,7 +9,8 @@ and produces:
   2. Three matplotlib plots saved to --output-dir
   3. A machine-readable summary JSON
 
-This is the end-to-end proof that distributional eval surfaces what mean hides.
+This is a descriptive report over one agent's run distribution. It characterises
+what the mean hides; it does not establish anything about training.
 """
 from __future__ import annotations
 
