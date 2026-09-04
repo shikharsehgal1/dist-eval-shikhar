@@ -380,9 +380,16 @@ def to_ranking_jsonl(dataset: PreferenceDataset, path: str) -> int:
     by_task: dict[str, list[dict]] = {}
     for p in dataset.pairs:
         g = by_task.setdefault(p.task_id, [])
-        for side, score in ((p.chosen, p.chosen_score), (p.rejected, p.rejected_score)):
-            if not any(c["trajectory"]["trajectory_id"] == side["trajectory_id"] for c in g):
-                g.append({"trajectory": side, "score": score})
+        sides = (
+            (p.chosen, p.chosen_score, p.metadata.get("chosen_id")),
+            (p.rejected, p.rejected_score, p.metadata.get("rejected_id")),
+        )
+        for side, score, fallback_id in sides:
+            tid = side.get("trajectory_id", fallback_id) if isinstance(side, dict) else fallback_id
+            if tid is None:
+                continue
+            if not any(c.get("trajectory_id") == tid for c in g):
+                g.append({"trajectory_id": tid, "trajectory": side, "score": score})
     n = 0
     with open(path, "w", encoding="utf-8") as f:
         for task, cands in by_task.items():
