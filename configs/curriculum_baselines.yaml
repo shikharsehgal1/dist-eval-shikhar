@@ -1,0 +1,87 @@
+# The primary experiment: all six curriculum strategies at a fixed data budget.
+#
+#   python -m disteval experiment configs/curriculum_baselines.yaml --coupling weak
+#
+# The hypothesis under test is NOT "the capability-reliability gap is a good
+# metric" and NOT "intermediate-success tasks are more trainable". It is:
+#
+#     does within-task failure structure add predictive value for training-data
+#     selection beyond difficulty and learning progress?
+#
+# So the comparison that settles it is `gap_plus_structure` against `difficulty`
+# and `learning_progress` -- not against `uniform`, which is too weak a baseline
+# to support the claim. Read the summary table's gain_per_100_examples and
+# gain_per_1k_tokens columns rather than heldout_delta: the claim is about sample
+# efficiency, and strategies that yield different amounts of data are otherwise
+# not comparable.
+#
+# Run this under --coupling none as well. A method that also "wins" in a world
+# where benefit is unrelated to structure by construction is broken, not good.
+
+experiment:
+  name: curriculum_baselines
+  description: >-
+    Six curriculum strategies at equal pair budget, evaluated on held-out
+    domains. Reports held-out reliability gain per unit of training data.
+  seed: 42
+  n_seeds: 5
+
+evaluation:
+  runs_per_task: 8
+  min_runs_per_task: 3
+  # Adaptive rerun allocation: spend the evaluation budget where the posterior
+  # is least settled rather than uniformly. Set false for the uniform control.
+  adaptive_sampling: true
+  allocation_policy: greedy_voi
+  budget_per_task: 8
+  warmup_runs: 2
+  stopping: true
+  max_runs_per_task: 24
+
+reliability:
+  # Criterion-level estimation is the primary path; this selects how criterion
+  # posteriors are pooled. "independent" is the no-shrinkage ablation.
+  model: hierarchical
+  backend: laplace
+  prior: jeffreys
+  credible_level: 0.95
+  tau_cap: 0.15
+  tau_rel: 0.90
+  tau_stuck: 0.10
+  confidence: 0.80
+
+selection:
+  # "all" = the six curriculum strategies.
+  method: all
+  n_tasks: 40
+  n_pairs: 100
+  max_pairs_per_task: 4
+  min_margin: 0.5
+  match_environment: true
+  # Weighting inside gap_plus_structure. Setting structure_weight to 0 recovers
+  # the plain gap selector, which is the ablation that isolates the structure
+  # contribution.
+  gap_weight: 0.5
+  structure_weight: 0.5
+  # Require posterior evidence the task is ever fully solved. Leave null to let
+  # the gap selectors also consider tasks whose criteria are individually within
+  # reach but never satisfied together.
+  require_joint_capability: null
+  dataset_sizes: [25, 50, 100, 250]
+
+training:
+  # Optimiser-agnostic. "simulated" drives the analytic response model from
+  # ground-truth benefit (simulation only); "none" exports every view;
+  # "weighted_sft" and "scalar_reward" export a single view; "trl"/"axolotl"
+  # are DPO backends -- one option among several, not the default objective.
+  backend: simulated
+
+split:
+  # Held-out DOMAINS, not held-out tasks: an in-distribution task split cannot
+  # distinguish transferable policy improvement from domain-specific adaptation.
+  strategy: domain_holdout
+  test_fraction: 0.3
+
+report:
+  figures: true
+  figure_format: pdf

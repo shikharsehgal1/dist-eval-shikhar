@@ -1,0 +1,44 @@
+# Ablation sweep for the incremental-validity question.
+#
+#   python -m disteval sweep configs/structure_ablation.yaml --coupling weak
+#   python -m disteval sweep configs/structure_ablation.yaml --coupling none
+#
+# Axes chosen so each isolates one claim:
+#   selection.method       -- does structure beat difficulty and learning progress?
+#   selection.structure_weight -- 0.0 is the plain gap; >0 adds structure.
+#   reliability.model      -- with vs without hierarchical shrinkage.
+#   evaluation.runs_per_task -- how much of the effect is just evaluation budget?
+name: structure_ablation
+
+base:
+  experiment:
+    name: structure_ablation
+    seed: 42
+    n_seeds: 5
+  evaluation:
+    runs_per_task: 8
+    min_runs_per_task: 3
+  reliability:
+    model: hierarchical
+    prior: jeffreys
+  selection:
+    n_tasks: 40
+    n_pairs: 100
+    gap_weight: 0.5
+    structure_weight: 0.5
+  training:
+    backend: simulated
+  split:
+    strategy: domain_holdout
+    test_fraction: 0.3
+
+sweep:
+  selection.method:
+    - uniform
+    - difficulty
+    - uncertainty
+    - learning_progress
+    - capability_reliability_gap
+    - gap_plus_structure
+  reliability.model: [independent, hierarchical]
+  evaluation.runs_per_task: [3, 8]

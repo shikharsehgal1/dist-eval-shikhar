@@ -56,6 +56,28 @@ posterior definition of it at criterion granularity, and the open question is
 whether it carries *incremental* predictive value for training-data selection
 over difficulty and learning progress -- see :mod:`disteval.selection`.
 
+The gap is not monotone in performance, and this has consequences
+-----------------------------------------------------------------
+``G_t`` is an inverted U in ``p``. A criterion the agent never satisfies has
+``c ~ 0`` and ``r ~ 0``, so its gap is near zero; one it always satisfies has
+``c ~ 1`` and ``r ~ 1``, also near zero; the gap is maximised in between. That
+is by design -- it is what "demonstrated but not dependable" means -- but three
+consequences follow and none of them is obvious:
+
+1. **Ranking by ``G_t`` is not ranking by difficulty**, in either direction. It
+   is closer to ranking by *how uncertain the deployment answer is*.
+2. **Shrinkage can reorder the ranking substantially.** Because the map from
+   ``p`` to ``G_t`` is non-monotone, compressing the spread of ``p`` estimates
+   does not compress ``G_t`` proportionally -- it can move tasks across the peak
+   and reverse their order. Measured on a 20-task synthetic corpus, the
+   independent and hierarchical gap rankings correlate at rho = 0.73 under
+   empirical-Bayes pooling but can be near zero or negative under the full
+   hierarchical fit. Neither ranking is wrong; they answer the same question
+   from different estimates, and **the estimator choice is a substantive
+   modelling decision that must be reported with the ranking**, not a detail.
+3. **A high ``G_t`` says nothing on its own about whether the task is worth
+   training on.** That is the hypothesis, not a property of the metric.
+
 Criterion-level and task-level capability are different things
 ---------------------------------------------------------------
 ``C_t`` asks whether each criterion is *individually* within reach. A task can
@@ -213,6 +235,18 @@ class GapProfile:
         return float(max(gaps) / total)
 
     @property
+    def gap_concentration_ratio(self) -> float:
+        """``gap_concentration * J``: concentration relative to a uniform spread.
+
+        1.0 means the gap is spread evenly across the rubric; ``J`` means one
+        criterion accounts for all of it. More interpretable than the raw share
+        when comparing tasks with different numbers of criteria, since the
+        uniform baseline is ``1/J`` and therefore rubric-size dependent.
+        """
+        c = self.gap_concentration
+        return float(c * self.n_criteria) if np.isfinite(c) else float("nan")
+
+    @property
     def dominant_criterion(self) -> Optional[str]:
         if not self.criteria:
             return None
@@ -240,6 +274,7 @@ class GapProfile:
             "reliability": self.reliability,
             "gap": self.gap,
             "gap_concentration": self.gap_concentration,
+            "gap_concentration_ratio": self.gap_concentration_ratio,
             "dominant_criterion": self.dominant_criterion,
             "n_unstable_criteria": self.n_unstable(),
             "n_never_satisfied_criteria": self.n_never(),
