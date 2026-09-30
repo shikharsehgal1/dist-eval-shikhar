@@ -93,6 +93,7 @@ Reliability analysis:
   experiment  Run the full evaluate -> select -> train -> re-evaluate loop
   sweep       Run a matrix of experiments from a sweep config
   simulate    Validate the estimators against known ground truth
+  generate    Synthesise metamorphic eval-task variants from seed tasks
   metrics     Print the metric registry (definitions, assumptions, edge cases)
 
 Existing tooling:
@@ -823,8 +824,114 @@ def handle_metrics(argv):
             print(f"  code       : {s.implementation}")
 
 
+def handle_generate(argv):
+    """`disteval generate` -- metamorphic variants of seed tasks."""
+    p = argparse.ArgumentParser(
+        prog="disteval generate",
+        description="Generate eval-task variants whose verifier transfers from "
+                    "their seed by construction",
+    )
+    p.add_argument("tasks", help="Seed task definitions (JSON/JSONL/Parquet)")
+    p.add_argument("--runs", help="Run records; enables targeting at measured "
+                                  "criterion weaknesses")
+    p.add_argument("-n", "--n-variants", type=int, default=25)
+    p.add_argument("--max-per-seed", type=int, default=4)
+    p.add_argument("--max-per-relation", type=int, default=None)
+    p.add_argument("--relations", help="Comma-separated relation names; default all")
+    p.add_argument("--generator-id", default="structural")
+    p.add_argument("--evaluated-model", default="",
+                   help="Model under test; used to warn about shared-family confounds")
+    p.add_argument("--output", "-o", default="generated_tasks.jsonl")
+    p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--allow-missing-verifier", action="store_true",
+                   help="Dry run only: generated tasks will not be gradeable")
+    args = p.parse_args(argv)
+
+    import json as _json
+
+    from disteval.loaders import load_runs, load_tasks
+    from disteval.taskgen import (
+        SeedTask, TaskGenerator, get_relation, validate_batch,
+    )
+
+    tasks = load_tasks(args.tasks)
+    seeds = [
+        SeedTask(
+            task_id=t.task_id,
+            payload={
+                "instruction": t.instruction or f"Complete task {t.task_id}",
+                "files": list(t.metadata.get("files") or []),
+                "entities": list(t.metadata.get("entities") or []),
+                "quantities": dict(t.metadata.get("quantities") or {}),
+                "required_inputs": list(t.metadata.get("required_inputs") or []),
+            },
+            verifier=(t.metadata.get("verifier") or f"verify::{t.task_id}"),
+            domain=t.domain,
+            rubric_criteria=list(t.rubric_criteria),
+        )
+        for t in tasks.values()
+    ]
+
+    targets = []
+    if args.runs:
+        from disteval.reliability.criterion import gap_profiles
+
+        runs = load_runs(args.runs)
+        by, dom = {}, {}
+        for r in runs:
+            if r.get("rubric_scores"):
+                by.setdefault(r["task"], []).append(r["rubric_scores"])
+            if r.get("domain"):
+                dom[r["task"]] = r["domain"]
+        if by:
+            profs = gap_profiles(by, domains=dom)
+            targets = TaskGenerator.targets_from_gaps(profs)
+            print(f"Targeting {len(targets)} unstable criteria measured from "
+                  f"{len(by)} tasks.")
+        else:
+            print("warning: runs carry no per-criterion rubric scores, so "
+                  "generation cannot be aimed at a measured weakness",
+                  file=sys.stderr)
+
+    rels = ([get_relation(x.strip()) for x in args.relations.split(",")]
+            if args.relations else None)
+    gen = TaskGenerator(
+        seeds, relations=rels, generator_id=args.generator_id,
+        evaluated_model=args.evaluated_model,
+        require_verifier=not args.allow_missing_verifier, seed=args.seed,
+    )
+    report = gen.generate(
+        args.n_variants, targets=targets, max_per_seed=args.max_per_seed,
+        max_per_relation=args.max_per_relation,
+    )
+    summary = validate_batch(report, {s.task_id: s for s in seeds})
+
+    with open(args.output, "w", encoding="utf-8") as f:
+        for t in report.valid_tasks:
+            f.write(_json.dumps(t.to_dict(), default=str) + "\n")
+
+    print(f"\ngenerated {len(report)} variants from {len(report.seeds_used)} seeds "
+          f"using {len(report.relations_used)} relations")
+    print(f"  valid: {summary['n_valid']}  rejected: {summary['n_rejected']}")
+    if summary["failures_by_gate"]:
+        for g, c in summary["failures_by_gate"].items():
+            print(f"    gate {g!r} rejected {c}")
+    d = summary["diversity"]
+    if d.get("n"):
+        print(f"  diversity: {d['n_distinct_relations']} relations, "
+              f"{d['n_distinct_seeds']} seeds; largest relation share "
+              f"{d['largest_relation_share']:.2f}, largest seed share "
+              f"{d['largest_seed_share']:.2f}")
+    for w in report.warnings:
+        print(f"warning: {w}", file=sys.stderr)
+    print(f"\nWrote {summary['n_valid']} valid variants to {args.output}")
+    print("Each carries its seed's verifier plus a note on how to apply it under "
+          "the relation; none was graded by a model.")
+
+
 _NEW_HANDLERS = {
     "evaluate": handle_evaluate,
+    "generate": handle_generate,
     "diagnose": handle_diagnose,
     "select": handle_select,
     "experiment": handle_experiment,

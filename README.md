@@ -6,7 +6,7 @@
 > its failures are structured — and tests whether that structure helps pick
 > training data better than difficulty or learning progress already do.
 
-[![tests](https://img.shields.io/badge/tests-970%20passing-brightgreen)](#tests)
+[![tests](https://img.shields.io/badge/tests-1048%20passing-brightgreen)](#tests)
 [![python](https://img.shields.io/badge/python-3.10%2B-blue)](pyproject.toml)
 [![license](https://img.shields.io/badge/license-MIT-lightgrey)](#license)
 
@@ -146,7 +146,38 @@ different data pipeline. **DPO is one optional backend, not the framework's
 objective.** `weighted_sft` is the control: if it matches a preference loss on the
 same data, the preference machinery is not what is doing the work.
 
-### 7. Held-out reliability gain per unit of training data
+### 7. Eval-task generation (metamorphic)
+
+More tasks would help — the sample-size limits above are what make rankings tie
+and labels stay UNCERTAIN. But a generated task is only an eval task if it can be
+**graded**, and free-form synthesis usually can't be: grading against the
+generator's own answer measures agreement with the generator, and if generator
+and agent share a model family the task set is the intersection of what the model
+can imagine with what it can do.
+
+So variants are produced by transformations whose effect on the answer is known
+by construction, and the seed's verifier transfers:
+
+| relation | effect on the answer | grading |
+|---|---|---|
+| reorder files, add distractors, paraphrase | unchanged | seed verifier, unmodified |
+| rename an entity, scale every quantity by k | changes invertibly | invert, then seed verifier |
+| remove a required input | task unsatisfiable | agent must decline |
+
+You never need the answer, only the *relation* to the seed's. Generation is aimed
+by the criterion-level gap, so variants probe criteria the agent is already
+measured to be shaky on. Structural transforms mean the variant distribution
+doesn't depend on the evaluated model; model-backed ones are flagged and held out
+of headline metrics until confirmed. Batch diversity is measured, because an
+unconstrained generator emits fifty variants of one seed and measures one thing
+fifty times.
+
+This is the right instrument for *reliability* specifically: an agent that solves
+a task but fails its paraphrase got the right answer for a reason that didn't
+survive a change that shouldn't have mattered — and repeated runs of the same
+task can't tell that from sampling noise.
+
+### 8. Held-out reliability gain per unit of training data
 
 Evaluation is on held-out **domains**, not held-out tasks — an in-distribution
 split cannot separate transferable improvement from domain-specific adaptation.
@@ -211,6 +242,9 @@ python -m disteval sweep configs/structure_ablation.yaml
 # Validate the estimators against known ground truth
 python -m disteval simulate --study all -o docs/validation
 
+# Generate eval-task variants, aimed at measured criterion weaknesses
+python -m disteval generate examples/tasks.json --runs examples/runs.json -n 25
+
 # Any metric's definition, assumptions, edge cases and prior work
 python -m disteval metrics recoverability_headroom
 ```
@@ -249,6 +283,7 @@ disteval/
   diagnosis/       failure taxonomy, causality graphs, entropy, survival
   active/          value of information, adaptive allocation, stopping rules
   selection/       six curriculum selectors, pair construction, view exports
+  taskgen/         metamorphic relations, targeted generation, validity gates
   experiments/     config, tracking, splits, A-D pipeline, sweeps
   sim/             ground-truth simulator and the estimator validation suite
   metrics.py       IQM, lower-tail CVaR, pass@k / pass^k
@@ -259,7 +294,7 @@ disteval/
 configs/           reproducible experiment and sweep configs
 examples/          synthetic demo dataset + its generator
 docs/validation/   committed outputs of the estimator validation suite
-tests/             970 tests
+tests/             1048 tests
 ```
 
 ## Backwards compatibility
@@ -278,7 +313,7 @@ remain as working aliases and extra ablation arms.
 ## Tests
 
 ```bash
-pytest -q     # 970 passed
+pytest -q     # 1048 passed
 ```
 
 Covering: posterior estimation and its edge cases (no runs, one run, all-success,
@@ -288,7 +323,10 @@ Beta-Binomial); property-based invariants via Hypothesis (pass@k non-decreasing 
 k, pass^k non-increasing, CVaR ordering, allocation never exceeding budget);
 criterion-level gap behaviour including its non-monotonicity; all six selectors;
 the four export views; incremental validity detecting signal and rejecting noise;
-and the demo dataset and CLI end-to-end as a subprocess.
+and the demo dataset and CLI end-to-end as a subprocess; metamorphic relations
+(each must actually change the payload, invariant ones must preserve the entity
+set), the generation gates, batch-diversity collapse detection, and the
+frontier-band estimator.
 
 ## Research status / limitations
 
@@ -301,7 +339,14 @@ in [`docs/validation/`](docs/validation):
 - RECOVERABLE precision is 0.94–1.00, with 20–43% of tasks left UNCERTAIN;
 - hierarchical pooling helps on homogeneous suites (+0.029 nats/run) and hurts on
   heterogeneous ones (−0.046), which is why the choice is made per dataset;
-- the incremental-validity test detects genuine signal and rejects pure noise.
+- the incremental-validity test detects genuine signal and rejects pure noise;
+- a plug-in "learnable frontier" band label is very noisy at the K such pipelines
+  use: at K=8 with a [1/8, 3/8] band **no success count resolves in-band at 80%
+  confidence** (≈24 runs are needed), and at K=3 with a [1/3, 2/3] band both 1/3
+  and 2/3 give P(in band) = 0.42. This doesn't invalidate those pipelines — label
+  noise is symmetric across arms, so relative comparisons survive, attenuated —
+  but it biases the absolute frontier rate and bounds the smallest difference the
+  metric can resolve.
 
 **Not established.**
 
@@ -342,6 +387,14 @@ This repository builds on, and does not claim, the following:
 - **Shrinkage** — Efron & Morris, JASA 1975.
 - **Automatic curricula / learning progress** — Oudeyer & Kaplan; Graves et al.,
   *Automated Curriculum Learning for Neural Networks*, 2017.
+- **PROPEL** — Wolf et al., *Breaking the Solver Bottleneck: Training Task
+  Generators at the Learnable Frontier*, 2026. The frontier-band utility
+  definition `U(x) = 1[a ≤ p ≤ b]`, and the solver-cost framing this repo's
+  active-evaluation machinery addresses from a different angle. Training a
+  generator policy against a learned difficulty probe is **not** implemented
+  here — it needs model internals and training infrastructure.
+- **Metamorphic testing** — Chen et al., 1998/2018. Transformation plus known
+  output relation; what the task generator rests on.
 
 The methodology is designed to be applicable to long-horizon professional-agent
 benchmarks such as APEX. This is an independent research project, not affiliated

@@ -38,6 +38,10 @@ Layers, roughly in dependency order:
 ``experiments``
     Config, tracking, splits, the A-D pipeline, and ablation sweeps.
 
+``taskgen``
+    Metamorphic eval-task generation: variants of seed tasks whose verifier
+    transfers by construction, aimed at measured criterion weaknesses.
+
 ``sim``
     A ground-truth simulator and the validation suite for the estimators
     themselves.
@@ -62,7 +66,7 @@ from . import adapters
 
 # Reliability-analysis layers.
 from . import active, diagnosis, experiments, loaders, plots, reliability
-from . import research_report, selection, sim, trajectory
+from . import research_report, selection, sim, taskgen, trajectory
 
 from .loaders import TaskSpec, load_runs, load_tasks, load_trajectories
 from .records import EpisodeRecord, RecordStore
@@ -93,7 +97,7 @@ __all__ = [
     "SOLID", "RECOVERABLE", "STUCK", "UNCERTAIN",
     # subpackages
     "reliability", "trajectory", "diagnosis", "active", "selection",
-    "experiments", "sim", "plots", "research_report", "loaders",
+    "experiments", "sim", "taskgen", "plots", "research_report", "loaders",
     "metrics", "metrics_spec", "adapters",
     # pre-existing modules
     "bootstrap", "compare", "failure", "repeat", "right_tail",

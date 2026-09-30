@@ -6,7 +6,7 @@
       "task_id": "reconcile_ledger",
       "domain": "finance",
       "environment": "finance_env_v1",
-      "instruction": "[synthetic] complete the reconcile ledger task",
+      "instruction": "[synthetic] Using ReconcileLedger's records, complete the reconcile ledger task and report the total.",
       "rubric_criteria": [
         "r_retrieve",
         "r_compute",
@@ -31,13 +31,77 @@
         "verify",
         "write"
       ],
+      "files": [
+        "reconcile_ledger/source_0.csv",
+        "reconcile_ledger/source_1.csv",
+        "reconcile_ledger/source_2.csv",
+        "reconcile_ledger/ReconcileLedger_notes.md",
+        "reconcile_ledger/README.md"
+      ],
+      "entities": [
+        "ReconcileLedger"
+      ],
+      "quantities": {
+        "total": 600.0
+      },
+      "required_inputs": [
+        "reconcile_ledger/source_0.csv"
+      ],
+      "verifier": "verifiers/reconcile_ledger.sh",
       "synthetic": true
     },
     {
       "task_id": "quarterly_variance",
       "domain": "finance",
       "environment": "finance_env_v1",
-      "instruction": "[synthetic] complete the quarterly variance task",
+      "instruction": "[synthetic] Using QuarterlyVariance's records, complete the quarterly variance task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 15,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "quarterly_variance/source_0.csv",
+        "quarterly_variance/source_1.csv",
+        "quarterly_variance/QuarterlyVariance_notes.md",
+        "quarterly_variance/README.md"
+      ],
+      "entities": [
+        "QuarterlyVariance"
+      ],
+      "quantities": {
+        "total": 850.0
+      },
+      "required_inputs": [
+        "quarterly_variance/source_0.csv"
+      ],
+      "verifier": "verifiers/quarterly_variance.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "fx_exposure",
+      "domain": "finance",
+      "environment": "finance_env_v1",
+      "instruction": "[synthetic] Using FxExposure's records, complete the fx exposure task and report the total.",
       "rubric_criteria": [
         "r_retrieve",
         "r_compute",
@@ -62,44 +126,30 @@
         "verify",
         "write"
       ],
-      "synthetic": true
-    },
-    {
-      "task_id": "fx_exposure",
-      "domain": "finance",
-      "environment": "finance_env_v1",
-      "instruction": "[synthetic] complete the fx exposure task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
+      "files": [
+        "fx_exposure/source_0.csv",
+        "fx_exposure/source_1.csv",
+        "fx_exposure/source_2.csv",
+        "fx_exposure/FxExposure_notes.md",
+        "fx_exposure/README.md"
       ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
+      "entities": [
+        "FxExposure"
       ],
-      "complexity": 7,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
+      "quantities": {
+        "total": 1250.0
+      },
+      "required_inputs": [
+        "fx_exposure/source_0.csv"
       ],
+      "verifier": "verifiers/fx_exposure.sh",
       "synthetic": true
     },
     {
       "task_id": "audit_sample",
       "domain": "finance",
       "environment": "finance_env_v1",
-      "instruction": "[synthetic] complete the audit sample task",
+      "instruction": "[synthetic] Using AuditSample's records, complete the audit sample task and report the total.",
       "rubric_criteria": [
         "r_retrieve",
         "r_compute",
@@ -116,7 +166,7 @@
           "r_report"
         ]
       ],
-      "complexity": 17,
+      "complexity": 10,
       "tools": [
         "search",
         "read",
@@ -124,13 +174,221 @@
         "verify",
         "write"
       ],
+      "files": [
+        "audit_sample/source_0.csv",
+        "audit_sample/source_1.csv",
+        "audit_sample/source_2.csv",
+        "audit_sample/AuditSample_notes.md",
+        "audit_sample/README.md"
+      ],
+      "entities": [
+        "AuditSample"
+      ],
+      "quantities": {
+        "total": 600.0
+      },
+      "required_inputs": [
+        "audit_sample/source_0.csv"
+      ],
+      "verifier": "verifiers/audit_sample.sh",
       "synthetic": true
     },
     {
       "task_id": "invoice_match",
       "domain": "finance",
       "environment": "finance_env_v1",
-      "instruction": "[synthetic] complete the invoice match task",
+      "instruction": "[synthetic] Using InvoiceMatch's records, complete the invoice match task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 18,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "invoice_match/source_0.csv",
+        "invoice_match/source_1.csv",
+        "invoice_match/source_2.csv",
+        "invoice_match/InvoiceMatch_notes.md",
+        "invoice_match/README.md"
+      ],
+      "entities": [
+        "InvoiceMatch"
+      ],
+      "quantities": {
+        "total": 1000.0
+      },
+      "required_inputs": [
+        "invoice_match/source_0.csv"
+      ],
+      "verifier": "verifiers/invoice_match.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "cashflow_forecast",
+      "domain": "finance",
+      "environment": "finance_env_v1",
+      "instruction": "[synthetic] Using CashflowForecast's records, complete the cashflow forecast task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 19,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "cashflow_forecast/source_0.csv",
+        "cashflow_forecast/source_1.csv",
+        "cashflow_forecast/source_2.csv",
+        "cashflow_forecast/CashflowForecast_notes.md",
+        "cashflow_forecast/README.md"
+      ],
+      "entities": [
+        "CashflowForecast"
+      ],
+      "quantities": {
+        "total": 1050.0
+      },
+      "required_inputs": [
+        "cashflow_forecast/source_0.csv"
+      ],
+      "verifier": "verifiers/cashflow_forecast.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "contract_diff",
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "instruction": "[synthetic] Using ContractDiff's records, complete the contract diff task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 9,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "contract_diff/source_0.csv",
+        "contract_diff/source_1.csv",
+        "contract_diff/source_2.csv",
+        "contract_diff/ContractDiff_notes.md",
+        "contract_diff/README.md"
+      ],
+      "entities": [
+        "ContractDiff"
+      ],
+      "quantities": {
+        "total": 550.0
+      },
+      "required_inputs": [
+        "contract_diff/source_0.csv"
+      ],
+      "verifier": "verifiers/contract_diff.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "clause_extraction",
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "instruction": "[synthetic] Using ClauseExtraction's records, complete the clause extraction task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 24,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "clause_extraction/source_0.csv",
+        "clause_extraction/source_1.csv",
+        "clause_extraction/ClauseExtraction_notes.md",
+        "clause_extraction/README.md"
+      ],
+      "entities": [
+        "ClauseExtraction"
+      ],
+      "quantities": {
+        "total": 1300.0
+      },
+      "required_inputs": [
+        "clause_extraction/source_0.csv"
+      ],
+      "verifier": "verifiers/clause_extraction.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "precedent_search",
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "instruction": "[synthetic] Using PrecedentSearch's records, complete the precedent search task and report the total.",
       "rubric_criteria": [
         "r_retrieve",
         "r_compute",
@@ -155,75 +413,30 @@
         "verify",
         "write"
       ],
+      "files": [
+        "precedent_search/source_0.csv",
+        "precedent_search/source_1.csv",
+        "precedent_search/source_2.csv",
+        "precedent_search/PrecedentSearch_notes.md",
+        "precedent_search/README.md"
+      ],
+      "entities": [
+        "PrecedentSearch"
+      ],
+      "quantities": {
+        "total": 900.0
+      },
+      "required_inputs": [
+        "precedent_search/source_0.csv"
+      ],
+      "verifier": "verifiers/precedent_search.sh",
       "synthetic": true
     },
     {
-      "task_id": "cashflow_forecast",
-      "domain": "finance",
-      "environment": "finance_env_v1",
-      "instruction": "[synthetic] complete the cashflow forecast task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 12,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "contract_diff",
+      "task_id": "redline_review",
       "domain": "legal",
       "environment": "legal_env_v1",
-      "instruction": "[synthetic] complete the contract diff task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 6,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "clause_extraction",
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "instruction": "[synthetic] complete the clause extraction task",
+      "instruction": "[synthetic] Using RedlineReview's records, complete the redline review task and report the total.",
       "rubric_criteria": [
         "r_retrieve",
         "r_compute",
@@ -248,416 +461,30 @@
         "verify",
         "write"
       ],
-      "synthetic": true
-    },
-    {
-      "task_id": "precedent_search",
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "instruction": "[synthetic] complete the precedent search task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
+      "files": [
+        "redline_review/source_0.csv",
+        "redline_review/source_1.csv",
+        "redline_review/source_2.csv",
+        "redline_review/RedlineReview_notes.md",
+        "redline_review/README.md"
       ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
+      "entities": [
+        "RedlineReview"
       ],
-      "complexity": 23,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
+      "quantities": {
+        "total": 1350.0
+      },
+      "required_inputs": [
+        "redline_review/source_0.csv"
       ],
-      "synthetic": true
-    },
-    {
-      "task_id": "redline_review",
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "instruction": "[synthetic] complete the redline review task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 8,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
+      "verifier": "verifiers/redline_review.sh",
       "synthetic": true
     },
     {
       "task_id": "obligation_matrix",
       "domain": "legal",
       "environment": "legal_env_v1",
-      "instruction": "[synthetic] complete the obligation matrix task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 23,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "nda_compare",
-      "domain": "legal",
-      "environment": "legal_env_v1",
-      "instruction": "[synthetic] complete the nda compare task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 13,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "literature_sweep",
-      "domain": "research",
-      "environment": "research_env_v1",
-      "instruction": "[synthetic] complete the literature sweep task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 16,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "data_extraction",
-      "domain": "research",
-      "environment": "research_env_v1",
-      "instruction": "[synthetic] complete the data extraction task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 16,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "figure_reproduce",
-      "domain": "research",
-      "environment": "research_env_v1",
-      "instruction": "[synthetic] complete the figure reproduce task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 19,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "citation_audit",
-      "domain": "research",
-      "environment": "research_env_v1",
-      "instruction": "[synthetic] complete the citation audit task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 6,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "method_summary",
-      "domain": "research",
-      "environment": "research_env_v1",
-      "instruction": "[synthetic] complete the method summary task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 17,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "benchmark_table",
-      "domain": "research",
-      "environment": "research_env_v1",
-      "instruction": "[synthetic] complete the benchmark table task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 19,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "incident_triage",
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "instruction": "[synthetic] complete the incident triage task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 8,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "runbook_execute",
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "instruction": "[synthetic] complete the runbook execute task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 19,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "capacity_plan",
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "instruction": "[synthetic] complete the capacity plan task",
-      "rubric_criteria": [
-        "r_retrieve",
-        "r_compute",
-        "r_verify",
-        "r_report"
-      ],
-      "criterion_dependencies": [
-        [
-          "r_retrieve",
-          "r_report"
-        ],
-        [
-          "r_compute",
-          "r_report"
-        ]
-      ],
-      "complexity": 13,
-      "tools": [
-        "search",
-        "read",
-        "compute",
-        "verify",
-        "write"
-      ],
-      "synthetic": true
-    },
-    {
-      "task_id": "log_rootcause",
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "instruction": "[synthetic] complete the log rootcause task",
+      "instruction": "[synthetic] Using ObligationMatrix's records, complete the obligation matrix task and report the total.",
       "rubric_criteria": [
         "r_retrieve",
         "r_compute",
@@ -682,13 +509,29 @@
         "verify",
         "write"
       ],
+      "files": [
+        "obligation_matrix/source_0.csv",
+        "obligation_matrix/source_1.csv",
+        "obligation_matrix/ObligationMatrix_notes.md",
+        "obligation_matrix/README.md"
+      ],
+      "entities": [
+        "ObligationMatrix"
+      ],
+      "quantities": {
+        "total": 450.0
+      },
+      "required_inputs": [
+        "obligation_matrix/source_0.csv"
+      ],
+      "verifier": "verifiers/obligation_matrix.sh",
       "synthetic": true
     },
     {
-      "task_id": "access_review",
-      "domain": "ops",
-      "environment": "ops_env_v1",
-      "instruction": "[synthetic] complete the access review task",
+      "task_id": "nda_compare",
+      "domain": "legal",
+      "environment": "legal_env_v1",
+      "instruction": "[synthetic] Using NdaCompare's records, complete the nda compare task and report the total.",
       "rubric_criteria": [
         "r_retrieve",
         "r_compute",
@@ -705,7 +548,7 @@
           "r_report"
         ]
       ],
-      "complexity": 19,
+      "complexity": 10,
       "tools": [
         "search",
         "read",
@@ -713,13 +556,409 @@
         "verify",
         "write"
       ],
+      "files": [
+        "nda_compare/source_0.csv",
+        "nda_compare/source_1.csv",
+        "nda_compare/source_2.csv",
+        "nda_compare/NdaCompare_notes.md",
+        "nda_compare/README.md"
+      ],
+      "entities": [
+        "NdaCompare"
+      ],
+      "quantities": {
+        "total": 600.0
+      },
+      "required_inputs": [
+        "nda_compare/source_0.csv"
+      ],
+      "verifier": "verifiers/nda_compare.sh",
       "synthetic": true
     },
     {
-      "task_id": "sla_report",
+      "task_id": "literature_sweep",
+      "domain": "research",
+      "environment": "research_env_v1",
+      "instruction": "[synthetic] Using LiteratureSweep's records, complete the literature sweep task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 22,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "literature_sweep/source_0.csv",
+        "literature_sweep/source_1.csv",
+        "literature_sweep/source_2.csv",
+        "literature_sweep/LiteratureSweep_notes.md",
+        "literature_sweep/README.md"
+      ],
+      "entities": [
+        "LiteratureSweep"
+      ],
+      "quantities": {
+        "total": 1200.0
+      },
+      "required_inputs": [
+        "literature_sweep/source_0.csv"
+      ],
+      "verifier": "verifiers/literature_sweep.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "data_extraction",
+      "domain": "research",
+      "environment": "research_env_v1",
+      "instruction": "[synthetic] Using DataExtraction's records, complete the data extraction task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 17,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "data_extraction/source_0.csv",
+        "data_extraction/source_1.csv",
+        "data_extraction/DataExtraction_notes.md",
+        "data_extraction/README.md"
+      ],
+      "entities": [
+        "DataExtraction"
+      ],
+      "quantities": {
+        "total": 950.0
+      },
+      "required_inputs": [
+        "data_extraction/source_0.csv"
+      ],
+      "verifier": "verifiers/data_extraction.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "figure_reproduce",
+      "domain": "research",
+      "environment": "research_env_v1",
+      "instruction": "[synthetic] Using FigureReproduce's records, complete the figure reproduce task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 22,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "figure_reproduce/source_0.csv",
+        "figure_reproduce/source_1.csv",
+        "figure_reproduce/source_2.csv",
+        "figure_reproduce/FigureReproduce_notes.md",
+        "figure_reproduce/README.md"
+      ],
+      "entities": [
+        "FigureReproduce"
+      ],
+      "quantities": {
+        "total": 1200.0
+      },
+      "required_inputs": [
+        "figure_reproduce/source_0.csv"
+      ],
+      "verifier": "verifiers/figure_reproduce.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "citation_audit",
+      "domain": "research",
+      "environment": "research_env_v1",
+      "instruction": "[synthetic] Using CitationAudit's records, complete the citation audit task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 12,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "citation_audit/source_0.csv",
+        "citation_audit/source_1.csv",
+        "citation_audit/CitationAudit_notes.md",
+        "citation_audit/README.md"
+      ],
+      "entities": [
+        "CitationAudit"
+      ],
+      "quantities": {
+        "total": 700.0
+      },
+      "required_inputs": [
+        "citation_audit/source_0.csv"
+      ],
+      "verifier": "verifiers/citation_audit.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "method_summary",
+      "domain": "research",
+      "environment": "research_env_v1",
+      "instruction": "[synthetic] Using MethodSummary's records, complete the method summary task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 15,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "method_summary/source_0.csv",
+        "method_summary/source_1.csv",
+        "method_summary/MethodSummary_notes.md",
+        "method_summary/README.md"
+      ],
+      "entities": [
+        "MethodSummary"
+      ],
+      "quantities": {
+        "total": 850.0
+      },
+      "required_inputs": [
+        "method_summary/source_0.csv"
+      ],
+      "verifier": "verifiers/method_summary.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "benchmark_table",
+      "domain": "research",
+      "environment": "research_env_v1",
+      "instruction": "[synthetic] Using BenchmarkTable's records, complete the benchmark table task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 17,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "benchmark_table/source_0.csv",
+        "benchmark_table/source_1.csv",
+        "benchmark_table/BenchmarkTable_notes.md",
+        "benchmark_table/README.md"
+      ],
+      "entities": [
+        "BenchmarkTable"
+      ],
+      "quantities": {
+        "total": 950.0
+      },
+      "required_inputs": [
+        "benchmark_table/source_0.csv"
+      ],
+      "verifier": "verifiers/benchmark_table.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "incident_triage",
       "domain": "ops",
       "environment": "ops_env_v1",
-      "instruction": "[synthetic] complete the sla report task",
+      "instruction": "[synthetic] Using IncidentTriage's records, complete the incident triage task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 24,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "incident_triage/source_0.csv",
+        "incident_triage/source_1.csv",
+        "incident_triage/IncidentTriage_notes.md",
+        "incident_triage/README.md"
+      ],
+      "entities": [
+        "IncidentTriage"
+      ],
+      "quantities": {
+        "total": 1300.0
+      },
+      "required_inputs": [
+        "incident_triage/source_0.csv"
+      ],
+      "verifier": "verifiers/incident_triage.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "runbook_execute",
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "instruction": "[synthetic] Using RunbookExecute's records, complete the runbook execute task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 9,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "runbook_execute/source_0.csv",
+        "runbook_execute/source_1.csv",
+        "runbook_execute/source_2.csv",
+        "runbook_execute/RunbookExecute_notes.md",
+        "runbook_execute/README.md"
+      ],
+      "entities": [
+        "RunbookExecute"
+      ],
+      "quantities": {
+        "total": 550.0
+      },
+      "required_inputs": [
+        "runbook_execute/source_0.csv"
+      ],
+      "verifier": "verifiers/runbook_execute.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "capacity_plan",
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "instruction": "[synthetic] Using CapacityPlan's records, complete the capacity plan task and report the total.",
       "rubric_criteria": [
         "r_retrieve",
         "r_compute",
@@ -744,6 +983,165 @@
         "verify",
         "write"
       ],
+      "files": [
+        "capacity_plan/source_0.csv",
+        "capacity_plan/source_1.csv",
+        "capacity_plan/CapacityPlan_notes.md",
+        "capacity_plan/README.md"
+      ],
+      "entities": [
+        "CapacityPlan"
+      ],
+      "quantities": {
+        "total": 1150.0
+      },
+      "required_inputs": [
+        "capacity_plan/source_0.csv"
+      ],
+      "verifier": "verifiers/capacity_plan.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "log_rootcause",
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "instruction": "[synthetic] Using LogRootcause's records, complete the log rootcause task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 23,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "log_rootcause/source_0.csv",
+        "log_rootcause/source_1.csv",
+        "log_rootcause/LogRootcause_notes.md",
+        "log_rootcause/README.md"
+      ],
+      "entities": [
+        "LogRootcause"
+      ],
+      "quantities": {
+        "total": 1250.0
+      },
+      "required_inputs": [
+        "log_rootcause/source_0.csv"
+      ],
+      "verifier": "verifiers/log_rootcause.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "access_review",
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "instruction": "[synthetic] Using AccessReview's records, complete the access review task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 25,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "access_review/source_0.csv",
+        "access_review/source_1.csv",
+        "access_review/source_2.csv",
+        "access_review/AccessReview_notes.md",
+        "access_review/README.md"
+      ],
+      "entities": [
+        "AccessReview"
+      ],
+      "quantities": {
+        "total": 1350.0
+      },
+      "required_inputs": [
+        "access_review/source_0.csv"
+      ],
+      "verifier": "verifiers/access_review.sh",
+      "synthetic": true
+    },
+    {
+      "task_id": "sla_report",
+      "domain": "ops",
+      "environment": "ops_env_v1",
+      "instruction": "[synthetic] Using SlaReport's records, complete the sla report task and report the total.",
+      "rubric_criteria": [
+        "r_retrieve",
+        "r_compute",
+        "r_verify",
+        "r_report"
+      ],
+      "criterion_dependencies": [
+        [
+          "r_retrieve",
+          "r_report"
+        ],
+        [
+          "r_compute",
+          "r_report"
+        ]
+      ],
+      "complexity": 21,
+      "tools": [
+        "search",
+        "read",
+        "compute",
+        "verify",
+        "write"
+      ],
+      "files": [
+        "sla_report/source_0.csv",
+        "sla_report/source_1.csv",
+        "sla_report/source_2.csv",
+        "sla_report/SlaReport_notes.md",
+        "sla_report/README.md"
+      ],
+      "entities": [
+        "SlaReport"
+      ],
+      "quantities": {
+        "total": 1150.0
+      },
+      "required_inputs": [
+        "sla_report/source_0.csv"
+      ],
+      "verifier": "verifiers/sla_report.sh",
       "synthetic": true
     }
   ]

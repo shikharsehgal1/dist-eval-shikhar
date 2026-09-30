@@ -106,16 +106,31 @@ def build():
                 spread_i += 1
             q = min(p / max(r_exec, 1e-6), 1.0)
             complexity = int(rng.integers(6, 26))
+            # Structural fields, so metamorphic task generation has something to
+            # transform: files to reorder, an entity to rename consistently, a
+            # quantity to scale, and a declared required input to remove.
+            entity = "".join(w.capitalize() for w in name.split("_"))
+            files = [
+                f"{name}/source_{j}.csv" for j in range(1 + rng.integers(1, 3))
+            ] + [f"{name}/{entity}_notes.md", f"{name}/README.md"]
             tasks.append(
                 {
                     "task_id": name,
                     "domain": domain,
                     "environment": f"{domain}_env_v1",
-                    "instruction": f"[synthetic] complete the {name.replace('_', ' ')} task",
+                    "instruction": (
+                        f"[synthetic] Using {entity}'s records, complete the "
+                        f"{name.replace('_', ' ')} task and report the total."
+                    ),
                     "rubric_criteria": CRITERIA,
                     "criterion_dependencies": CRITERION_DEPENDENCIES,
                     "complexity": complexity,
                     "tools": ["search", "read", "compute", "verify", "write"],
+                    "files": files,
+                    "entities": [entity],
+                    "quantities": {"total": float(100 + 50 * complexity)},
+                    "required_inputs": [files[0]],
+                    "verifier": f"verifiers/{name}.sh",
                     "synthetic": True,
                 }
             )

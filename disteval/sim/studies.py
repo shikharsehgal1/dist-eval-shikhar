@@ -65,6 +65,7 @@ __all__ = [
     "adaptive_saving_study",
     "decomposition_study",
     "selection_study",
+    "band_label_noise_study",
     "run_all_studies",
 ]
 
@@ -462,9 +463,65 @@ def run_all_studies(seed: int = 0, quick: bool = False) -> dict:
             n_select=20 if quick else 40,
             seeds=(seed, seed + 1) if quick else tuple(range(seed, seed + 5)),
         ),
+        "band_label_noise": band_label_noise_study(),
         "adaptive": adaptive_saving_study(
             n_tasks=60 if quick else 120,
             budgets_per_task=(4, 8) if quick else (4, 8, 16),
             seed=seed,
         ),
     }
+
+
+def band_label_noise_study(
+    bands: Optional[Sequence] = None,
+    ks: Sequence[int] = (3, 8, 16, 24, 32, 48, 64),
+    seed: int = 0,
+):
+    """How noisy is a plug-in frontier-band label, and what does it cost?
+
+    Generate-and-filter pipelines for synthetic tasks label a candidate as
+    "at the learnable frontier" by running it ``K`` times and checking whether
+    ``k/K`` lands in a band. This study computes, exactly from the Binomial pmf
+    (no simulation), how often that label is wrong, and the smallest ``K`` at
+    which a task at the band's centre becomes resolvable.
+
+    The result is not that such pipelines are broken. Label noise is symmetric
+    across arms, so a *relative* comparison between two generators sharing one
+    labeller remains meaningful -- though attenuated, in the regression-dilution
+    sense, meaning reported improvements understate true ones. What the noise
+    does bias is the *absolute* frontier rate, and it sets a floor on how small a
+    difference the metric can resolve at a given ``K``.
+    """
+    from ..reliability.frontier import (
+        MATH_CODE_BAND,
+        SWE_BAND,
+        band_decision,
+        plugin_band_error,
+    )
+    from ..reliability.posterior import binary_posterior
+
+    bands = list(bands) if bands is not None else [MATH_CODE_BAND, SWE_BAND]
+    rows = []
+    for band in bands:
+        centre = 0.5 * (band.lo + band.hi)
+        for k in ks:
+            err = plugin_band_error(band, k)
+            in_truth = err[err["in_band_truth"]]
+            out_truth = err[~err["in_band_truth"]]
+            # Can any observed count resolve "in band" at 80% confidence?
+            resolvable = any(
+                band_decision(binary_posterior(s, k), band).label == "in_band"
+                for s in range(k + 1)
+            )
+            centre_dec = band_decision(binary_posterior(round(centre * k), k), band)
+            rows.append({
+                "band": band.name or f"[{band.lo:.2f},{band.hi:.2f}]",
+                "band_width": band.width,
+                "K": k,
+                "mean_miss_rate": float(in_truth["p_mislabelled"].mean()),
+                "mean_false_positive_rate": float(out_truth["p_mislabelled"].mean()),
+                "worst_false_positive_rate": float(out_truth["p_mislabelled"].max()),
+                "in_band_resolvable_at_80pct": bool(resolvable),
+                "p_in_at_band_centre": float(centre_dec.p_in),
+            })
+    return _frame(rows)

@@ -662,6 +662,108 @@ machinery to run it is here and tested; the result is not claimed.
 
 ---
 
+## 13. Generating eval tasks, and what makes a generated task trustworthy
+
+More tasks would help: the sample-size limits in §8 and the tie structure in §7
+are both consequences of having few tasks and few runs. But a generated task is
+only an eval task if it can be **graded**, and that is where most synthesis
+approaches become circular.
+
+### The circularity problem
+
+Two distinct failure modes, often conflated:
+
+1. **No trustworthy answer.** If the generator does not know the correct answer,
+   grading against the generator's answer measures agreement with the generator.
+   Approaches that synthesise freely need an independent oracle — for instance
+   requiring several models to agree, as in the PROPEL setup (Wolf et al., 2026)
+   — and that is a real but weaker guarantee.
+2. **The evaluated model shapes its own test distribution.** If the generator and
+   the agent under test share a model family, the task set is the intersection of
+   what the model can imagine with what it can do, which systematically flatters
+   it. This cannot be fixed by better grading; it has to be designed out or
+   disclosed.
+
+### Metamorphic generation
+
+The approach taken here avoids both. Take a task whose grading you already trust
+and apply a transformation whose effect on the answer is **known by
+construction**:
+
+| relation kind | effect on the answer | how the verifier transfers |
+|---|---|---|
+| invariant | unchanged | apply the seed's verifier unmodified |
+| equivariant | changes in a stated, invertible way | invert, then apply the seed's verifier |
+| refuted | task becomes unsatisfiable | the agent must decline; a confident answer is a failure |
+
+Reordering files, inserting irrelevant documents, renaming an entity
+consistently, scaling every quantity by $k$ — you never needed the answer, only
+the *relation* between the seed's answer and the variant's. The transformations
+are structural, so the variant distribution does not depend on the evaluated
+model's preferences. Where a model-backed transformation is used, the affected
+tasks are flagged and excluded from headline metrics until confirmed.
+
+**Why this is the right instrument for reliability specifically.** An agent that
+solves a task but fails its paraphrase got the right answer for a reason that did
+not survive a change which should not have mattered. Repeated runs of the *same*
+task cannot distinguish that from sampling noise; a metamorphic variant can. The
+generator is aimed using the criterion-level gap: variants probe criteria the
+agent is already measured to be shaky on.
+
+The cost of this guarantee is generality. Metamorphic variation cannot produce a
+genuinely novel task, only a principled perturbation of an existing one. It
+complements free synthesis rather than replacing it.
+
+### The learnable frontier, and why its label is noisy
+
+A recurring target for task generation is the band $U(x) = \mathbb{1}[a \le p_x
+\le b]$ — tasks neither trivial nor impossible. PROPEL uses $[1/8, 3/8]$ at
+$K=8$ for math and code and $[1/3, 2/3]$ at $K=3$ for software engineering; the
+same intuition drives competence-progress curricula and the $\mathbb{E}[p(1-p)]$
+proxy of §9.
+
+Band membership is normally read off the plug-in ratio $k/K$. That is a decision
+about a Bernoulli parameter from a handful of draws, and at realistic $K$ it is
+very noisy (`docs/validation/band_label_noise.csv`):
+
+| band | $K$ | mean miss rate | mean false-positive rate | in-band resolvable at 80%? |
+|---|---|---|---|---|
+| $[1/8, 3/8]$ | 3 | 0.60 | 0.20 | no |
+| $[1/8, 3/8]$ | 8 | 0.26 | 0.20 | **no** |
+| $[1/8, 3/8]$ | 16 | 0.23 | 0.14 | no |
+| $[1/8, 3/8]$ | 24 | 0.20 | 0.11 | yes |
+| $[1/3, 2/3]$ | 3 | 0.28 | 0.40 | **no** |
+| $[1/3, 2/3]$ | 16 | 0.34 | 0.11 | yes |
+
+Two specific consequences. At $K=8$ with a $[1/8, 3/8]$ band, **no observed
+success count resolves "in band" at 80% posterior confidence** — the band is
+narrower than the posterior's resolution at that sample size, and about 24 runs
+are needed. At $K=3$ with a $[1/3, 2/3]$ band, $1/3$ and $2/3$ both give
+$P(\text{in band}) = 0.42$: the label is close to a coin flip.
+
+**This does not invalidate such pipelines.** Label noise is symmetric across
+arms, so a *relative* comparison between two generators sharing one labeller
+remains meaningful — attenuated, in the regression-dilution sense, meaning
+reported improvements understate true ones. What the noise biases is the
+*absolute* frontier rate, and it sets a floor on how small a difference the
+metric can resolve at a given $K$.
+
+It also identifies where the rollout budget should go.
+:func:`~disteval.reliability.frontier.band_information` scores how much one more
+run would resolve a candidate's membership, so budget goes to candidates still in
+doubt rather than re-confirming obvious ones — the same value-of-information
+argument as §… applied to a different decision. Since labelling is the expensive
+step in generate-and-filter (PROPEL spends 22.6k offline solver trials on it),
+this is where the framework has something to contribute to that workflow rather
+than merely restating it.
+
+**What is not implemented here.** Training a generator policy against a learned
+difficulty signal, as PROPEL does with activation probes, needs model internals
+and training infrastructure. It is out of scope, and a gestural version would be
+a fake.
+
+---
+
 ## References
 
 - Agarwal, R., Schwarzer, M., Castro, P. S., Courville, A., & Bellemare, M. G.
@@ -682,5 +784,12 @@ machinery to run it is here and tested; the result is not claimed.
 - Song, Y., et al. (2024). Trial and Error: Exploration-Based Trajectory
   Optimization for LLM Agents (ETO). *ACL*. (preference learning from
   success/failure agent trajectories — prior work this repository builds on)
+- Wolf, L., Watts, C., Creus Castanyer, R., Bradway, G., Lin, M.,
+  Mavor-Parker, A. N., & Daborn-Sargent, M. (2026). Breaking the Solver
+  Bottleneck: Training Task Generators at the Learnable Frontier. (PROPEL; the
+  frontier-band utility definition, and the solver-cost framing this repository's
+  active-evaluation machinery addresses from a different angle)
+- Chen, T. Y., et al. (1998/2018). Metamorphic testing. (the transformation +
+  known output relation idea this repository's task generation rests on)
 - Yao, S., et al. (2024). τ-bench: A Benchmark for Tool-Agent-User Interaction in
   Real-World Domains. (pass^k for agent reliability)

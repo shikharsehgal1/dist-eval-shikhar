@@ -70,6 +70,17 @@ from .criterion import (
     gap_profile,
     gap_profiles,
 )
+from .frontier import (
+    MATH_CODE_BAND,
+    SWE_BAND,
+    BandDecision,
+    FrontierBand,
+    band_decision,
+    band_information,
+    band_probability,
+    expected_runs_to_resolve_band,
+    plugin_band_error,
+)
 from .decomposition import (
     Decomposition,
     decompose,
@@ -104,6 +115,15 @@ from .hierarchical import (
 )
 
 __all__ = [
+    "FrontierBand",
+    "BandDecision",
+    "MATH_CODE_BAND",
+    "SWE_BAND",
+    "band_probability",
+    "band_decision",
+    "band_information",
+    "expected_runs_to_resolve_band",
+    "plugin_band_error",
     "CriterionEstimate",
     "GapProfile",
     "gap_profile",
